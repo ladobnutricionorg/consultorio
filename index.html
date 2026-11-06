@@ -82,9 +82,11 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 
 /* Pagos */
 .col{width:100%;max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.tot{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.col{max-width:760px}
+.totals{display:flex;justify-content:center;gap:10px}
+.tot{flex:0 1 287px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;gap:2px}
 .tot span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tot span em{font-style:normal;text-transform:none;letter-spacing:0;margin-left:4px}
 .tot b{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .tot small{font-size:12px;color:var(--muted)}
 .tot.hi{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -92,7 +94,10 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .tot.fc{background:var(--lima);border-color:var(--lima)}
 .tot.fc span,.tot.fc small{color:#2C3A0A}
 .table{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.thead,.prow{display:grid;grid-template-columns:minmax(0,1fr) 120px 150px 92px;align-items:center;column-gap:12px;padding:0 16px}
+.thead,.prow{display:grid;grid-template-columns:44px minmax(0,1fr) 100px 128px 72px;align-items:center;column-gap:12px;padding:0 16px}
+.prow{border-top:1px solid #F0F2EE}
+.table .prow:nth-child(2){border-top:0}
+.pdate{font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .thead{height:38px;background:#F6F7F3;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .r{text-align:right}.c{text-align:center}
 .dayrow{display:flex;align-items:baseline;justify-content:space-between;padding:14px 16px 6px;border-top:1px solid var(--line2)}
@@ -139,6 +144,20 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .fld input,.fld select{font:inherit;font-size:15px;font-weight:500;height:44px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;width:100%;color:var(--ink);background:#fff;min-width:0}
 .fld input:focus,.fld select:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
 .err{margin:0;color:#A12F22;font-size:13px;font-weight:600}
+[hidden]{display:none!important}
+.fields.three{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr)}
+.pacrow{display:flex;gap:8px;align-items:stretch}
+.combo{position:relative;flex:1;min-width:0}
+.combo input{font:inherit;font-size:15px;font-weight:500;height:44px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;width:100%;color:var(--ink);background:#fff}
+.combo input:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
+.combo input.ok{border-color:#7BA319;background:#FAFDF2}
+.opts{position:absolute;left:0;right:0;top:48px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 24px rgba(23,32,27,.15);max-height:260px;overflow:auto;padding:4px}
+.opts button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;text-align:left;padding:10px 10px;border-radius:6px;font-size:14px;cursor:pointer;min-height:40px}
+.opts button:hover,.opts button:focus{background:#F1F2EE;outline:0}
+.opts button small{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.opts .none{padding:10px;font-size:13px;color:var(--muted)}
+.addpac{flex:none;width:44px;height:44px;border-radius:8px;border:0;background:var(--ink);color:var(--lima);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#overlay2{z-index:60}
 .wa{font-size:13.5px;font-weight:600;height:44px;border:1px solid #B9DDB0;background:#EEF8EA;color:#1D4D17;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none}
 .wa:hover{background:#E2F3DC}
 .paid{display:flex;align-items:center;gap:10px;background:#EEF8EA;border:1px solid #B9DDB0;border-radius:10px;padding:12px 14px;font-size:14px}
@@ -182,12 +201,14 @@ details.edit[open] summary{margin-bottom:12px}
   .ev .t{width:32px;font-size:11px}
   .tm{padding-right:6px}
   .fab{display:flex;position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--ink);color:var(--lima);align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(23,32,27,.3);z-index:20;cursor:pointer}
-  .totals{grid-template-columns:1fr 1fr}
-  .tot.hi{grid-column:1/-1}
-  .tot b{font-size:22px}
+  .tot{flex:1 1 0;min-width:0;padding:10px 12px}
+  .tot b{font-size:21px}
   .thead{display:none}
-  .prow{grid-template-columns:minmax(0,1fr) auto 44px;grid-template-areas:"n n k" "a m k";padding:6px 12px;row-gap:2px}
+  .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n n k" "d a m k";padding:6px 12px;row-gap:2px}
+  .prow .pdate{grid-area:d}
   .prow .pname{grid-area:n;padding:4px 0 0}
+  .fields.three{grid-template-columns:1fr 1fr}
+  .fields.three .fld:first-child{grid-column:1/-1}
   .prow .amt{grid-area:a;text-align:left}
   .prow .chip{grid-area:m;justify-self:end}
   .prow .ck{grid-area:k;width:44px}
@@ -216,6 +237,7 @@ details.edit[open] summary{margin-bottom:12px}
   <p class="foot">Versión de prueba: los datos son de ejemplo y se guardan solo en este navegador. <button type="button" data-act="reset">Restablecer ejemplo</button></p>
 </div>
 <div class="overlay" id="overlay" hidden><div class="dlg" id="dlg" role="dialog" aria-modal="true"></div></div>
+<div class="overlay" id="overlay2" hidden><div class="dlg" id="dlg2" role="dialog" aria-modal="true"></div></div>
 
 <script>
 (function(){
@@ -228,7 +250,8 @@ var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','se
 var MEDIOS=['Efectivo','Mercado Pago','Tarjeta'];
 var MEDIO_CLS={'Efectivo':'ef','Mercado Pago':'mp','Tarjeta':'tj'};
 var TIPOS=[['','Consulta'],['InBody','InBody'],['Virtual','Virtual']];
-var KEY='ladob_data_v1', UIKEY='ladob_ui_v1';
+var KEY='ladob_data_v2', UIKEY='ladob_ui_v1';
+var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
   prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
   next:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
@@ -294,7 +317,9 @@ function seed(){
   ['fran','car'].forEach(function(n){
     var pacs={};
     names[n].forEach(function(nm,i){
-      var p={id:uid()+i,name:nm,phone:'11 5'+pad(10+i)+' '+(4000+i*137)%10000,nutri:n};
+      var parts=nm.split(' '), nom=parts[0], ape=parts.slice(1).join(' ');
+      if(parts.length>3||(parts[0]==='María'&&parts.length>2)){nom=parts.slice(0,2).join(' ');ape=parts.slice(2).join(' ')}
+      var p={id:uid()+n+i,nombre:nom,apellido:ape,name:nm,phone:'11 5'+pad(10+i)+' '+(4000+i*137)%10000,llegada:LLEGADAS[i%4],notas:'',nutri:n};
       pacs[nm]=p; d.pacientes.push(p);
     });
     var k=0;
@@ -305,12 +330,12 @@ function seed(){
           if(w===1&&j%2===1)return;
           var nm=names[n][(k*7+wd)%names[n].length]; k++;
           var est=r[3]; if(w===1)est=(j%4===0?'c':'p');
-          var t={id:uid()+k,nutri:n,date:di,time:hhmm(toMin(r[0])),dur:r[1],name:nm,tipo:r[2],estado:est};
+          var t={id:uid()+k,nutri:n,date:di,time:hhmm(toMin(r[0])),dur:r[1],name:nm,pid:pacs[nm].id,tipo:r[2],estado:est};
           d.turnos.push(t);
           var when=new Date(day.getFullYear(),day.getMonth(),day.getDate(),0,toMin(r[0]));
           if(est==='c'&&when<now&&k%7!==3){
             var monto=r[2]==='InBody'?30000:(r[1]===60?60000:[40000,45000,45000][k%3]);
-            d.pagos.push({id:uid()+'p'+k,nutri:n,turnoId:t.id,name:nm,date:di,monto:monto,medio:MEDIOS[[1,1,0,1,2,1][k%6]],fact:k%5===0});
+            d.pagos.push({id:uid()+'p'+k,nutri:n,turnoId:t.id,pid:t.pid,name:nm,date:di,monto:monto,medio:MEDIOS[[1,1,0,1,2,1][k%6]],fact:k%5===0});
           }
         });
         bloq[n].forEach(function(b){ if(b[0]===wd&&w>=0) d.bloqueos.push({id:uid()+'b'+wd+w,nutri:n,date:di,from:hhmm(toMin(b[1])),to:hhmm(toMin(b[2])),nota:b[3]}); });
@@ -335,21 +360,55 @@ function pagoDe(tid){for(var i=0;i<data.pagos.length;i++)if(data.pagos[i].turnoI
 function findT(id){return data.turnos.find(function(t){return t.id===id})}
 function findP(id){return data.pagos.find(function(p){return p.id===id})}
 function findB(id){return data.bloqueos.find(function(b){return b.id===id})}
+function findPac(id){return data.pacientes.find(function(p){return p.id===id})}
 function paciente(name){var k=norm(name);return data.pacientes.find(function(p){return norm(p.name)===k})}
-function upsertPaciente(name,phone,nutri){
-  var p=paciente(name);
-  if(!p){p={id:uid(),name:name.trim(),phone:(phone||'').trim(),nutri:nutri};data.pacientes.push(p)}
-  else if(phone&&phone.trim())p.phone=phone.trim();
-  return p;
+function pacDe(t){return (t.pid&&findPac(t.pid))||paciente(t.name)}
+/* Selector de paciente: solo se puede elegir de la lista; "+" para cargar uno nuevo */
+function pacField(id,pid){
+  var p=pid?findPac(pid):null;
+  return '<div class="fld full"><span>Paciente</span><div class="pacrow"><div class="combo">'+
+    '<input id="'+id+'" class="pacin'+(p?' ok':'')+'" autocomplete="off" placeholder="Buscar paciente…" value="'+esc(p?p.name:'')+'" data-pid="'+(p?p.id:'')+'" role="combobox" aria-expanded="false" aria-controls="'+id+'L">'+
+    '<div class="opts" id="'+id+'L" role="listbox" hidden></div></div>'+
+    '<button type="button" class="addpac" data-act="newPac" data-for="'+id+'" aria-label="Cargar paciente nuevo" title="Cargar paciente nuevo">'+ICON.plus+'</button></div></div>';
 }
-function datalist(){
-  var mine=data.pacientes.filter(function(p){return p.nutri===ui.nutri}).sort(function(a,b){return a.name.localeCompare(b.name)});
-  var other=data.pacientes.filter(function(p){return p.nutri!==ui.nutri}).sort(function(a,b){return a.name.localeCompare(b.name)});
-  return '<datalist id="pacs">'+mine.map(function(p){return '<option value="'+esc(p.name)+'"></option>'}).join('')+
-    other.map(function(p){return '<option value="'+esc(p.name)+'">Paciente de '+NUTRIS[p.nutri]+'</option>'}).join('')+'</datalist>';
+function pacOptions(input){
+  var q=norm(input.value), list=$('#'+input.id+'L');
+  var all=data.pacientes.filter(function(p){return !q||norm(p.name).indexOf(q)>-1});
+  all.sort(function(a,b){var x=(a.nutri===ui.nutri?0:1)-(b.nutri===ui.nutri?0:1);return x||a.name.localeCompare(b.name)});
+  all=all.slice(0,8);
+  list.innerHTML=all.length?all.map(function(p){return '<button type="button" role="option" data-pick="'+p.id+'" data-for="'+input.id+'"><span>'+esc(p.name)+'</span>'+(p.nutri!==ui.nutri?'<small>de '+NUTRIS[p.nutri]+'</small>':'')+'</button>'}).join('')
+    :'<div class="none">No está en la lista. Tocá <b>+</b> para cargarlo.</div>';
+  list.hidden=false; input.setAttribute('aria-expanded','true');
+}
+function closeOpts(){$$('.opts').forEach(function(l){l.hidden=true});$$('.pacin').forEach(function(i){i.setAttribute('aria-expanded','false')})}
+function pickPac(inputId,pid){var i=$('#'+inputId),p=findPac(pid);if(!i||!p)return;i.value=p.name;i.dataset.pid=p.id;i.classList.add('ok');closeOpts()}
+function pidOf(inputId){var i=$('#'+inputId);if(!i)return null;if(i.dataset.pid&&findPac(i.dataset.pid))return i.dataset.pid;var p=paciente(i.value);return p?p.id:null}
+function openPacForm(forId){
+  $('#dlg2').innerHTML=head('Paciente nuevo','Queda asociado a '+NUTRIS[ui.nutri])+
+    '<div class="sec"><div class="fields">'+
+      '<label class="fld"><span>Nombre</span><input id="qNom" autocomplete="off" autofocus></label>'+
+      '<label class="fld"><span>Apellido</span><input id="qApe" autocomplete="off"></label>'+
+      '<label class="fld full"><span>Teléfono</span><input id="qTel" inputmode="tel" placeholder="11 1234 5678"></label>'+
+    '</div><span class="lbl">Medio de llegada</span>'+seg('llegada',LLEGADAS.map(function(x){return [x,x]}),null)+
+    '<div class="fields"><label class="fld full"><span>Notas <em>(opcional)</em></span><input id="qNotas" placeholder="Ej: hijo de…"></label></div>'+
+    '<p class="err" id="qErr" hidden></p></div>'+
+    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="savePac" data-for="'+forId+'">Guardar paciente</button></div></div>';
+  $('#overlay2').hidden=false;
+  if(!isMobile())$('#qNom').focus();
+}
+function savePac(forId){
+  var e=$('#qErr'), nom=$('#qNom').value.trim(), ape=$('#qApe').value.trim(), tel=$('#qTel').value.trim(), lle=segVal('llegada',$('#dlg2'));
+  var miss=[]; if(!nom)miss.push('nombre'); if(!ape)miss.push('apellido'); if(!tel)miss.push('teléfono'); if(!lle)miss.push('medio de llegada');
+  if(miss.length){e.textContent='Falta completar: '+miss.join(', ')+'.';e.hidden=false;return}
+  var full=nom+' '+ape;
+  if(paciente(full)){e.textContent='Ya existe un paciente con ese nombre. Buscalo en la lista.';e.hidden=false;return}
+  var p={id:uid(),nombre:nom,apellido:ape,name:full,phone:tel,llegada:lle,notas:$('#qNotas').value.trim(),nutri:ui.nutri};
+  data.pacientes.push(p); save();
+  $('#overlay2').hidden=true; $('#dlg2').innerHTML='';
+  pickPac(forId,p.id);
 }
 function waLink(t){
-  var p=paciente(t.name); if(!p||!p.phone)return null;
+  var p=pacDe(t); if(!p||!p.phone)return null;
   var num=p.phone.replace(/\D/g,'');
   if(num.indexOf('54')!==0){ if(num.indexOf('0')===0)num=num.slice(1); num='549'+num; }
   var d=parse(t.date);
@@ -431,19 +490,13 @@ function renderPagos(){
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
   var tot=0,tf=0,cf=0; list.forEach(function(p){tot+=+p.monto;if(p.fact){tf+=+p.monto;cf++}});
   var html='<div class="col"><div class="totals">'+
-    '<div class="tot hi"><span>Total del mes</span><b>'+money(tot)+'</b><small>'+list.length+' pago'+(list.length===1?'':'s')+'</small></div>'+
-    '<div class="tot fc"><span>Facturado</span><b>'+money(tf)+'</b><small>'+cf+' con tilde</small></div>'+
-    '<div class="tot"><span>Sin facturar</span><b>'+money(tot-tf)+'</b><small>'+(list.length-cf)+' pago'+(list.length-cf===1?'':'s')+'</small></div></div>';
-  html+='<div class="table"><div class="thead"><span>Paciente</span><span class="r">Monto</span><span>Medio de pago</span><span class="c">Facturado</span></div>';
+    '<div class="tot hi"><span>Total del mes<em>('+list.length+')</em></span><b>'+money(tot)+'</b></div>'+
+    '<div class="tot fc"><span>Facturado</span><b>'+money(tf)+'</b></div></div>';
+  html+='<div class="table"><div class="thead"><span>Fecha</span><span>Paciente</span><span class="r">Monto</span><span>Medio</span><span class="c">Fact.</span></div>';
   if(!list.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
-  var cur=null;
   list.forEach(function(p){
-    if(p.date!==cur){
-      cur=p.date; var sub=list.filter(function(q){return q.date===cur}).reduce(function(a,q){return a+(+q.monto)},0);
-      html+='<div class="dayrow"><b>'+cap(largo(parse(cur)))+'</b><span>'+money(sub)+'</span></div>';
-    }
     var t=p.turnoId?findT(p.turnoId):null;
-    html+='<div class="prow"><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
+    html+='<div class="prow"><span class="pdate">'+ddmm(p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
       '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio)+'</span>'+
       '<label class="ck"><input type="checkbox" data-fact="'+p.id+'"'+(p.fact?' checked':'')+' aria-label="Facturado: '+esc(p.name)+'"></label></div>';
   });
@@ -462,54 +515,62 @@ function openModal(html){
 function closeModal(){$('#overlay').hidden=true;$('#dlg').innerHTML='';document.body.style.overflow='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
 function head(title,sub){return '<div class="dh"><div><h2 id="dlgT">'+title+'</h2>'+(sub?'<p>'+sub+'</p>':'')+'</div><button type="button" class="xbtn" data-act="close" aria-label="Cerrar">'+ICON.close+'</button></div>'}
 function seg(name,opts,val,cls){return '<div class="seg '+(cls||'')+'" role="group" data-seg="'+name+'">'+opts.map(function(o){return '<button type="button" data-val="'+esc(o[0])+'" aria-pressed="'+(o[0]===val)+'"'+(o[0]===val?' class="on"':'')+'>'+esc(o[1])+'</button>'}).join('')+'</div>'}
-function segVal(name){var b=$('[data-seg="'+name+'"] .on',$('#dlg'));return b?b.dataset.val:null}
-function slotSelect(id,val,withOther){
-  var o='', found=false;
-  for(var m=START;m<END;m+=30){var v=hhmm(m); if(v===val)found=true; o+='<option value="'+v+'"'+(v===val?' selected':'')+'>'+show(m)+'</option>';}
-  if(val&&!found)o='<option value="'+val+'" selected>'+show(toMin(val))+'</option>'+o;
-  if(withOther)o+='<option value="otro">Otro horario…</option>';
+function segVal(name,root){var b=$('[data-seg="'+name+'"] .on',root||$('#dlg'));return b?b.dataset.val:null}
+function slotSelect(id,val){
+  var o='';
+  for(var m=START;m<END;m+=30){var v=hhmm(m); o+='<option value="'+v+'"'+(v===val?' selected':'')+'>'+show(m)+'</option>';}
   return '<select id="'+id+'">'+o+'</select>';
 }
 function endSelect(id,val){var o='';for(var m=START+30;m<=END;m+=30){var v=hhmm(m);o+='<option value="'+v+'"'+(v===val?' selected':'')+'>'+show(m)+'</option>'}return '<select id="'+id+'">'+o+'</select>'}
-function timeVal(selId,otherId){var s=$('#'+selId).value;if(s==='otro'){var v=$('#'+otherId).value;return v||null}return s}
+/* "Otra hora" pisa a la hora del desplegable cuando está completa */
+function timeVal(selId,otherId){var v=$('#'+otherId).value;return v||$('#'+selId).value}
+function whenFields(p,date,time){
+  var half=time&&toMin(time)%30===0, sel=half?time:hhmm(Math.floor(toMin(time||'09:00')/30)*30);
+  return '<div class="fields three">'+
+    '<label class="fld"><span>Fecha</span><input id="'+p+'Date" type="date" value="'+date+'"></label>'+
+    '<label class="fld"><span>Hora</span>'+slotSelect(p+'Time',sel)+'</label>'+
+    '<label class="fld"><span>Otra hora</span><input id="'+p+'Other" type="time" step="300" value="'+(half?'':(time||''))+'"></label></div>';
+}
 
 /* Nuevo turno / bloqueo */
 function openNuevo(di,time){
   var d=di||iso(ui.date), t=time||'09:00';
   openModal(head('Nuevo','Agenda de '+NUTRIS[ui.nutri])+
     '<div class="sec">'+seg('kind',[['turno','Turno'],['bloqueo','Bloqueo']],'turno')+'</div>'+
-    '<div class="sec" id="kTurno"><div class="fields">'+
-      '<label class="fld full"><span>Paciente</span><input id="nName" list="pacs" autocomplete="off" placeholder="Nombre y apellido" autofocus></label>'+datalist()+
-      '<label class="fld full"><span>Teléfono <em>(para el recordatorio)</em></span><input id="nPhone" inputmode="tel" placeholder="11 1234 5678"></label>'+
-      '<label class="fld"><span>Fecha</span><input id="nDate" type="date" value="'+d+'"></label>'+
-      '<label class="fld"><span>Hora</span>'+slotSelect('nTime',t,true)+'</label>'+
-      '<label class="fld" id="nOtherW" hidden><span>Hora exacta</span><input id="nOther" type="time" step="300"></label>'+
-    '</div><span class="lbl">Duración</span>'+seg('dur',[['30','30 min'],['60','60 min']],'30')+
+    '<div class="sec" id="kTurno"><div class="fields">'+pacField('nName',null)+'</div>'+
+      whenFields('n',d,t)+
+    '<span class="lbl">Duración</span>'+seg('dur',[['30','30 min'],['60','60 min']],'30')+
     '<span class="lbl">Tipo</span>'+seg('tipo',TIPOS,'')+
-    '<span class="lbl">Estado</span>'+seg('estado',[['c','Confirmado'],['p','A confirmar']],'c','estado')+
+    '<span class="lbl">Estado</span>'+seg('estado',[['p','A confirmar'],['c','Confirmado']],'p','estado')+
     '<p class="err" id="nErr" hidden></p></div>'+
-    '<div class="sec" id="kBloq" hidden><div class="fields">'+
-      '<label class="fld full"><span>Fecha</span><input id="bDate" type="date" value="'+d+'"></label>'+
-      '<label class="fld"><span>Desde</span>'+slotSelect('bFrom',t,false)+'</label>'+
-      '<label class="fld"><span>Hasta</span>'+endSelect('bTo',hhmm(Math.min(toMin(t)+60,END)))+'</label>'+
-      '<label class="fld full"><span>Nota <em>(opcional)</em></span><input id="bNota" placeholder="Ej: Congreso, feriado…"></label>'+
-    '</div><p class="err" id="bErr" hidden></p></div>'+
+    '<div class="sec" id="kBloq" hidden>'+bloqFields(null,d,t)+'<p class="err" id="bErr" hidden></p></div>'+
     '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveNuevo">Guardar</button></div></div>');
+}
+function bloqFields(b,d,t){
+  return '<div class="fields">'+
+    '<label class="fld full"><span>Detalle <em>(opcional)</em></span><input id="bNota" placeholder="Ej: Congreso, feriado…" value="'+esc(b?b.nota:'')+'"></label>'+
+    '<label class="fld full"><span>Fecha</span><input id="bDate" type="date" value="'+(b?b.date:d)+'"></label>'+
+    '<label class="fld"><span>Desde</span>'+slotSelect('bFrom',b?b.from:t)+'</label>'+
+    '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b?b.to:hhmm(Math.min(toMin(t)+60,END)))+'</label></div>';
+}
+function readBloq(){
+  var a=$('#bFrom').value, z=$('#bTo').value, err=$('#bErr');
+  if(!$('#bDate').value){err.textContent='Elegí la fecha.';err.hidden=false;return null}
+  if(toMin(z)<=toMin(a)){err.textContent='El horario "hasta" tiene que ser después de "desde".';err.hidden=false;return null}
+  return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim()};
 }
 function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
-    var a=$('#bFrom').value, z=$('#bTo').value, err=$('#bErr');
-    if(toMin(z)<=toMin(a)){err.textContent='El horario "hasta" tiene que ser después de "desde".';err.hidden=false;return}
-    if(!$('#bDate').value){err.textContent='Elegí la fecha.';err.hidden=false;return}
-    data.bloqueos.push({id:uid(),nutri:ui.nutri,date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim()});
-    save();closeModal();goTo($('#bDate').value);return;
+    var b=readBloq(); if(!b)return;
+    b.id=uid(); b.nutri=ui.nutri; data.bloqueos.push(b);
+    save();closeModal();goTo(b.date);return;
   }
-  var name=$('#nName').value.trim(), e=$('#nErr'), time=timeVal('nTime','nOther'), date=$('#nDate').value;
-  if(!name){e.textContent='Escribí el nombre del paciente.';e.hidden=false;return}
+  var pid=pidOf('nName'), e=$('#nErr'), time=timeVal('nTime','nOther'), date=$('#nDate').value;
+  if(!pid){e.textContent='Elegí un paciente de la lista, o cargalo con el botón +.';e.hidden=false;return}
   if(!date){e.textContent='Elegí la fecha.';e.hidden=false;return}
   if(!time){e.textContent='Elegí la hora.';e.hidden=false;return}
-  var p=upsertPaciente(name,$('#nPhone').value,ui.nutri);
-  data.turnos.push({id:uid(),nutri:ui.nutri,date:date,time:time,dur:+segVal('dur'),name:p.name,tipo:segVal('tipo')||'',estado:segVal('estado')});
+  var p=findPac(pid);
+  data.turnos.push({id:uid(),nutri:ui.nutri,date:date,time:time,dur:+segVal('dur'),name:p.name,pid:p.id,tipo:segVal('tipo')||'',estado:segVal('estado')});
   save();closeModal();goTo(date);
 }
 function goTo(di){var d=parse(di);if(d.getDay()!==0&&d.getDay()!==6)ui.date=d;render()}
@@ -517,7 +578,7 @@ function goTo(di){var d=parse(di);if(d.getDay()!==0&&d.getDay()!==6)ui.date=d;re
 /* Detalle de turno */
 function openTurno(id,editPago){
   var t=findT(id); if(!t)return;
-  var d=parse(t.date), a=toMin(t.time), pg=pagoDe(t.id), p=paciente(t.name), link=waLink(t);
+  var d=parse(t.date), a=toMin(t.time), pg=pagoDe(t.id), p=pacDe(t), link=waLink(t);
   var sub=largo(d)+' · '+show(a)+' – '+show(a+t.dur)+(t.tipo?' · '+t.tipo:'');
   var html=head(esc(t.name),esc(cap(sub)));
   html+='<div class="sec"><span class="lbl">Estado del turno</span>'+seg('estadoT',[['c','Confirmado'],['p','A confirmar'],['x','Cancelado']],t.estado,'estado');
@@ -529,13 +590,9 @@ function openTurno(id,editPago){
     html+='<div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio)+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div>';
   } else html+=pagoFields(pg,false)+'<button type="button" class="btn big primary" data-act="savePagoT" data-id="'+t.id+'">'+(pg?'Guardar cambios del pago':'Guardar pago')+'</button>'+(pg?'<button type="button" class="danger" data-act="delPagoT" data-id="'+t.id+'">Quitar pago</button>':'');
   html+='</div>';
-  html+='<div class="sec"><details class="edit"><summary>Editar datos del turno</summary><div class="fields">'+
-    '<label class="fld full"><span>Paciente</span><input id="eName" list="pacs" value="'+esc(t.name)+'"></label>'+datalist()+
-    '<label class="fld full"><span>Teléfono</span><input id="ePhone" inputmode="tel" value="'+esc(p?p.phone:'')+'"></label>'+
-    '<label class="fld"><span>Fecha</span><input id="eDate" type="date" value="'+t.date+'"></label>'+
-    '<label class="fld"><span>Hora</span>'+slotSelect('eTime',t.time,true)+'</label>'+
-    '<label class="fld" id="eOtherW" hidden><span>Hora exacta</span><input id="eOther" type="time" step="300"></label>'+
-    '</div><span class="lbl" style="display:block;margin:12px 0 8px">Duración</span>'+seg('eDur',[['30','30 min'],['60','60 min']],String(t.dur))+
+  html+='<div class="sec"><details class="edit"><summary>Editar datos del turno</summary><div class="fields">'+pacField('eName',p?p.id:null)+'</div>'+
+    '<div style="margin-top:12px">'+whenFields('e',t.date,t.time)+'</div>'+
+    '<span class="lbl" style="display:block;margin:12px 0 8px">Duración</span>'+seg('eDur',[['30','30 min'],['60','60 min']],String(t.dur))+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Tipo</span>'+seg('eTipo',TIPOS,t.tipo||'')+
     '<div style="margin-top:12px"><button type="button" class="btn big" data-act="saveEdit" data-id="'+t.id+'">Guardar cambios</button></div></details></div>';
   html+='<div class="df"><button type="button" class="danger" data-act="delTurno" data-id="'+t.id+'">Borrar turno</button><div class="r"><button type="button" class="btn big" data-act="close">Cerrar</button></div></div>';
@@ -543,7 +600,7 @@ function openTurno(id,editPago){
 }
 function pagoFields(pg,withName){
   return '<div class="fields">'+
-    (withName?'<label class="fld full"><span>Paciente</span><input id="pName" list="pacs" autocomplete="off" value="'+esc(pg?pg.name:'')+'" autofocus></label>'+datalist():'')+
+    (withName?pacField('pName',pg?(pg.pid||(paciente(pg.name)||{}).id):null):'')+
     '<label class="fld"><span>Fecha de pago</span><input id="pDate" type="date" value="'+(pg?pg.date:iso(today()))+'"></label>'+
     '<label class="fld"><span>Monto</span><input id="pMonto" inputmode="numeric" placeholder="$" value="'+(pg?Number(pg.monto).toLocaleString('es-AR'):'')+'"></label></div>'+
     '<span class="lbl">Medio de pago</span>'+seg('medio',MEDIOS.map(function(m){return [m,m]}),pg?pg.medio:null)+
@@ -570,12 +627,7 @@ function openPago(id){
 function openBloq(id){
   var b=findB(id); if(!b)return;
   openModal(head('Bloqueado',esc(cap(largo(parse(b.date))))+' · '+show(toMin(b.from))+' – '+show(toMin(b.to)))+
-    '<div class="sec"><div class="fields">'+
-      '<label class="fld full"><span>Fecha</span><input id="bDate" type="date" value="'+b.date+'"></label>'+
-      '<label class="fld"><span>Desde</span>'+slotSelect('bFrom',b.from,false)+'</label>'+
-      '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b.to)+'</label>'+
-      '<label class="fld full"><span>Nota <em>(opcional)</em></span><input id="bNota" value="'+esc(b.nota)+'"></label>'+
-    '</div><p class="err" id="bErr" hidden></p></div>'+
+    '<div class="sec">'+bloqFields(b)+'<p class="err" id="bErr" hidden></p></div>'+
     '<div class="df"><button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar bloqueo</button><div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveBloq" data-id="'+b.id+'">Guardar</button></div></div>');
 }
 
@@ -599,6 +651,9 @@ document.addEventListener('click',function(ev){
     if(name==='estadoT'){var t=findT($('[data-act="delTurno"]').dataset.id);if(t){t.estado=segBtn.dataset.val;save();render()}}
     return;
   }
+  var pick=el.closest('[data-pick]'); if(pick){pickPac(pick.dataset.for,pick.dataset.pick);return}
+  if(!el.closest('.combo'))closeOpts();
+  if(el===$('#overlay2')){$('#overlay2').hidden=true;return}
   if(el===$('#overlay')){closeModal();return}
   var tb=el.closest('[data-turno]'); if(tb){openTurno(tb.dataset.turno);return}
   var bb=el.closest('[data-blk]'); if(bb){openBloq(bb.dataset.blk);return}
@@ -623,7 +678,10 @@ document.addEventListener('click',function(ev){
     case 'nuevoPago': openPago(null); break;
     case 'close': closeModal(); break;
     case 'saveNuevo': saveNuevo(); break;
-    case 'savePhone': t2=findT(id); var ph=$('#tPhone').value.trim(); if(t2&&ph){upsertPaciente(t2.name,ph,t2.nutri);save();openTurno(id)} break;
+    case 'savePhone': t2=findT(id); var ph=$('#tPhone').value.trim(), pp0=t2&&pacDe(t2); if(pp0&&ph){pp0.phone=ph;save();openTurno(id)} break;
+    case 'newPac': openPacForm(a.dataset.for); break;
+    case 'savePac': savePac(a.dataset.for); break;
+    case 'close2': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; break;
     case 'editPago': openTurno(id,true); break;
     case 'savePagoT':
       t2=findT(id); r=readPago(); if(!t2||!r)break;
@@ -634,28 +692,28 @@ document.addEventListener('click',function(ev){
     case 'delPagoT': if(!sure(a))break; pg=pagoDe(id); data.pagos=data.pagos.filter(function(x){return x!==pg}); save(); render(); openTurno(id); break;
     case 'saveEdit':
       t2=findT(id); if(!t2)break;
-      var nn=$('#eName').value.trim(), tm=timeVal('eTime','eOther'), dt=$('#eDate').value;
-      if(!nn||!tm||!dt)break;
-      var pp=upsertPaciente(nn,$('#ePhone').value,t2.nutri);
-      t2.name=pp.name; t2.date=dt; t2.time=tm; t2.dur=+segVal('eDur'); t2.tipo=segVal('eTipo')||'';
+      var epid=pidOf('eName'), tm=timeVal('eTime','eOther'), dt=$('#eDate').value;
+      if(!epid||!tm||!dt){var ee=$('#eName');ee.focus();ee.setCustomValidity&&ee.setCustomValidity('Elegí un paciente de la lista');ee.reportValidity&&ee.reportValidity();break}
+      var pp=findPac(epid);
+      t2.name=pp.name; t2.pid=pp.id; t2.date=dt; t2.time=tm; t2.dur=+segVal('eDur'); t2.tipo=segVal('eTipo')||'';
       pg=pagoDe(t2.id); if(pg)pg.name=t2.name;
       save(); goTo(dt); openTurno(id); break;
     case 'delTurno': if(!sure(a))break; data.turnos=data.turnos.filter(function(x){return x.id!==id}); data.pagos.forEach(function(x){if(x.turnoId===id)x.turnoId=null}); save(); closeModal(); render(); break;
     case 'savePago':
-      var nm2=$('#pName').value.trim(); r=readPago();
-      if(!nm2){$('#pErr').textContent='Escribí el nombre del paciente.';$('#pErr').hidden=false;break}
-      if(!r)break;
-      var p3=upsertPaciente(nm2,'',ui.nutri);
+      var ppid=pidOf('pName');
+      if(!ppid){$('#pErr').textContent='Elegí un paciente de la lista, o cargalo con el botón +.';$('#pErr').hidden=false;break}
+      r=readPago(); if(!r)break;
+      var p3=findPac(ppid);
       pg=id?findP(id):null;
-      if(pg){pg.name=p3.name;pg.monto=r.monto;pg.medio=r.medio;pg.date=r.date;pg.fact=$('#pFact').checked}
-      else data.pagos.push({id:uid(),nutri:ui.nutri,turnoId:null,name:p3.name,date:r.date,monto:r.monto,medio:r.medio,fact:$('#pFact').checked});
+      if(pg){pg.name=p3.name;pg.pid=p3.id;pg.monto=r.monto;pg.medio=r.medio;pg.date=r.date;pg.fact=$('#pFact').checked}
+      else data.pagos.push({id:uid(),nutri:ui.nutri,turnoId:null,pid:p3.id,name:p3.name,date:r.date,monto:r.monto,medio:r.medio,fact:$('#pFact').checked});
       var pd=parse(r.date); ui.month=new Date(pd.getFullYear(),pd.getMonth(),1);
       save(); closeModal(); render(); break;
     case 'delPago': if(!sure(a))break; data.pagos=data.pagos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
     case 'saveBloq':
       b2=findB(id); if(!b2)break;
-      if(toMin($('#bTo').value)<=toMin($('#bFrom').value)){$('#bErr').textContent='El horario "hasta" tiene que ser después de "desde".';$('#bErr').hidden=false;break}
-      b2.date=$('#bDate').value;b2.from=$('#bFrom').value;b2.to=$('#bTo').value;b2.nota=$('#bNota').value.trim();
+      var rb=readBloq(); if(!rb)break;
+      b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;
       save(); closeModal(); goTo(b2.date); break;
     case 'delBloq': if(!sure(a))break; data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
     case 'reset': if(!sure(a))break; data=seed(); render(); break;
@@ -666,11 +724,20 @@ function prevWeekday(d){var x=addDays(d,-1);while(x.getDay()===0||x.getDay()===6
 document.addEventListener('change',function(ev){
   var el=ev.target;
   if(el.dataset&&el.dataset.fact){var p=findP(el.dataset.fact);if(p){p.fact=el.checked;save();render()}return}
-  if(el.id==='nTime'){$('#nOtherW').hidden=el.value!=='otro'}
-  if(el.id==='eTime'){$('#eOtherW').hidden=el.value!=='otro'}
-  if(el.id==='nName'){var p2=paciente(el.value);if(p2&&p2.phone&&!$('#nPhone').value)$('#nPhone').value=p2.phone}
+  if(el.id==='nTime')$('#nOther').value='';
+  if(el.id==='eTime')$('#eOther').value='';
 });
-document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!$('#overlay').hidden)closeModal()});
+document.addEventListener('input',function(ev){
+  var el=ev.target;
+  if(el.classList&&el.classList.contains('pacin')){el.dataset.pid='';el.classList.remove('ok');if(el.setCustomValidity)el.setCustomValidity('');pacOptions(el)}
+});
+document.addEventListener('focusin',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('pacin')&&!el.dataset.pid)pacOptions(el)});
+document.addEventListener('keydown',function(ev){
+  if(ev.key!=='Escape')return;
+  if($$('.opts').some(function(l){return !l.hidden})){closeOpts();return}
+  if(!$('#overlay2').hidden){$('#overlay2').hidden=true;return}
+  if(!$('#overlay').hidden)closeModal();
+});
 var mq=window.matchMedia('(max-width:760px)');
 if(mq.addEventListener)mq.addEventListener('change',render);else if(mq.addListener)mq.addListener(render);
 setInterval(function(){if(ui.view==='agenda'&&$('#overlay').hidden)render()},60000);
