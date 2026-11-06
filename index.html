@@ -119,6 +119,11 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .ck input{width:18px;height:18px;accent-color:var(--ink);cursor:pointer;margin:0}
 .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px}
 .foot{font-size:12px;color:var(--muted);text-align:center;padding-top:6px}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.lbox{width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 26px;display:flex;flex-direction:column;gap:14px}
+.lbox img{width:180px;height:auto;align-self:center}
+.lsub{margin:0 0 4px;text-align:center;color:var(--muted);font-size:13.5px}
+.lforgot{border:0;background:none;color:var(--muted);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:4px}
 .foot button{border:0;background:none;color:#2F5D3A;text-decoration:underline;cursor:pointer;font-size:12px;padding:4px}
 
 /* Modal */
@@ -336,7 +341,18 @@ details.edit[open] summary{margin-bottom:12px}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="login" id="login" hidden>
+  <form class="lbox" id="lForm" novalidate>
+    <img src="logo.png" alt="Lado B Nutrición" width="295" height="137">
+    <p class="lsub">Ingresá con tu usuario</p>
+    <label class="fld"><span>Mail</span><input id="lMail" type="email" autocomplete="username" required></label>
+    <label class="fld"><span>Contraseña</span><input id="lPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="lErr" hidden></p>
+    <button type="submit" class="btn primary big" id="lBtn">Entrar</button>
+    <button type="button" class="lforgot" data-act="forgot">Me olvidé la contraseña</button>
+  </form>
+</div>
+<div class="app" hidden>
   <header class="top">
     <nav class="nav" aria-label="Secciones">
       <button type="button" data-act="view" data-view="agenda">Agenda</button>
@@ -351,11 +367,14 @@ details.edit[open] summary{margin-bottom:12px}
   </header>
   <div class="row2" id="row2"></div>
   <main id="main"></main>
-  <p class="foot">Versión de prueba: los datos son de ejemplo y se guardan solo en este navegador. <button type="button" data-act="reset">Restablecer ejemplo</button></p>
+  <p class="foot">Sesión: <span id="who"></span> · <button type="button" data-act="logout">Salir</button></p>
 </div>
 <div class="overlay" id="overlay" hidden><div class="dlg" id="dlg" role="dialog" aria-modal="true"></div></div>
 <div class="overlay" id="overlay2" hidden><div class="dlg" id="dlg2" role="dialog" aria-modal="true"></div></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
 'use strict';
@@ -367,7 +386,8 @@ var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','se
 var MEDIOS=['Efectivo','Mercado Pago','Tarjeta'];
 var MEDIO_CLS={'Efectivo':'ef','Mercado Pago':'mp','Tarjeta':'tj'};
 var TIPOS=[['','Consulta'],['InBody','InBody'],['Virtual','Virtual']];
-var KEY='ladob_data_v2', UIKEY='ladob_ui_v1';
+var UIKEY='ladob_ui_v1';
+try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
   prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -404,64 +424,59 @@ function norm(s){return String(s||'').trim().toLowerCase().normalize('NFD').repl
 /* ---------- datos ---------- */
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function read(k){try{var s=localStorage.getItem(k);return s?JSON.parse(s):null}catch(e){return null}}
-var data=read(KEY)||seed();
-function save(){store(KEY,data)}
-
-function seed(){
-  var d={turnos:[],bloqueos:[],pagos:[],pacientes:[]};
-  var names={
-    fran:['Lucía Fernández','Martina Gómez Álvarez','Sofía Romero','Valentina Ruiz Díaz','Camila Herrera','Julieta Benítez Paredes','Agustina Molina','Florencia Castro Villalba','Tomás Acosta','Joaquín Medina','Paula Ortiz','Carolina Ramírez Etcheverry','Micaela Suárez','Rocío Giménez','Natalia Domínguez Ferreyra','Emilia Vázquez','Martín Sosa','Lorena Aguirre','Bianca Peralta','María Eugenia Salvatierra Quiroga','Ignacio Funes','Abril Cabrera','Delfina Rojas','Santiago Ledesma','Pilar Navarro Bustamante'],
-    car:['Ana Laura Sánchez','Gabriela Torres','Mariana Silva Correa','Victoria Pereyra','Constanza Ríos','Bárbara Luna','Guadalupe Méndez Arriola','Josefina Blanco','Renata Ibáñez','Federico Paz','Lucas Morales','Daniela Ferrari','Antonella Vega','Celeste Quiroga Lamas','Carla Ponce','Belén Godoy','Melina Rivas','Olivia Campos','Juana Echeverría','María José Villalba Ortega','Clara Benedetti','Milagros Arce','Tamara Sosa','Lara Gutiérrez Pinto','Diego Castillo']
-  };
-  var plan={
-    fran:[
-      [['15:00',30,'','x'],['15:30',30,'InBody','c'],['16:00',30,'','c'],['16:30',30,'Virtual','c'],['17:30',30,'','c'],['18:00',30,'','p'],['18:30',30,'','c'],['19:00',60,'','c']],
-      [['15:00',30,'','c'],['15:30',30,'','c'],['16:00',30,'','c'],['17:00',30,'','c'],['17:30',30,'InBody','c'],['18:00',30,'','c'],['18:30',30,'','x']],
-      [['15:00',30,'','x'],['16:00',30,'','c'],['16:30',30,'','c'],['17:00',30,'','c'],['18:00',30,'','c'],['18:30',30,'','c'],['19:00',30,'','c'],['19:30',30,'','p']],
-      [['9:00',30,'','c'],['9:30',30,'','c'],['10:00',60,'','c'],['11:00',30,'','c'],['12:00',30,'InBody','c'],['12:30',30,'','c'],['13:00',30,'','c'],['14:00',30,'','c'],['14:30',30,'','x'],['15:30',30,'','p']],
-      [['9:00',30,'','c'],['9:30',30,'','c'],['10:00',30,'InBody','c'],['10:30',30,'','c'],['11:00',30,'InBody','c'],['11:30',30,'','c'],['12:00',30,'','c']]
-    ],
-    car:[
-      [['13:00',30,'','c'],['13:30',30,'','c'],['14:00',30,'InBody','c'],['15:00',60,'','c'],['16:00',30,'','x'],['16:30',30,'','c']],
-      [['9:00',30,'','c'],['9:30',30,'','p'],['10:00',30,'','c'],['10:30',30,'InBody','c'],['11:30',30,'','c'],['12:00',30,'','c']],
-      [['9:30',30,'','c'],['10:00',30,'','c'],['10:30',30,'','x'],['11:00',30,'','c'],['12:00',30,'Virtual','c'],['12:30',30,'','c']],
-      [['16:00',30,'','c'],['16:30',30,'','c'],['17:00',30,'InBody','c'],['17:30',30,'','c'],['18:00',30,'','p'],['18:30',30,'','c'],['19:00',30,'','c']],
-      [['9:00',30,'','c'],['9:30',30,'','c'],['10:00',30,'','c'],['11:00',60,'','c']]
-    ]
-  };
-  var bloq={fran:[[0,'17:00','17:30',''],[3,'10:30','11:00',''],[4,'12:30','20:00','Congreso']],car:[[0,'8:00','12:00','Curso'],[2,'14:00','17:00','']]};
-  var now=new Date(), base=monday(weekday(today()));
-  ['fran','car'].forEach(function(n){
-    var pacs={};
-    names[n].forEach(function(nm,i){
-      var parts=nm.split(' '), nom=parts[0], ape=parts.slice(1).join(' ');
-      if(parts.length>3||(parts[0]==='María'&&parts.length>2)){nom=parts.slice(0,2).join(' ');ape=parts.slice(2).join(' ')}
-      var p={id:uid()+n+i,nombre:nom,apellido:ape,name:nm,phone:'11 5'+pad(10+i)+' '+(4000+i*137)%10000,llegada:LLEGADAS[i%4],notas:'',nutri:n};
-      pacs[nm]=p; d.pacientes.push(p);
-    });
-    var k=0;
-    [-1,0,1].forEach(function(w){
-      for(var wd=0;wd<5;wd++){
-        var day=addDays(base,w*7+wd), di=iso(day);
-        plan[n][wd].forEach(function(r,j){
-          if(w===1&&j%2===1)return;
-          var nm=names[n][(k*7+wd)%names[n].length]; k++;
-          var est=r[3]; if(w===1)est=(j%4===0?'c':'p');
-          var t={id:uid()+k,nutri:n,date:di,time:hhmm(toMin(r[0])),dur:r[1],name:nm,pid:pacs[nm].id,tipo:r[2],estado:est};
-          d.turnos.push(t);
-          var when=new Date(day.getFullYear(),day.getMonth(),day.getDate(),0,toMin(r[0]));
-          if(est==='c'&&when<now&&k%7!==3){
-            var monto=r[2]==='InBody'?30000:(r[1]===60?60000:[40000,45000,45000][k%3]);
-            d.pagos.push({id:uid()+'p'+k,nutri:n,turnoId:t.id,pid:t.pid,name:nm,date:di,monto:monto,medio:MEDIOS[[1,1,0,1,2,1][k%6]],fact:k%5===0});
-          }
-        });
-        bloq[n].forEach(function(b){ if(b[0]===wd&&w>=0) d.bloqueos.push({id:uid()+'b'+wd+w,nutri:n,date:di,from:hhmm(toMin(b[1])),to:hhmm(toMin(b[2])),nota:b[3]}); });
-      }
-    });
+var data={turnos:[],bloqueos:[],pagos:[],pacientes:[]};
+/* ---------- Firebase ---------- */
+var FB_CONFIG={apiKey:"AIzaSyAK5JhG3yBIbuqMMr8SeZbhq7RZlXxWFmI",authDomain:"ladob-consultorio.firebaseapp.com",projectId:"ladob-consultorio",storageBucket:"ladob-consultorio.firebasestorage.app",messagingSenderId:"639263803246",appId:"1:639263803246:web:d297f0d993932888ff637f"};
+firebase.initializeApp(FB_CONFIG);
+var auth=firebase.auth(), db=firebase.firestore();
+var COLS=['pacientes','turnos','bloqueos','pagos'], synced={}, loaded={}, unsubs=[], staff=null, pendingRender=false;
+COLS.forEach(function(c){synced[c]={}});
+function clean(o){return JSON.parse(JSON.stringify(o))}
+/* Guarda en Firestore solo lo que cambió respecto de lo último sincronizado */
+function save(){
+  if(!staff)return;
+  var batch=db.batch(), n=0;
+  COLS.forEach(function(c){
+    var seen={};
+    data[c].forEach(function(o){seen[o.id]=1;var j=JSON.stringify(o);if(synced[c][o.id]!==j){synced[c][o.id]=j;batch.set(db.collection(c).doc(o.id),clean(o));n++}});
+    Object.keys(synced[c]).forEach(function(id){if(!seen[id]){delete synced[c][id];batch.delete(db.collection(c).doc(id));n++}});
   });
-  store(KEY,d);
-  return d;
+  if(n)batch.commit().catch(function(e){toast('No se pudo guardar. Revisá la conexión e intentá de nuevo.');console.error(e)});
 }
+function busy(){
+  if(!$('#overlay').hidden||!$('#overlay2').hidden)return true;
+  var a=document.activeElement;
+  return ui.view==='ficha'&&a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA/.test(a.tagName);
+}
+function scheduleRender(){if(!COLS.every(function(c){return loaded[c]}))return;if(busy()){pendingRender=true;return}pendingRender=false;render()}
+function listen(){
+  unsubs.forEach(function(u){u()});unsubs=[];
+  COLS.forEach(function(c){
+    unsubs.push(db.collection(c).onSnapshot(function(snap){
+      data[c]=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
+      synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
+      loaded[c]=true; scheduleRender();
+    },function(e){console.error(e);showLogin('No se pudieron leer los datos. Puede que tu usuario no tenga permiso.')}));
+  });
+}
+function showLogin(msg){
+  $('#login').hidden=false;$('.app').hidden=true;
+  var e=$('#lErr');e.textContent=msg||'';e.hidden=!msg;
+  var b=$('#lBtn');b.disabled=false;b.textContent='Entrar';
+}
+auth.onAuthStateChanged(function(u){
+  if(!u){staff=null;unsubs.forEach(function(x){x()});unsubs=[];showLogin();return}
+  var email=(u.email||'').toLowerCase();
+  db.collection('staff').doc(email).get().then(function(d){
+    if(!d.exists){auth.signOut();showLogin('Tu usuario ('+email+') todavía no tiene acceso. Pedile a Fede que lo habilite.');return}
+    staff=d.data();staff.email=email;
+    if(staff.nutri==='fran'||staff.nutri==='car')ui.nutri=staff.nutri;
+    $('#who').textContent=(staff.nombre||email);
+    $('#login').hidden=true;$('.app').hidden=false;
+    listen();
+  }).catch(function(e){console.error(e);auth.signOut();showLogin('Tu usuario no tiene acceso a la base. Pedile a Fede que lo habilite.')});
+});
+
 
 /* ---------- estado de pantalla ---------- */
 var ui=(function(){
@@ -742,7 +757,7 @@ function openModal(html){
   document.body.style.overflow='hidden';
   var f=$('#dlg [autofocus]')||$("#dlg .xbtn"); if(f&&!isMobile())f.focus();
 }
-function closeModal(){$('#overlay').hidden=true;$('#dlg').innerHTML='';document.body.style.overflow='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
+function closeModal(){$('#overlay').hidden=true;$('#dlg').innerHTML='';document.body.style.overflow='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}if(pendingRender)scheduleRender()}
 function head(title,sub,act){return '<div class="dh"><div><h2>'+title+'</h2>'+(sub?'<p>'+sub+'</p>':'')+'</div><button type="button" class="xbtn" data-act="'+(act||'close')+'" aria-label="Cerrar">'+ICON.close+'</button></div>'}
 function seg(name,opts,val,cls){return '<div class="seg '+(cls||'')+'" role="group" data-seg="'+name+'">'+opts.map(function(o){return '<button type="button" data-val="'+esc(o[0])+'" aria-pressed="'+(o[0]===val)+'"'+(o[0]===val?' class="on"':'')+'>'+esc(o[1])+'</button>'}).join('')+'</div>'}
 function segVal(name,root){var b=$('[data-seg="'+name+'"] .on',root||$('#dlg'));return b?b.dataset.val:null}
@@ -956,7 +971,9 @@ document.addEventListener('click',function(ev){
       b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;
       save(); closeModal(); goTo(b2.date); break;
     case 'delBloq': if(!sure(a))break; data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
-    case 'reset': if(!sure(a))break; data=seed(); render(); break;
+    case 'logout': auth.signOut(); break;
+    case 'forgot': var fm=$('#lMail').value.trim(); if(!fm){$('#lErr').textContent='Escribí tu mail arriba y tocá de nuevo.';$('#lErr').hidden=false;break}
+      auth.sendPasswordResetEmail(fm).then(function(){$('#lErr').textContent='Te mandamos un mail para cambiar la contraseña.';$('#lErr').hidden=false}).catch(function(){$('#lErr').textContent='No se pudo enviar el mail. Revisá que esté bien escrito.';$('#lErr').hidden=false}); break;
   }
 });
 function prevWeekday(d){var x=addDays(d,-1);while(x.getDay()===0||x.getDay()===6)x=addDays(x,-1);return x}
@@ -983,9 +1000,19 @@ document.addEventListener('keydown',function(ev){
 });
 var mq=window.matchMedia('(max-width:760px)');
 if(mq.addEventListener)mq.addEventListener('change',render);else if(mq.addListener)mq.addListener(render);
-setInterval(function(){if(ui.view==='agenda'&&$('#overlay').hidden)render()},60000);
+setInterval(function(){if(staff&&ui.view==='agenda'&&!busy())render()},60000);
 
-render();
+document.addEventListener('submit',function(ev){
+  if(ev.target.id!=='lForm')return; ev.preventDefault();
+  var m=$('#lMail').value.trim(), p=$('#lPass').value, b=$('#lBtn'), e=$('#lErr');
+  if(!m||!p){e.textContent='Completá mail y contraseña.';e.hidden=false;return}
+  b.disabled=true;b.textContent='Entrando…';e.hidden=true;
+  auth.signInWithEmailAndPassword(m,p).catch(function(err){
+    var c=err.code||'';
+    showLogin(/wrong-password|invalid-credential|user-not-found|invalid-email|invalid-login/.test(c)?'Mail o contraseña incorrectos.':c==='auth/too-many-requests'?'Demasiados intentos. Esperá unos minutos.':'No se pudo ingresar. Revisá la conexión.');
+  });
+});
+document.addEventListener('focusout',function(){setTimeout(function(){if(pendingRender&&!busy())scheduleRender()},0)});
 })();
 </script>
 </body>
