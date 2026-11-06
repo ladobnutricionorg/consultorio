@@ -452,6 +452,7 @@ var data={turnos:[],bloqueos:[],pagos:[],pacientes:[]};
 var FB_CONFIG={apiKey:"AIzaSyAK5JhG3yBIbuqMMr8SeZbhq7RZlXxWFmI",authDomain:"ladob-consultorio.firebaseapp.com",projectId:"ladob-consultorio",storageBucket:"ladob-consultorio.firebasestorage.app",messagingSenderId:"639263803246",appId:"1:639263803246:web:d297f0d993932888ff637f"};
 firebase.initializeApp(FB_CONFIG);
 var auth=firebase.auth(), db=firebase.firestore();
+try{db.enablePersistence({synchronizeTabs:true}).catch(function(){})}catch(e){}
 var COLS=['pacientes','turnos','bloqueos','pagos'], synced={}, loaded={}, unsubs=[], staff=null, pendingRender=false;
 COLS.forEach(function(c){synced[c]={}});
 function clean(o){return JSON.parse(JSON.stringify(o))}
@@ -471,16 +472,39 @@ function busy(){
   var a=document.activeElement;
   return a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=='checkbox';
 }
-function scheduleRender(){if(!COLS.every(function(c){return loaded[c]}))return;if(busy()){pendingRender=true;return}pendingRender=false;render()}
+function scheduleRender(){if(!COLS.every(function(c){return loaded[c]}))return;if(!$('.app')||$('.app').hidden)return;if(busy()){pendingRender=true;return}pendingRender=false;render()}
+/* Lecturas acotadas: pacientes completos; turnos, bloqueos y pagos solo del rango que se está mirando */
+var rng={};
+function sub(c,q,key){
+  if(rng[c]&&rng[c].key===key)return;
+  if(rng[c]&&rng[c].un)rng[c].un();
+  rng[c]={key:key,un:q.onSnapshot(function(snap){
+    data[c]=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
+    synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
+    loaded[c]=true; scheduleRender();
+  },function(e){console.error(e);toast('No se pudieron leer los datos. Revisá la conexión.')})};
+}
+function ensureRanges(){
+  if(!staff)return;
+  var ws=monday(ui.date), from=iso(addDays(ws,-21)), to=iso(addDays(ws,34));
+  var cur=rng.turnos&&rng.turnos.key.split('|');
+  if(!cur||ui.view==='agenda'&&(iso(ws)<iso(addDays(parse(cur[0]),7))||iso(addDays(ws,6))>iso(addDays(parse(cur[1]),-7)))){
+    sub('turnos',db.collection('turnos').where('date','>=',from).where('date','<=',to),from+'|'+to);
+    sub('bloqueos',db.collection('bloqueos').where('date','>=',from).where('date','<=',to),from+'|'+to);
+  }
+  var tk=rng.turnos.key.split('|'), ms=iso(ui.month), me=iso(new Date(ui.month.getFullYear(),ui.month.getMonth()+1,0));
+  var pf=ui.view==='pagos'?ms:tk[0], pt=ui.view==='pagos'?me:tk[1];
+  sub('pagos',db.collection('pagos').where('date','>=',pf).where('date','<=',pt),pf+'|'+pt);
+}
 function listen(){
-  unsubs.forEach(function(u){u()});unsubs=[];
-  COLS.forEach(function(c){
-    unsubs.push(db.collection(c).onSnapshot(function(snap){
-      data[c]=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
-      synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
-      loaded[c]=true; scheduleRender();
-    },function(e){console.error(e);showLogin('No se pudieron leer los datos. Puede que tu usuario no tenga permiso.')}));
-  });
+  Object.keys(rng).forEach(function(c){if(rng[c].un)rng[c].un()});rng={};
+  if(unsubs.length){unsubs.forEach(function(u){u()});unsubs=[]}
+  unsubs.push(db.collection('pacientes').onSnapshot(function(snap){
+    data.pacientes=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
+    synced.pacientes={};data.pacientes.forEach(function(o){synced.pacientes[o.id]=JSON.stringify(o)});
+    loaded.pacientes=true; scheduleRender();
+  },function(e){console.error(e);showLogin('No se pudieron leer los datos. Puede que tu usuario no tenga permiso.')}));
+  ensureRanges();
 }
 function showLogin(msg){
   $('#login').hidden=false;$('.app').hidden=true;
@@ -488,7 +512,7 @@ function showLogin(msg){
   var b=$('#lBtn');b.disabled=false;b.textContent='Entrar';
 }
 auth.onAuthStateChanged(function(u){
-  if(!u){staff=null;unsubs.forEach(function(x){x()});unsubs=[];showLogin();return}
+  if(!u){staff=null;unsubs.forEach(function(x){x()});unsubs=[];Object.keys(rng).forEach(function(c){if(rng[c].un)rng[c].un()});rng={};showLogin();return}
   var email=(u.email||'').toLowerCase();
   db.collection('staff').doc(email).get().then(function(d){
     if(!d.exists){auth.signOut();showLogin('Tu usuario ('+email+') todavía no tiene acceso. Pedile a Fede que lo habilite.');return}
@@ -588,7 +612,8 @@ function edad(nac){if(!nac)return null;var b=parse(nac),t=today(),e=t.getFullYea
 function initials(p){return ((p.nombre||'')[0]||'')+((p.apellido||'')[0]||'')}
 function renderFicha(){
   var p=findPac(ui.fichaId), f=p.ficha||{}, mo=f.motivo||{}, td=iso(today());
-  var ts=data.turnos.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
+  var seenT={}, srcT=(ui.fichaTs||[]).concat(data.turnos).filter(function(t){if(seenT[t.id])return false;seenT[t.id]=1;return true});
+  var ts=srcT.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
   var first=ts[0], next=ts.filter(function(t){return t.date>=td})[0], ed=edad(f.nac);
   var wa=p.phone?('https://wa.me/'+(function(n){n=n.replace(/\D/g,'');if(n.indexOf('54')!==0){if(n[0]==='0')n=n.slice(1);n='549'+n}return n})(p.phone)):null;
   $('#row2').innerHTML='';
@@ -734,6 +759,7 @@ function waLink(t){
 
 /* ---------- render ---------- */
 function render(){
+  ensureRanges();
   var nv=ui.view==='ficha'?'pacientes':ui.view;
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
@@ -994,7 +1020,8 @@ document.addEventListener('click',function(ev){
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||200)+300; renderPacList(); break;
-    case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
+    case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0);
+      db.collection('turnos').where('pid','==',id).get().then(function(sn){if(ui.fichaId!==id)return;ui.fichaTs=sn.docs.map(function(d){var o=d.data();o.id=d.id;return o});if(ui.view==='ficha'&&!busy())renderFicha()}); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
     case 'fichaDatos': openPacForm(null,id); break;
