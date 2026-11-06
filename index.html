@@ -452,7 +452,9 @@ var data={turnos:[],bloqueos:[],pagos:[],pacientes:[]};
 var FB_CONFIG={apiKey:"AIzaSyAK5JhG3yBIbuqMMr8SeZbhq7RZlXxWFmI",authDomain:"ladob-consultorio.firebaseapp.com",projectId:"ladob-consultorio",storageBucket:"ladob-consultorio.firebasestorage.app",messagingSenderId:"639263803246",appId:"1:639263803246:web:d297f0d993932888ff637f"};
 firebase.initializeApp(FB_CONFIG);
 var auth=firebase.auth(), db=firebase.firestore();
+try{db.settings({cacheSizeBytes:firebase.firestore.CACHE_SIZE_UNLIMITED,merge:true})}catch(e){}
 try{db.enablePersistence({synchronizeTabs:true}).catch(function(){})}catch(e){}
+var SVTS=function(){return firebase.firestore.FieldValue.serverTimestamp()};
 var COLS=['pacientes','turnos','bloqueos','pagos'], synced={}, loaded={}, unsubs=[], staff=null, pendingRender=false;
 COLS.forEach(function(c){synced[c]={}});
 function clean(o){return JSON.parse(JSON.stringify(o))}
@@ -462,8 +464,9 @@ function save(){
   var batch=db.batch(), n=0;
   COLS.forEach(function(c){
     var seen={};
-    data[c].forEach(function(o){seen[o.id]=1;var j=JSON.stringify(o);if(synced[c][o.id]!==j){synced[c][o.id]=j;batch.set(db.collection(c).doc(o.id),clean(o));n++}});
-    Object.keys(synced[c]).forEach(function(id){if(!seen[id]){delete synced[c][id];batch.delete(db.collection(c).doc(id));n++}});
+    data[c].forEach(function(o){seen[o.id]=1;var j=JSON.stringify(o);if(synced[c][o.id]!==j){synced[c][o.id]=j;var x=clean(o);delete x.id;x.updatedAt=SVTS();batch.set(db.collection(c).doc(o.id),x);n++}});
+    /* borrado "suave": se marca como borrado para que los demás dispositivos se enteren sin releer todo */
+    Object.keys(synced[c]).forEach(function(id){if(!seen[id]){delete synced[c][id];batch.set(db.collection(c).doc(id),{deleted:true,updatedAt:SVTS()},{merge:true});n++}});
   });
   if(n)batch.commit().catch(function(e){toast('No se pudo guardar. Revisá la conexión e intentá de nuevo.');console.error(e)});
 }
@@ -473,38 +476,42 @@ function busy(){
   return a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=='checkbox';
 }
 function scheduleRender(){if(!COLS.every(function(c){return loaded[c]}))return;if(!$('.app')||$('.app').hidden)return;if(busy()){pendingRender=true;return}pendingRender=false;render()}
-/* Lecturas acotadas: pacientes completos; turnos, bloqueos y pagos solo del rango que se está mirando */
-var rng={};
-function sub(c,q,key){
-  if(rng[c]&&rng[c].key===key)return;
-  if(rng[c]&&rng[c].un)rng[c].un();
-  rng[c]={key:key,un:q.onSnapshot(function(snap){
-    data[c]=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
-    synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
+/* Sincronización con lecturas mínimas:
+   - la primera vez en cada dispositivo se lee todo y queda guardado en el navegador;
+   - después se arranca desde esa copia (no cuenta como lectura) y solo se piden a Firebase
+     los registros modificados desde la última vez (campo updatedAt). */
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function docObj(d){var o=d.data({serverTimestamps:'estimate'})||{},ts=o.updatedAt;delete o.updatedAt;o.id=d.id;return {o:o,ts:ts&&ts.toMillis?ts.toMillis():0,del:!!o.deleted,pend:d.metadata&&d.metadata.hasPendingWrites}}
+function applyDocs(c,list,replace){
+  var map={};if(!replace)data[c].forEach(function(o){map[o.id]=o});
+  list.forEach(function(x){if(x.del)delete map[x.o.id];else map[x.o.id]=x.o});
+  data[c]=Object.keys(map).map(function(k){return map[k]});
+  synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
+}
+function startCol(c){
+  var key='ladob_sync_'+c, last=lsGet(key)||0;
+  var full=function(){last=0;return db.collection(c).get({source:'server'})};
+  (last?db.collection(c).get({source:'cache'}).then(function(sn){return sn.empty?full():sn}).catch(full):full())
+  .then(function(sn){
+    var mx=last, list=sn.docs.map(docObj);
+    list.forEach(function(x){if(!x.pend&&x.ts>mx)mx=x.ts});
+    applyDocs(c,list,true);
+    if(!mx)mx=1; lsSet(key,mx);
     loaded[c]=true; scheduleRender();
-  },function(e){console.error(e);toast('No se pudieron leer los datos. Revisá la conexión.')})};
+    var q=db.collection(c).where('updatedAt','>',firebase.firestore.Timestamp.fromMillis(mx));
+    unsubs.push(q.onSnapshot({includeMetadataChanges:false},function(s2){
+      var ch=s2.docChanges().map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
+      ch.forEach(function(x){if(!x.pend&&x.ts>m2)m2=x.ts});
+      lsSet(key,m2);
+      if(ch.length){applyDocs(c,ch,false);scheduleRender()}
+    },function(e){console.error(e)}));
+  }).catch(function(e){console.error(e);showLogin('No se pudieron leer los datos. Puede que tu usuario no tenga permiso.')});
 }
-function ensureRanges(){
-  if(!staff)return;
-  var ws=monday(ui.date), from=iso(addDays(ws,-21)), to=iso(addDays(ws,34));
-  var cur=rng.turnos&&rng.turnos.key.split('|');
-  if(!cur||ui.view==='agenda'&&(iso(ws)<iso(addDays(parse(cur[0]),7))||iso(addDays(ws,6))>iso(addDays(parse(cur[1]),-7)))){
-    sub('turnos',db.collection('turnos').where('date','>=',from).where('date','<=',to),from+'|'+to);
-    sub('bloqueos',db.collection('bloqueos').where('date','>=',from).where('date','<=',to),from+'|'+to);
-  }
-  var tk=rng.turnos.key.split('|'), ms=iso(ui.month), me=iso(new Date(ui.month.getFullYear(),ui.month.getMonth()+1,0));
-  var pf=ui.view==='pagos'?ms:tk[0], pt=ui.view==='pagos'?me:tk[1];
-  sub('pagos',db.collection('pagos').where('date','>=',pf).where('date','<=',pt),pf+'|'+pt);
-}
+function ensureRanges(){}
 function listen(){
-  Object.keys(rng).forEach(function(c){if(rng[c].un)rng[c].un()});rng={};
-  if(unsubs.length){unsubs.forEach(function(u){u()});unsubs=[]}
-  unsubs.push(db.collection('pacientes').onSnapshot(function(snap){
-    data.pacientes=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o});
-    synced.pacientes={};data.pacientes.forEach(function(o){synced.pacientes[o.id]=JSON.stringify(o)});
-    loaded.pacientes=true; scheduleRender();
-  },function(e){console.error(e);showLogin('No se pudieron leer los datos. Puede que tu usuario no tenga permiso.')}));
-  ensureRanges();
+  unsubs.forEach(function(u){u()});unsubs=[];
+  COLS.forEach(startCol);
 }
 function showLogin(msg){
   $('#login').hidden=false;$('.app').hidden=true;
@@ -512,7 +519,7 @@ function showLogin(msg){
   var b=$('#lBtn');b.disabled=false;b.textContent='Entrar';
 }
 auth.onAuthStateChanged(function(u){
-  if(!u){staff=null;unsubs.forEach(function(x){x()});unsubs=[];Object.keys(rng).forEach(function(c){if(rng[c].un)rng[c].un()});rng={};showLogin();return}
+  if(!u){staff=null;unsubs.forEach(function(x){x()});unsubs=[];showLogin();return}
   var email=(u.email||'').toLowerCase();
   db.collection('staff').doc(email).get().then(function(d){
     if(!d.exists){auth.signOut();showLogin('Tu usuario ('+email+') todavía no tiene acceso. Pedile a Fede que lo habilite.');return}
@@ -1020,8 +1027,7 @@ document.addEventListener('click',function(ev){
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||200)+300; renderPacList(); break;
-    case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0);
-      db.collection('turnos').where('pid','==',id).get().then(function(sn){if(ui.fichaId!==id)return;ui.fichaTs=sn.docs.map(function(d){var o=d.data();o.id=d.id;return o});if(ui.view==='ficha'&&!busy())renderFicha()}); break;
+    case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
     case 'fichaDatos': openPacForm(null,id); break;
