@@ -27,8 +27,8 @@ button{font:inherit;color:inherit}
 .nav button{border:0;background:transparent;font-size:13px;font-weight:600;color:#3D4741;height:34px;padding:0 12px;border-radius:8px;cursor:pointer}
 .nav button:hover{background:#E6E9E2}
 .nav button.on{background:var(--ink);color:#fff}
-.logo{grid-area:logo;font-weight:900;font-size:26px;letter-spacing:-0.02em;text-align:center;line-height:1}
-.logo span{background:var(--lima);padding:0 7px;margin-left:5px}
+.logo{grid-area:logo;display:flex;justify-content:center;line-height:0}
+.logo img{height:52px;width:auto;display:block}
 .who{grid-area:who;display:flex;align-items:center;gap:12px;justify-content:flex-end;flex-wrap:wrap}
 h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .btn{font-size:13px;font-weight:600;height:36px;padding:0 14px;border-radius:8px;border:1px solid #C9CFC8;background:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
@@ -133,6 +133,20 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
 .seg button{font-size:13.5px;font-weight:600;height:42px;border:1px solid #C9CFC8;border-radius:8px;background:#fff;cursor:pointer;padding:0 6px}
 .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+[data-seg="llegada"] button[data-val="Google"]{color:#A3352A}
+[data-seg="llegada"] button[data-val="Instagram"]{color:#A8296F}
+[data-seg="llegada"] button[data-val="Referido"]{color:#1F5A9E}
+[data-seg="llegada"] button[data-val="Otro"]{color:#8A6A0B}
+[data-seg="llegada"] button.on[data-val="Google"]{background:#F6D3CE;border-color:#E09A90;color:#7E2219}
+[data-seg="llegada"] button.on[data-val="Instagram"]{background:#FAD3E8;border-color:#E79BC4;color:#7D1A50}
+[data-seg="llegada"] button.on[data-val="Referido"]{background:#D3E4F8;border-color:#93B7E2;color:#173F70}
+[data-seg="llegada"] button.on[data-val="Otro"]{background:#FFE7A3;border-color:#E0B12A;color:#5C4505}
+[data-seg="llegada"] button.on{font-weight:800}
+.lleg{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;justify-self:start}
+.lleg.Google{background:#F6D3CE;color:#7E2219}.lleg.Instagram{background:#FAD3E8;color:#7D1A50}.lleg.Referido{background:#D3E4F8;color:#173F70}.lleg.Otro{background:#FFE7A3;color:#5C4505}
+.ficha{font-size:12px;font-weight:800;letter-spacing:.06em;height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+.ficha:hover{background:var(--ink);color:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;z-index:80;box-shadow:0 8px 20px rgba(0,0,0,.2)}
 .seg.estado button.on[data-val="c"]{background:var(--conf);border-color:#E0B12A;color:var(--ink)}
 .seg.estado button.on[data-val="p"]{background:#FFF8E1;border:2px dashed var(--pendLine);color:var(--ink)}
 .seg.estado button.on[data-val="x"]{background:var(--canc);border-color:#E3A097;color:var(--cancInk)}
@@ -149,10 +163,13 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .err{margin:0;color:#A12F22;font-size:13px;font-weight:600}
 [hidden]{display:none!important}
 .search{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:340px}
-.pacrowl{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px;align-items:center;column-gap:12px;padding:0 16px;min-height:44px;border-top:1px solid #F0F2EE;width:100%;border-left:0;border-right:0;border-bottom:0;background:transparent;text-align:left;cursor:pointer;font-size:13.5px}
+.pacrowl{display:grid;grid-template-columns:minmax(0,1fr) 110px 90px auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:48px;border-top:1px solid #F0F2EE;font-size:13.5px}
+.pacname{border:0;background:transparent;text-align:left;cursor:pointer;padding:6px 0;font-size:13.5px;min-width:0}
+.pacname:hover b{text-decoration:underline}
 .pacrowl:first-child{border-top:0}
 .pacrowl:hover{background:#FAFBF7}
 .pacrowl b{font-weight:600}
+.lleg{align-self:center}
 .pacrowl small{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-top:1px}
 .pacrowl .pl{font-size:12.5px;color:var(--muted)}
 .fields.three{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr)}
@@ -192,8 +209,8 @@ details.edit[open] summary{margin-bottom:12px}
   .hide-m{display:none}
   .app{padding:8px 8px 84px;gap:7px}
   .top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo who" "nav nav";gap:7px}
-  .logo{font-size:17px;text-align:left}
-  .logo span{padding:0 5px;margin-left:3px}
+  .logo{justify-content:flex-start}
+  .logo img{height:34px}
   .who{gap:6px;flex-wrap:nowrap}
   h1{font-size:14px;white-space:nowrap}
   .btn{font-size:12px;height:30px;padding:0 9px}
@@ -227,8 +244,10 @@ details.edit[open] summary{margin-bottom:12px}
   .search{height:30px;font-size:13px}
   .fab{display:flex;position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--ink);color:var(--lima);align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(23,32,27,.3);z-index:20;cursor:pointer}
   .tot{flex:1 1 0;min-width:0;padding:8px 10px}
-  .pacrowl{grid-template-columns:minmax(0,1fr) auto;padding:8px 12px}
-  .pacrowl .pl{display:none}
+  .pacrowl{grid-template-columns:minmax(0,1fr) auto;padding:6px 12px}
+  .pacrowl .pl,.pacrowl .lleg{display:none}
+  .pacname{font-size:13px}
+  .ficha{height:30px;font-size:11px;padding:0 12px}
   .thead{display:none}
   .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n n k" "d a m k";padding:6px 12px;row-gap:2px}
   .prow .pdate{grid-area:d}
@@ -253,7 +272,7 @@ details.edit[open] summary{margin-bottom:12px}
       <button type="button" data-act="view" data-view="pagos">Pagos</button>
       <button type="button" data-act="view" data-view="pacientes">Pacientes</button>
     </nav>
-    <div class="logo" aria-label="Lado B">LADO<span>B</span></div>
+    <div class="logo"><img src="logo.png" alt="Lado B Nutrición" width="295" height="137"></div>
     <div class="who">
       <h1 id="title">Agenda de Fran</h1>
       <button type="button" class="btn pill" id="switchBtn" data-act="switch"></button>
@@ -412,7 +431,7 @@ function pickPac(inputId,pid){var i=$('#'+inputId),p=findPac(pid);if(!i||!p)retu
 function pidOf(inputId){var i=$('#'+inputId);if(!i)return null;if(i.dataset.pid&&findPac(i.dataset.pid))return i.dataset.pid;var p=paciente(i.value);return p?p.id:null}
 function openPacForm(forId,pid){
   var p=pid?findPac(pid):null;
-  $('#dlg2').innerHTML=head(p?esc(p.name):'Paciente nuevo',p?'Paciente de '+NUTRIS[p.nutri]:'Queda asociado a '+NUTRIS[ui.nutri])+
+  $('#dlg2').innerHTML=head(p?esc(p.name):'Paciente nuevo',p?'Paciente de '+NUTRIS[p.nutri]:'Queda asociado a '+NUTRIS[ui.nutri],'close2')+
     '<div class="sec"><div class="fields">'+
       '<label class="fld"><span>Nombre</span><input id="qNom" autocomplete="off" value="'+esc(p?p.nombre:'')+'"></label>'+
       '<label class="fld"><span>Apellido</span><input id="qApe" autocomplete="off" value="'+esc(p?p.apellido:'')+'"></label>'+
@@ -453,11 +472,14 @@ function renderPacList(){
   var html='<div class="col"><div class="table">';
   if(!list.length)html+='<div class="empty">'+(q?'No hay pacientes que coincidan.':'Todavía no hay pacientes cargados.')+'</div>';
   list.forEach(function(p){
-    html+='<button type="button" class="pacrowl" data-act="editPac" data-id="'+p.id+'"><span><b>'+esc(p.name)+'</b><small>'+esc(p.phone)+(p.notas?' · '+esc(p.notas):'')+'</small></span><span class="pl">'+esc(p.llegada||'')+'</span><span class="pl" style="text-align:right">'+turnosCount(p)+'</span></button>';
+    html+='<div class="pacrowl"><button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b>'+(p.notas?'<small>'+esc(p.notas)+'</small>':'')+'</button>'+
+      '<span class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'')+'</span><span class="pl" style="text-align:right">'+turnosCount(p)+'</span>'+
+      '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'">FICHA</button></div>';
   });
   html+='</div><p class="foot" style="margin:0">'+list.length+' paciente'+(list.length===1?'':'s')+' de '+NUTRIS[ui.nutri]+'</p></div>';
   $('#main').innerHTML=html;
 }
+function toast(msg){var t=$('.toast');if(t)t.remove();t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2600)}
 function turnosCount(p){var n=data.turnos.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).length;return n+' turno'+(n===1?'':'s')}
 function waLink(t){
   var p=pacDe(t); if(!p||!p.phone)return null;
@@ -565,7 +587,7 @@ function openModal(html){
   var f=$('#dlg [autofocus]')||$("#dlg .xbtn"); if(f&&!isMobile())f.focus();
 }
 function closeModal(){$('#overlay').hidden=true;$('#dlg').innerHTML='';document.body.style.overflow='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
-function head(title,sub){return '<div class="dh"><div><h2 id="dlgT">'+title+'</h2>'+(sub?'<p>'+sub+'</p>':'')+'</div><button type="button" class="xbtn" data-act="close" aria-label="Cerrar">'+ICON.close+'</button></div>'}
+function head(title,sub,act){return '<div class="dh"><div><h2>'+title+'</h2>'+(sub?'<p>'+sub+'</p>':'')+'</div><button type="button" class="xbtn" data-act="'+(act||'close')+'" aria-label="Cerrar">'+ICON.close+'</button></div>'}
 function seg(name,opts,val,cls){return '<div class="seg '+(cls||'')+'" role="group" data-seg="'+name+'">'+opts.map(function(o){return '<button type="button" data-val="'+esc(o[0])+'" aria-pressed="'+(o[0]===val)+'"'+(o[0]===val?' class="on"':'')+'>'+esc(o[1])+'</button>'}).join('')+'</div>'}
 function segVal(name,root){var b=$('[data-seg="'+name+'"] .on',root||$('#dlg'));return b?b.dataset.val:null}
 function slotSelect(id,val){
@@ -724,6 +746,7 @@ document.addEventListener('click',function(ev){
     case 'prev': ui.date=addDays(ui.date,-7); render(); break;
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
+    case 'ficha': toast('La ficha del paciente la armamos en el próximo paso.'); break;
     case 'day': ui.date=parse(a.dataset.date); render(); break;
     case 'mprev': ui.month=new Date(ui.month.getFullYear(),ui.month.getMonth()-1,1); render(); break;
     case 'mnext': ui.month=new Date(ui.month.getFullYear(),ui.month.getMonth()+1,1); render(); break;
