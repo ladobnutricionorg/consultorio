@@ -146,8 +146,11 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 [data-seg="llegada"] button.on{font-weight:800}
 .lleg{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;justify-self:start}
 .lleg.Google{background:#F6D3CE;color:#7E2219}.lleg.Instagram{background:#FAD3E8;color:#7D1A50}.lleg.Referido{background:#D3E4F8;color:#173F70}.lleg.Otro{background:#FFE7A3;color:#5C4505}
-.ficha{font-size:12px;font-weight:800;letter-spacing:.06em;height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
-.ficha:hover{background:var(--ink);color:#fff}
+.ficha{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;letter-spacing:.12em;height:28px;padding:0 11px;border-radius:6px;border:1px solid #D9DDD5;background:transparent;color:#56605A;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.ficha svg{opacity:.7}
+.ficha:hover{border-color:var(--ink);color:var(--ink);background:#fff}
+.warn{margin:0;background:#FFF6DC;border:1px solid #EBCB6B;color:#5C4505;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.4}
+.warn b{font-weight:700}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;z-index:80;box-shadow:0 8px 20px rgba(0,0,0,.2)}
 .seg.estado button.on[data-val="c"]{background:var(--conf);border-color:#E0B12A;color:var(--ink)}
 .seg.estado button.on[data-val="p"]{background:#FFF8E1;border:2px dashed var(--pendLine);color:var(--ink)}
@@ -251,7 +254,7 @@ details.edit[open] summary{margin-bottom:12px}
   .pacrowl{grid-template-columns:minmax(0,1fr) auto auto;padding:6px 12px}
   .pacrowl .pl:not(:nth-child(2)),.pacrowl .lleg{display:none}
   .pacname{font-size:13px}
-  .ficha{height:30px;font-size:11px;padding:0 12px}
+  .ficha{height:28px;font-size:10px;padding:0 9px}
   .thead{display:none}
   .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n n k" "d a m k";padding:6px 12px;row-gap:2px}
   .prow .pdate{grid-area:d}
@@ -443,7 +446,7 @@ function openPacForm(forId,pid){
     '</div><span class="lbl">Medio de llegada</span>'+seg('llegada',LLEGADAS.map(function(x){return [x,x]}),p?p.llegada:null)+
     '<div class="fields"><label class="fld full"><span>Notas <em>(opcional)</em></span><input id="qNotas" placeholder="Ej: hijo de…" value="'+esc(p?p.notas:'')+'"></label></div>'+
     '<span class="lbl">Nutricionista</span>'+seg('qNutri',[['fran','Fran'],['car','Car']],p?p.nutri:ui.nutri)+
-    '<p class="err" id="qErr" hidden></p></div>'+
+    '<p class="err" id="qErr" hidden></p><p class="warn" id="qWarn" hidden></p></div>'+
     '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="savePac" data-for="'+(forId||'')+'" data-id="'+(p?p.id:'')+'">Guardar paciente</button></div></div>';
   $('#overlay2').hidden=false;
   if(!isMobile())$('#qNom').focus();
@@ -454,6 +457,18 @@ function savePac(forId,pid){
   if(miss.length){e.textContent='Falta completar: '+miss.join(', ')+'.';e.hidden=false;return}
   var full=nom+' '+ape, dup=paciente(full), p=pid?findPac(pid):null;
   if(dup&&dup!==p){e.textContent='Ya existe un paciente con ese nombre. Buscalo en la lista.';e.hidden=false;return}
+  e.hidden=true;
+  var btn=$('#dlg2 [data-act="savePac"]'), w=$('#qWarn');
+  if(!btn.dataset.force){
+    var dig=tel.replace(/\D/g,'').slice(-8), na=norm(ape);
+    var sim=data.pacientes.filter(function(x){return x!==p&&(norm(x.apellido)===na||(dig.length>=6&&x.phone.replace(/\D/g,'').slice(-8)===dig))});
+    if(sim.length){
+      w.innerHTML='<b>Ojo, puede estar repetido.</b> Ya hay '+(sim.length===1?'un paciente':'pacientes')+' con el mismo apellido o celular: '+
+        sim.slice(0,4).map(function(x){var why=[];if(norm(x.apellido)===na)why.push('apellido');if(dig.length>=6&&x.phone.replace(/\D/g,'').slice(-8)===dig)why.push('celular');return '<b>'+esc(x.name)+'</b> ('+NUTRIS[x.nutri]+', mismo '+why.join(' y ')+')'}).join(', ')+
+        '. Si es otra persona, tocá <b>Guardar igual</b>.';
+      w.hidden=false; btn.dataset.force='1'; btn.textContent='Guardar igual'; return;
+    }
+  }
   if(p){
     p.nombre=nom;p.apellido=ape;p.name=full;p.phone=tel;p.llegada=lle;p.notas=$('#qNotas').value.trim();p.nutri=segVal('qNutri',$('#dlg2'))||p.nutri;
     data.turnos.forEach(function(t){if(t.pid===p.id)t.name=full});
@@ -479,7 +494,7 @@ function renderPacList(){
   list.forEach(function(p){
     html+='<div class="pacrowl"><button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b>'+(p.notas?'<small>'+esc(p.notas)+'</small>':'')+'</button>'+
       '<span class="pl">'+NUTRIS[p.nutri]+'</span><span class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'')+'</span><span class="pl" style="text-align:right">'+turnosCount(p)+'</span>'+
-      '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'">FICHA</button></div>';
+      '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>FICHA</button></div>';
   });
   html+='</div><p class="foot" style="margin:0">'+list.length+' paciente'+(list.length===1?'':'s')+'</p></div>';
   $('#main').innerHTML=html;
@@ -814,6 +829,7 @@ document.addEventListener('change',function(ev){
 document.addEventListener('input',function(ev){
   var el=ev.target;
   if(el.id==='pacQ'){ui.q=el.value;renderPacList();return}
+  if(el.id==='qApe'||el.id==='qTel'){var sb=$('#dlg2 [data-act="savePac"]');if(sb&&sb.dataset.force){delete sb.dataset.force;sb.textContent='Guardar paciente';$('#qWarn').hidden=true}}
   if(el.classList&&el.classList.contains('pacin')){el.dataset.pid='';el.classList.remove('ok');if(el.setCustomValidity)el.setCustomValidity('');pacOptions(el)}
 });
 document.addEventListener('focusin',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('pacin')&&!el.dataset.pid)pacOptions(el)});
