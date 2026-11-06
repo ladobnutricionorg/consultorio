@@ -134,8 +134,11 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .seg button{font-size:13.5px;font-weight:600;height:42px;border:1px solid #C9CFC8;border-radius:8px;background:#fff;cursor:pointer;padding:0 6px}
 .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .seg.estado button.on[data-val="c"]{background:var(--conf);border-color:#E0B12A;color:var(--ink)}
-.seg.estado button.on[data-val="p"]{background:#fff;border:1.5px dashed var(--pendLine);color:var(--ink)}
+.seg.estado button.on[data-val="p"]{background:#FFF8E1;border:2px dashed var(--pendLine);color:var(--ink)}
 .seg.estado button.on[data-val="x"]{background:var(--canc);border-color:#E3A097;color:var(--cancInk)}
+.seg.estado button{color:#8A938D;font-weight:500}
+.seg.estado button.on{font-weight:800;box-shadow:0 0 0 2px var(--ink)}
+.seg.estado button.on::before{content:"✓ "}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .fld{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fld.full{grid-column:1/-1}
