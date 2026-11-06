@@ -28,9 +28,11 @@ button{font:inherit;color:inherit}
 .nav button:hover{background:#E6E9E2}
 .nav button.on{background:var(--ink);color:#fff}
 .logo{grid-area:logo;display:flex;justify-content:center;line-height:0}
-.logo img{height:52px;width:auto;display:block}
-.who{grid-area:who;display:flex;align-items:center;gap:12px;justify-content:flex-end;flex-wrap:wrap}
-h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
+.logo img{height:58px;width:auto;display:block}
+.who{grid-area:who;display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+h1{margin:0;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
+#switchBtn{height:32px;font-size:12.5px;font-weight:600;padding:0 12px}
 .btn{font-size:13px;font-weight:600;height:36px;padding:0 14px;border-radius:8px;border:1px solid #C9CFC8;background:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:#9AA39C}
 .btn.icon{width:36px;padding:0}
@@ -163,7 +165,7 @@ h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em}
 .err{margin:0;color:#A12F22;font-size:13px;font-weight:600}
 [hidden]{display:none!important}
 .search{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:340px}
-.pacrowl{display:grid;grid-template-columns:minmax(0,1fr) 110px 90px auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:48px;border-top:1px solid #F0F2EE;font-size:13.5px}
+.pacrowl{display:grid;grid-template-columns:minmax(0,1fr) 50px 100px 80px auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:48px;border-top:1px solid #F0F2EE;font-size:13.5px}
 .pacname{border:0;background:transparent;text-align:left;cursor:pointer;padding:6px 0;font-size:13.5px;min-width:0}
 .pacname:hover b{text-decoration:underline}
 .pacrowl:first-child{border-top:0}
@@ -208,11 +210,13 @@ details.edit[open] summary{margin-bottom:12px}
 @media (max-width:760px){
   .hide-m{display:none}
   .app{padding:8px 8px 84px;gap:7px}
-  .top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo who" "nav nav";gap:7px}
-  .logo{justify-content:flex-start}
-  .logo img{height:34px}
+  .top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:". logo who" "nav nav nav";gap:7px}
+  .logo{justify-content:center}
+  .logo img{height:38px}
   .who{gap:6px;flex-wrap:nowrap}
-  h1{font-size:14px;white-space:nowrap}
+  h1{font-size:11.5px;white-space:nowrap}
+  h1.plain{font-size:13px}
+  #switchBtn{height:28px;font-size:11.5px;padding:0 9px;gap:4px}
   .btn{font-size:12px;height:30px;padding:0 9px}
   .btn.icon{width:30px}
   .btn.pill{padding:0 10px}
@@ -244,8 +248,8 @@ details.edit[open] summary{margin-bottom:12px}
   .search{height:30px;font-size:13px}
   .fab{display:flex;position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--ink);color:var(--lima);align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(23,32,27,.3);z-index:20;cursor:pointer}
   .tot{flex:1 1 0;min-width:0;padding:8px 10px}
-  .pacrowl{grid-template-columns:minmax(0,1fr) auto;padding:6px 12px}
-  .pacrowl .pl,.pacrowl .lleg{display:none}
+  .pacrowl{grid-template-columns:minmax(0,1fr) auto auto;padding:6px 12px}
+  .pacrowl .pl:not(:nth-child(2)),.pacrowl .lleg{display:none}
   .pacname{font-size:13px}
   .ficha{height:30px;font-size:11px;padding:0 12px}
   .thead{display:none}
@@ -431,13 +435,14 @@ function pickPac(inputId,pid){var i=$('#'+inputId),p=findPac(pid);if(!i||!p)retu
 function pidOf(inputId){var i=$('#'+inputId);if(!i)return null;if(i.dataset.pid&&findPac(i.dataset.pid))return i.dataset.pid;var p=paciente(i.value);return p?p.id:null}
 function openPacForm(forId,pid){
   var p=pid?findPac(pid):null;
-  $('#dlg2').innerHTML=head(p?esc(p.name):'Paciente nuevo',p?'Paciente de '+NUTRIS[p.nutri]:'Queda asociado a '+NUTRIS[ui.nutri],'close2')+
+  $('#dlg2').innerHTML=head(p?esc(p.name):'Paciente nuevo','','close2')+
     '<div class="sec"><div class="fields">'+
       '<label class="fld"><span>Nombre</span><input id="qNom" autocomplete="off" value="'+esc(p?p.nombre:'')+'"></label>'+
       '<label class="fld"><span>Apellido</span><input id="qApe" autocomplete="off" value="'+esc(p?p.apellido:'')+'"></label>'+
       '<label class="fld full"><span>Teléfono</span><input id="qTel" inputmode="tel" placeholder="11 1234 5678" value="'+esc(p?p.phone:'')+'"></label>'+
     '</div><span class="lbl">Medio de llegada</span>'+seg('llegada',LLEGADAS.map(function(x){return [x,x]}),p?p.llegada:null)+
     '<div class="fields"><label class="fld full"><span>Notas <em>(opcional)</em></span><input id="qNotas" placeholder="Ej: hijo de…" value="'+esc(p?p.notas:'')+'"></label></div>'+
+    '<span class="lbl">Nutricionista</span>'+seg('qNutri',[['fran','Fran'],['car','Car']],p?p.nutri:ui.nutri)+
     '<p class="err" id="qErr" hidden></p></div>'+
     '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="savePac" data-for="'+(forId||'')+'" data-id="'+(p?p.id:'')+'">Guardar paciente</button></div></div>';
   $('#overlay2').hidden=false;
@@ -450,11 +455,11 @@ function savePac(forId,pid){
   var full=nom+' '+ape, dup=paciente(full), p=pid?findPac(pid):null;
   if(dup&&dup!==p){e.textContent='Ya existe un paciente con ese nombre. Buscalo en la lista.';e.hidden=false;return}
   if(p){
-    p.nombre=nom;p.apellido=ape;p.name=full;p.phone=tel;p.llegada=lle;p.notas=$('#qNotas').value.trim();
+    p.nombre=nom;p.apellido=ape;p.name=full;p.phone=tel;p.llegada=lle;p.notas=$('#qNotas').value.trim();p.nutri=segVal('qNutri',$('#dlg2'))||p.nutri;
     data.turnos.forEach(function(t){if(t.pid===p.id)t.name=full});
     data.pagos.forEach(function(x){if(x.pid===p.id)x.name=full});
   } else {
-    p={id:uid(),nombre:nom,apellido:ape,name:full,phone:tel,llegada:lle,notas:$('#qNotas').value.trim(),nutri:ui.nutri};
+    p={id:uid(),nombre:nom,apellido:ape,name:full,phone:tel,llegada:lle,notas:$('#qNotas').value.trim(),nutri:segVal('qNutri',$('#dlg2'))||ui.nutri};
     data.pacientes.push(p);
   }
   save();
@@ -468,15 +473,15 @@ function renderPacientes(){
 }
 function renderPacList(){
   var q=norm(ui.q);
-  var list=data.pacientes.filter(function(p){return p.nutri===ui.nutri&&(!q||norm(p.name).indexOf(q)>-1)}).sort(function(a,b){return a.apellido.localeCompare(b.apellido)||a.name.localeCompare(b.name)});
+  var list=data.pacientes.filter(function(p){return (!q||norm(p.name).indexOf(q)>-1)}).sort(function(a,b){return a.apellido.localeCompare(b.apellido)||a.name.localeCompare(b.name)});
   var html='<div class="col"><div class="table">';
   if(!list.length)html+='<div class="empty">'+(q?'No hay pacientes que coincidan.':'Todavía no hay pacientes cargados.')+'</div>';
   list.forEach(function(p){
     html+='<div class="pacrowl"><button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b>'+(p.notas?'<small>'+esc(p.notas)+'</small>':'')+'</button>'+
-      '<span class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'')+'</span><span class="pl" style="text-align:right">'+turnosCount(p)+'</span>'+
+      '<span class="pl">'+NUTRIS[p.nutri]+'</span><span class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'')+'</span><span class="pl" style="text-align:right">'+turnosCount(p)+'</span>'+
       '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'">FICHA</button></div>';
   });
-  html+='</div><p class="foot" style="margin:0">'+list.length+' paciente'+(list.length===1?'':'s')+' de '+NUTRIS[ui.nutri]+'</p></div>';
+  html+='</div><p class="foot" style="margin:0">'+list.length+' paciente'+(list.length===1?'':'s')+'</p></div>';
   $('#main').innerHTML=html;
 }
 function toast(msg){var t=$('.toast');if(t)t.remove();t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2600)}
@@ -495,10 +500,13 @@ function render(){
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===ui.view);b.setAttribute('aria-current',b.dataset.view===ui.view?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
   var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes']}[ui.view];
-  $('#title').innerHTML=V[0]+' <span class="hide-m">de </span>'+N;
-  $('#switchBtn').innerHTML=ICON.swap+'<span class="hide-m">Ver '+V[1]+' de</span>'+O;
+  var pac=ui.view==='pacientes';
+  $('#title').textContent=pac?'Pacientes':N;
+  $('#title').className=pac?'plain':'';
+  $('#switchBtn').hidden=pac;
+  $('#switchBtn').innerHTML=ICON.swap+O;
   $('#switchBtn').setAttribute('aria-label','Ver '+V[1]+' de '+O);
-  document.title=V[0]+' de '+N+' · Lado B';
+  document.title=(pac?'Pacientes':V[0]+' de '+N)+' · Lado B';
   if(ui.view==='agenda')renderAgenda();else if(ui.view==='pagos')renderPagos();else renderPacientes();
   saveUi();
 }
