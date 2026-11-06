@@ -842,8 +842,7 @@ function renderPagos(){
   var isCur=y===ty&&mo===today().getMonth();
   $('#row2').innerHTML='<select class="msel" id="pMes" aria-label="Mes">'+MESES.map(function(m,i){return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+cap(m)+'</option>'}).join('')+'</select>'+
     '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
-    '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>'+
-    '<button type="button" class="btn primary" data-act="nuevoPago">'+ICON.plus+'Pago</button>';
+    '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>';
   var pref=y+'-'+pad(mo+1)+'-';
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
   var tot=0,tf=0,cf=0; list.forEach(function(p){tot+=+p.monto;if(p.fact){tf+=+p.monto;cf++}});
