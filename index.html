@@ -581,7 +581,7 @@ function openTurno(id,editPago){
   var d=parse(t.date), a=toMin(t.time), pg=pagoDe(t.id), p=pacDe(t), link=waLink(t);
   var sub=largo(d)+' · '+show(a)+' – '+show(a+t.dur)+(t.tipo?' · '+t.tipo:'');
   var html=head(esc(t.name),esc(cap(sub)));
-  html+='<div class="sec"><span class="lbl">Estado del turno</span>'+seg('estadoT',[['c','Confirmado'],['p','A confirmar'],['x','Cancelado']],t.estado,'estado');
+  html+='<div class="sec"><span class="lbl">Estado del turno</span>'+seg('estadoT',[['p','A confirmar'],['c','Confirmado'],['x','Cancelado']],t.estado,'estado');
   if(link)html+='<a class="wa" href="'+link+'" target="_blank" rel="noopener">'+ICON.wa+'Enviar recordatorio por WhatsApp</a>';
   else html+='<div class="fields"><label class="fld full"><span>Teléfono <em>(para mandar el recordatorio)</em></span><input id="tPhone" inputmode="tel" placeholder="11 1234 5678"></label></div><button type="button" class="btn big" data-act="savePhone" data-id="'+t.id+'">Guardar teléfono</button>';
   html+='</div>';
