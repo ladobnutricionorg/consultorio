@@ -172,6 +172,8 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .fld input:focus,.fld select:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
 .err{margin:0;color:#A12F22;font-size:13px;font-weight:600}
 [hidden]{display:none!important}
+.msel{font:inherit;font-size:14px;font-weight:700;height:36px;border:1px solid #C9CFC8;border-radius:8px;background:#fff;color:var(--ink);padding:0 10px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
 .ptable{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
 .pt{min-width:1040px}
 .ph,.pr{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:10px;padding:0 14px}
@@ -333,6 +335,7 @@ details.edit[open] summary{margin-bottom:12px}
   .pname{font-size:12.5px}
   .chip{font-size:11px}
   .search{height:30px;font-size:13px}
+  .msel{height:30px;font-size:12.5px;padding:0 6px}
   .fab{display:flex;position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--ink);color:var(--lima);align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(23,32,27,.3);z-index:20;cursor:pointer}
   .tot{flex:1 1 0;min-width:0;padding:8px 10px}
   .pacrowl{grid-template-columns:minmax(0,1fr) auto auto;padding:6px 12px}
@@ -835,9 +838,11 @@ function dayCol(d){
 
 function renderPagos(){
   var y=ui.month.getFullYear(), mo=ui.month.getMonth();
-  $('#row2').innerHTML='<button type="button" class="btn icon" data-act="mprev" aria-label="Mes anterior">'+ICON.prev+'</button>'+
-    '<span class="period">'+cap(MESES[mo])+' '+y+'</span>'+
-    '<button type="button" class="btn icon" data-act="mnext" aria-label="Mes siguiente">'+ICON.next+'</button>'+
+  var ty=today().getFullYear(), yrs=[];for(var yy=2023;yy<=Math.max(ty+1,y);yy++)yrs.push(yy);
+  var isCur=y===ty&&mo===today().getMonth();
+  $('#row2').innerHTML='<select class="msel" id="pMes" aria-label="Mes">'+MESES.map(function(m,i){return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+cap(m)+'</option>'}).join('')+'</select>'+
+    '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
+    '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>'+
     '<button type="button" class="btn primary" data-act="nuevoPago">'+ICON.plus+'Pago</button>';
   var pref=y+'-'+pad(mo+1)+'-';
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
@@ -1037,8 +1042,7 @@ document.addEventListener('click',function(ev){
     case 'hcSave': saveHc(); break;
     case 'hcDel': if(!sure(a))break; var hp=findPac(ui.fichaId); hp.historia=(hp.historia||[]).filter(function(h){return h.id!==id}); save(); renderFicha(); break;
     case 'day': ui.date=parse(a.dataset.date); render(); break;
-    case 'mprev': ui.month=new Date(ui.month.getFullYear(),ui.month.getMonth()-1,1); render(); break;
-    case 'mnext': ui.month=new Date(ui.month.getFullYear(),ui.month.getMonth()+1,1); render(); break;
+    case 'mhoy': ui.month=new Date(today().getFullYear(),today().getMonth(),1); render(); break;
     case 'nuevo': openNuevo(iso(ui.date),null); break;
     case 'nuevoPago': openPago(null); break;
     case 'close': closeModal(); break;
@@ -1092,6 +1096,7 @@ document.addEventListener('change',function(ev){
   var el=ev.target;
   if(el.dataset&&el.dataset.pauta){var pp2=findPac(el.dataset.pauta);if(pp2){pp2.pauta=el.checked;save()}return}
   if(el.dataset&&el.dataset.fact){var p=findP(el.dataset.fact);if(p){p.fact=el.checked;save();render()}return}
+  if(el.id==='pMes'||el.id==='pAnio'){ui.month=new Date(+$('#pAnio').value,+$('#pMes').value,1);render();return}
   if(el.id==='nTime')$('#nOther').value='';
   if(el.id==='eTime')$('#eOther').value='';
 });
