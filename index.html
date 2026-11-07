@@ -172,6 +172,38 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .fld input:focus,.fld select:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
 .err{margin:0;color:#A12F22;font-size:13px;font-weight:600}
 [hidden]{display:none!important}
+.splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);z-index:100}
+.splash img{width:170px;height:auto}
+.splash p{margin:0;font-size:13px;color:var(--muted);text-align:center;max-width:280px;line-height:1.4}
+.spin{width:26px;height:26px;border-radius:50%;border:2.5px solid #DDE1DA;border-top-color:var(--ink);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.psearch{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:360px}
+.psearch:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
+.slist{width:100%;max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr) auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:46px;border-top:1px solid #F0F2EE}
+.srow:first-child{border-top:0}
+.srow:hover{background:#FAFBF7}
+.srow .pc{font-size:12.5px}
+.yrs{display:inline-flex;background:#E9EBE5;border-radius:10px;padding:3px;gap:2px}
+.yrs button{border:0;background:transparent;font-size:13.5px;font-weight:700;height:34px;padding:0 16px;border-radius:8px;cursor:pointer;color:#3D4741}
+.yrs button.on{background:var(--ink);color:#fff}
+.stgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;align-items:start}
+.stcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px 10px;overflow-x:auto}
+.stcard h3{margin:0 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3D4741}
+.stcard h3 small{font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:6px}
+.st{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.st th{font-size:10.5px;font-weight:700;color:var(--muted);text-align:right;padding:4px 6px;letter-spacing:.04em;white-space:nowrap}
+.st th:first-child,.st td:first-child{text-align:left}
+.st td{padding:4px 6px;text-align:right;border-top:1px solid #F2F3EF;white-space:nowrap}
+.st td:first-child{color:#3D4741;text-transform:capitalize}
+.st tr.cur td{background:#FAFDEB}
+.st tr.totr td{border-top:1.5px solid var(--ink);font-weight:800}
+.st .neg{color:#A12F22}
+.st .dim{color:#B5BBB4}
+.stin{font:inherit;font-size:12.5px;width:96px;height:26px;border:1px dashed #C9CFC8;border-radius:5px;padding:0 6px;text-align:right;background:#FCFCFA;color:var(--ink);font-variant-numeric:tabular-nums}
+.stin:focus{outline:2px solid var(--ink);outline-offset:-1px;border-style:solid;background:#fff}
+.stnote{font-size:11.5px;color:var(--muted);margin:6px 0 0}
 .msel{font:inherit;font-size:14px;font-weight:700;height:36px;border:1px solid #C9CFC8;border-radius:8px;background:#fff;color:var(--ink);padding:0 10px;cursor:pointer}
 .btn:disabled{opacity:.45;cursor:default}
 .ptable{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
@@ -336,6 +368,15 @@ details.edit[open] summary{margin-bottom:12px}
   .chip{font-size:11px}
   .search{height:30px;font-size:13px}
   .msel{height:30px;font-size:12.5px;padding:0 6px}
+  .psearch{height:30px;font-size:13px}
+  .srow{grid-template-columns:minmax(0,1fr) auto;row-gap:2px;padding:6px 12px}
+  .srow .pc{display:none}
+  .srow .pc.pn{display:block;grid-column:1/2;grid-row:2;font-size:11.5px;color:var(--muted)}
+  .srow .ficha{grid-row:1/3;grid-column:2}
+  .yrs button{height:30px;padding:0 11px;font-size:12.5px}
+  .stcard{padding:12px 10px 8px}
+  .st{font-size:11.5px}
+  .stin{width:80px;font-size:11.5px}
   .fab{display:flex;position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--ink);color:var(--lima);align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(23,32,27,.3);z-index:20;cursor:pointer}
   .tot{flex:1 1 0;min-width:0;padding:8px 10px}
   .pacrowl{grid-template-columns:minmax(0,1fr) auto auto;padding:6px 12px}
@@ -367,6 +408,11 @@ details.edit[open] summary{margin-bottom:12px}
 </style>
 </head>
 <body>
+<div class="splash" id="splash" role="status" aria-live="polite">
+  <img src="logo.png" alt="Lado B Nutrición" width="295" height="137">
+  <div class="spin" aria-hidden="true"></div>
+  <p id="splashTxt">Cargando…</p>
+</div>
 <div class="login" id="login" hidden>
   <form class="lbox" id="lForm" novalidate>
     <img src="logo.png" alt="Lado B Nutrición" width="295" height="137">
@@ -384,10 +430,11 @@ details.edit[open] summary{margin-bottom:12px}
       <button type="button" data-act="view" data-view="agenda">Agenda</button>
       <button type="button" data-act="view" data-view="pagos">Pagos</button>
       <button type="button" data-act="view" data-view="pacientes">Pacientes</button>
+      <button type="button" data-act="view" data-view="stats" id="navStats" hidden>Estadísticas</button>
     </nav>
     <div class="logo"><img src="logo.png" alt="Lado B Nutrición" width="295" height="137"></div>
     <div class="who">
-      <h1 id="title">Agenda de Fran</h1>
+      <h1 id="title"></h1>
       <button type="button" class="btn pill" id="switchBtn" data-act="switch"></button>
     </div>
   </header>
@@ -478,7 +525,8 @@ function busy(){
   var a=document.activeElement;
   return a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=='checkbox';
 }
-function scheduleRender(){if(!COLS.every(function(c){return loaded[c]}))return;if(!$('.app')||$('.app').hidden)return;if(busy()){pendingRender=true;return}pendingRender=false;render()}
+function scheduleRender(){if(!staff||!COLS.every(function(c){return loaded[c]}))return;
+  if($('.app').hidden){$('.app').hidden=false;$('#splash').hidden=true;$('#login').hidden=true;pendingRender=false;render();return}if(busy()){pendingRender=true;return}pendingRender=false;render()}
 /* Sincronización con lecturas mínimas:
    - la primera vez en cada dispositivo se lee todo y queda guardado en el navegador;
    - después se arranca desde esa copia (no cuenta como lectura) y solo se piden a Firebase
@@ -517,7 +565,7 @@ function listen(){
   COLS.forEach(startCol);
 }
 function showLogin(msg){
-  $('#login').hidden=false;$('.app').hidden=true;
+  $('#login').hidden=false;$('.app').hidden=true;$('#splash').hidden=true;
   var e=$('#lErr');e.textContent=msg||'';e.hidden=!msg;
   var b=$('#lBtn');b.disabled=false;b.textContent='Entrar';
 }
@@ -529,7 +577,11 @@ auth.onAuthStateChanged(function(u){
     staff=d.data();staff.email=email;
     if(staff.nutri==='fran'||staff.nutri==='car')ui.nutri=staff.nutri;
     $('#who').textContent=(staff.nombre||email);
-    $('#login').hidden=true;$('.app').hidden=false;
+    $('#navStats').hidden=staff.rol!=='admin';
+    if(ui.view==='stats'&&staff.rol!=='admin')ui.view='agenda';
+    $('#login').hidden=true;$('#splash').hidden=false;
+    $('#splashTxt').textContent=lsGet('ladob_sync_pacientes')?'Cargando…':'Primera vez en este dispositivo: estamos descargando la base. Puede tardar unos segundos.';
+    COLS.forEach(function(c){loaded[c]=false});
     listen();
   }).catch(function(e){console.error(e);auth.signOut();showLogin('Tu usuario no tiene acceso a la base. Pedile a Fede que lo habilite.')});
 });
@@ -538,7 +590,7 @@ auth.onAuthStateChanged(function(u){
 /* ---------- estado de pantalla ---------- */
 var ui=(function(){
   var u=read(UIKEY)||{};
-  return {view:(u.view==='pagos'||u.view==='pacientes')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1)};
+  return {view:(u.view==='pagos'||u.view==='pacientes'||u.view==='stats')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1)};
 })();
 function saveUi(){store(UIKEY,{view:ui.view,nutri:ui.nutri})}
 
@@ -714,7 +766,31 @@ function pacSortKey(p,k){
   if(k==='name')return norm((p.apellido||'')+' '+(p.nombre||p.name));
   return norm(pacVal(p,k));
 }
+function isAdmin(){return !!(staff&&staff.rol==='admin')}
+function renderPacSimple(){
+  $('#row2').innerHTML='<input class="psearch" id="pSearch" type="search" placeholder="Buscar paciente…" aria-label="Buscar paciente" autocomplete="off" value="'+esc(ui.q||'')+'">'+
+    '<button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
+  $('#main').innerHTML='<div class="slist" id="sbody"></div><p class="foot" id="pcount" style="margin:0"></p>';
+  renderPacSimpleList();
+}
+function renderPacSimpleList(){
+  var q=norm(ui.q||''), lim=ui.plim||100;
+  var list=data.pacientes.filter(function(p){return !q||norm(p.name).indexOf(q)>-1});
+  list.sort(function(a,b){var x=norm((a.apellido||'')+' '+a.name),y=norm((b.apellido||'')+' '+b.name);return x<y?-1:x>y?1:0});
+  var html='';
+  if(!list.length)html='<div class="empty">No hay pacientes que coincidan.'+(q?' Si es nuevo, cargalo con <b>+ Paciente</b>.':'')+'</div>';
+  list.slice(0,lim).forEach(function(p){
+    html+='<div class="srow"><button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b></button>'+
+      '<span class="pc">'+esc(NUTRIS[p.nutri]||'')+'</span>'+
+      '<span class="pc pn" title="'+esc(p.notas||'')+'">'+esc(p.notas||'')+'</span>'+
+      '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>FICHA</button></div>';
+  });
+  if(list.length>lim)html+='<div class="pmore"><button type="button" class="btn" data-act="pmore">Mostrar más ('+(list.length-lim)+' restantes)</button></div>';
+  $('#sbody').innerHTML=html;
+  $('#pcount').textContent=q?list.length+' coincidencia'+(list.length===1?'':'s'):data.pacientes.length+' pacientes';
+}
 function renderPacientes(){
+  if(!isAdmin()){renderPacSimple();return}
   ui.pf=ui.pf||{}; ui.ps=ui.ps||{k:'name',d:1}; ui.plim=ui.plim||200;
   $('#row2').innerHTML='<button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
   var tpl=PCOLS.map(function(c){return c.w}).join(' ')+' 84px';
@@ -757,6 +833,58 @@ function renderPacList(){
   $('#pbody').innerHTML=html;
   $('#pcount').textContent=list.length+' de '+data.pacientes.length+' pacientes';
 }
+/* ---------- Estadísticas (solo administrador) ----------
+   Hasta oct/2026: copia de la planilla "LADO B Estadísticas" (colección stats, un documento por año).
+   Valores manuales (valor consulta, costo fijo, gasto Google) se editan acá. */
+var stats=null, statsLoading=false;
+function loadStats(){
+  if(statsLoading)return; statsLoading=true;
+  db.collection('stats').get().then(function(sn){stats={};sn.docs.forEach(function(d){stats[d.id]=d.data()});statsLoading=false;if(ui.view==='stats')renderStats()})
+  .catch(function(e){statsLoading=false;console.error(e);$('#main').innerHTML='<div class="empty">No se pudieron leer las estadísticas.</div>'});
+}
+function fm(n){return n==null||n===''?'':'$ '+Math.round(n).toLocaleString('es-AR')}
+function fn(n){return n==null||n===''?'':Number(n).toLocaleString('es-AR')}
+function renderStats(){
+  var ty=today().getFullYear(), years=[];for(var y=2023;y<=ty;y++)years.push(y);
+  ui.sy=ui.sy||ty;
+  $('#row2').innerHTML='<div class="yrs" role="group" aria-label="Año">'+years.map(function(y){return '<button type="button" data-act="year" data-y="'+y+'" class="'+(y===ui.sy?'on':'')+'" aria-pressed="'+(y===ui.sy)+'">'+y+'</button>'}).join('')+'</div>';
+  if(!stats){$('#main').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto 10px"></div>Cargando estadísticas…</div>';loadStats();return}
+  var doc=stats[String(ui.sy)]||{m:{},tot:{}}, M=doc.m||{}, T=doc.tot||{}, curM=ui.sy===ty?today().getMonth()+1:0;
+  var row=function(m){return M[m]||{}};
+  var sum=function(k){var s=0,any=false;for(var m=1;m<=12;m++){var v=row(m)[k];if(typeof v==='number'){s+=v;any=true}}return any?s:null};
+  var tv=function(blk,k){return T[blk]&&typeof T[blk][k]==='number'?T[blk][k]:sum(k)};
+  var cell=function(v,money){if(v==null||v==='')return '<td class="dim">—</td>';return '<td'+(v<0?' class="neg"':'')+'>'+(money?fm(v):fn(v))+'</td>'};
+  var inp=function(m,k,v){return '<td><input class="stin" inputmode="numeric" data-sy="'+ui.sy+'" data-sm="'+m+'" data-sk="'+k+'" value="'+(v!=null?'$ '+Math.round(v).toLocaleString('es-AR'):'')+'" aria-label="'+k+' '+MESES[m-1]+'"></td>'};
+  var table=function(title,sub,cols,fnRow,totRow){
+    var h='<section class="stcard"><h3>'+title+(sub?'<small>'+sub+'</small>':'')+'</h3><table class="st"><thead><tr><th>Mes</th>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'</tr></thead><tbody>';
+    for(var m=1;m<=12;m++)h+='<tr'+(m===curM?' class="cur"':'')+'><td>'+MESES[m-1]+'</td>'+fnRow(m,row(m))+'</tr>';
+    if(totRow)h+='<tr class="totr"><td>Total</td>'+totRow+'</tr>';
+    return h+'</tbody></table></section>';
+  };
+  var html='<div class="stgrid">';
+  html+=table('Pacientes nuevos atendidos','primera vez en el mes',['Fran','Car','Total'],function(m,r){return cell(r.nf)+cell(r.nc)+cell(r.nt)},cell(tv('a','nf'))+cell(tv('a','nc'))+cell(tv('a','nt')));
+  html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')));
+  html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1));
+  html+=table('Promedio por paciente','ingresos ÷ pacientes atendidos',['Fran','Car','Total'],function(m,r){return cell(r.pf,1)+cell(r.pc,1)+cell(r.pt,1)},null);
+  html+=table('Rendimiento mensual','ingreso − costo fijo',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+inp(m,'cos',r.cos)+cell(r.ren,1)},cell(sum('ing'),1)+cell(sum('cos'),1)+cell(sum('ren'),1));
+  html+=table('Rendimiento redes','pacientes nuevos por canal',['Conv. Inst.','Ing. Inst.','Conv. Google','Ing. Google','Gasto Google','Rend. Google'],
+    function(m,r){return cell(r.ci)+cell(r.ii,1)+cell(r.cg)+cell(r.ig,1)+inp(m,'gg',r.gg)+cell(r.rg,1)},
+    cell(sum('ci'))+cell(sum('ii'),1)+cell(sum('cg'))+cell(sum('ig'),1)+cell(sum('gg'),1)+cell(sum('rg'),1));
+  html+=table('Valor consulta','se actualiza cada 4 meses',['Nuevo','Control'],function(m,r){return inp(m,'vn',r.vn)+inp(m,'vc',r.vc)},null);
+  html+='</div><p class="stnote">Hasta octubre 2026 los datos son los de la planilla. Los casilleros punteados (costo fijo, gasto Google y valor consulta) los podés completar o corregir acá.</p>';
+  $('#main').innerHTML=html;
+}
+function saveStat(el){
+  var y=el.dataset.sy, m=el.dataset.sm, k=el.dataset.sk, raw=String(el.value).replace(/[^\d-]/g,''), v=raw===''||raw==='-'?null:parseInt(raw,10);
+  stats[y]=stats[y]||{m:{},tot:{}}; stats[y].m=stats[y].m||{}; var r=stats[y].m[m]=stats[y].m[m]||{};
+  if(v==null)delete r[k];else r[k]=v;
+  var upd={};upd[k]=v==null?firebase.firestore.FieldValue.delete():v;
+  if(k==='cos'&&typeof r.ing==='number'){r.ren=v==null?null:r.ing-v;upd.ren=r.ren==null?firebase.firestore.FieldValue.delete():r.ren;if(r.ren==null)delete r.ren}
+  if(k==='gg'&&typeof r.ig==='number'){r.rg=v==null?null:r.ig-v;upd.rg=r.rg==null?firebase.firestore.FieldValue.delete():r.rg;if(r.rg==null)delete r.rg}
+  var mm={};mm[m]=upd;
+  db.collection('stats').doc(String(y)).set({m:mm,updatedAt:SVTS()},{merge:true}).then(function(){toast('Guardado')}).catch(function(e){console.error(e);toast('No se pudo guardar')});
+  renderStats();
+}
 function turnosCount(p){var n=data.turnos.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).length;return n+' turno'+(n===1?'':'s')}
 function waLink(t){
   var p=pacDe(t); if(!p||!p.phone)return null;
@@ -770,17 +898,19 @@ function waLink(t){
 /* ---------- render ---------- */
 function render(){
   ensureRanges();
+  if(ui.view==='stats'&&(!staff||staff.rol!=='admin'))ui.view='agenda';
   var nv=ui.view==='ficha'?'pacientes':ui.view;
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
-  var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes'],ficha:['Pacientes','pacientes']}[ui.view];
-  var pac=ui.view==='pacientes'||ui.view==='ficha';
-  $('#title').textContent=pac?'Pacientes':N;
+  var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes'],ficha:['Pacientes','pacientes'],stats:['Estadísticas','estadísticas']}[ui.view];
+  var pac=ui.view==='pacientes'||ui.view==='ficha'||ui.view==='stats';
+  $('#title').textContent=pac?V[0]:N;
   $('#title').className=pac?'plain':'';
   $('#switchBtn').hidden=pac;
   $('#switchBtn').innerHTML=ICON.swap+O;
   $('#switchBtn').setAttribute('aria-label','Ver '+V[1]+' de '+O);
-  document.title=(pac?'Pacientes':V[0]+' de '+N)+' · Lado B';
+  document.title=(pac?V[0]:V[0]+' de '+N)+' · Lado B';
+  if(ui.view==='stats'){renderStats();saveUi();return}
   if(ui.view==='agenda')renderAgenda();else if(ui.view==='pagos')renderPagos();else if(ui.view==='ficha'&&findPac(ui.fichaId))renderFicha();else{ui.view='pacientes';renderPacientes()}
   saveUi();
 }
@@ -1023,14 +1153,15 @@ document.addEventListener('click',function(ev){
   var a=el.closest('[data-act]'); if(!a)return;
   var act=a.dataset.act, id=a.dataset.id, t2, pg, b2, r;
   switch(act){
-    case 'view': ui.view=a.dataset.view; render(); break;
+    case 'view': ui.view=a.dataset.view; ui.plim=null; render(); break;
+    case 'year': ui.sy=+a.dataset.y; renderStats(); break;
     case 'switch': ui.nutri=OTHER[ui.nutri]; render(); break;
     case 'hoy': ui.date=weekday(today()); render(); break;
     case 'prev': ui.date=addDays(ui.date,-7); render(); break;
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
-    case 'pmore': ui.plim=(ui.plim||200)+300; renderPacList(); break;
+    case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
     case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
@@ -1095,6 +1226,7 @@ document.addEventListener('change',function(ev){
   var el=ev.target;
   if(el.dataset&&el.dataset.pauta){var pp2=findPac(el.dataset.pauta);if(pp2){pp2.pauta=el.checked;save()}return}
   if(el.dataset&&el.dataset.fact){var p=findP(el.dataset.fact);if(p){p.fact=el.checked;save();render()}return}
+  if(el.classList&&el.classList.contains('stin')){saveStat(el);return}
   if(el.id==='pMes'||el.id==='pAnio'){ui.month=new Date(+$('#pAnio').value,+$('#pMes').value,1);render();return}
   if(el.id==='nTime')$('#nOther').value='';
   if(el.id==='eTime')$('#eOther').value='';
@@ -1102,6 +1234,7 @@ document.addEventListener('change',function(ev){
 document.addEventListener('input',function(ev){
   var el=ev.target;
   if(el.id==='f_nac'){var e2=edad(el.value);$('#fEdad').textContent=e2!=null?e2+' años':'';var p0=findPac(ui.fichaId);$('#fSub').textContent=(e2!=null?e2+' años · ':'')+'Paciente de '+NUTRIS[p0.nutri];return}
+  if(el.id==='pSearch'){ui.q=el.value;ui.plim=100;renderPacSimpleList();return}
   if(el.classList&&el.classList.contains('pfi')){ui.pf=ui.pf||{};ui.pf[el.dataset.col]=el.value;ui.plim=200;renderPacList();return}
   if(el.id==='qApe'||el.id==='qTel'){var sb=$('#dlg2 [data-act="savePac"]');if(sb&&sb.dataset.force){delete sb.dataset.force;sb.textContent='Guardar paciente';$('#qWarn').hidden=true}}
   if(el.classList&&el.classList.contains('pacin')){el.dataset.pid='';el.classList.remove('ok');if(el.setCustomValidity)el.setCustomValidity('');pacOptions(el)}
