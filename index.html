@@ -1123,7 +1123,7 @@ function openTurno(id,editPago){
     '<div style="margin-top:12px">'+whenFields('e',t.date,t.time)+'</div>'+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Duración</span>'+seg('eDur',[['30','30 min'],['60','60 min']],String(t.dur))+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Tipo</span>'+seg('eTipo',TIPOS,t.tipo||'')+
-    '<div style="margin-top:12px"><button type="button" class="btn big" data-act="saveEdit" data-id="'+t.id+'">Guardar cambios</button></div></details></div>';
+    '<div style="margin-top:14px;display:flex;justify-content:flex-end"><button type="button" class="btn big primary" data-act="saveEdit" data-id="'+t.id+'">Guardar cambios</button></div></details></div>';
   html+='<div class="df"><button type="button" class="danger" data-act="delTurno" data-id="'+t.id+'">Borrar turno</button><div class="r"><button type="button" class="btn big" data-act="close">Cerrar</button></div></div>';
   openModal(html);
 }
