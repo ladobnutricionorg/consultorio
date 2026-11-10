@@ -71,6 +71,10 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .ev.x{background:var(--canc)}
 .ev.x .nm{text-decoration:line-through;color:var(--cancInk)}
 .ev.p{background:#fff;border:1.5px dashed var(--pendLine)}
+.ev.dup{padding:0 5px;gap:4px}
+.ev.dup .nm{font-size:10.5px;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ev.dup .tag{font-size:8.5px;padding:1px 3px}
+.warnin{display:block;background:#FFF6DC;border:1px solid #EBCB6B;color:#5C4505;border-radius:8px;padding:10px 12px;font-weight:600}
 .pay{flex:none;width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 .pay.ok{background:var(--ok);color:#fff}
 .pay.no{border:1.5px solid #8A938D;color:#6B746E;background:rgba(255,255,255,.5)}
@@ -967,11 +971,16 @@ function dayCol(d){
     var a=toMin(b.from), z=toMin(b.to), top=(a-START)/30*ROW+2, h=(z-a)/30*ROW-4, tall=h>40;
     inner+='<button type="button" class="blk'+(tall?' tall':'')+'" data-blk="'+b.id+'" style="top:'+top+'px;height:'+h+'px"><span class="bl">Bloqueado</span>'+(tall?'<span class="blr">'+show(a)+' – '+show(z)+'</span>':'')+(b.nota?'<span class="bln">'+esc(b.nota)+'</span>':'')+'</button>';
   });
-  turnosDe(ui.nutri,di).forEach(function(t){
-    var m=toMin(t.time), top=(m-START)/30*ROW+2, h=t.dur/30*ROW-4, pg=pagoDe(t.id), pay='';
+  /* turnos en el mismo horario se reparten el ancho, uno al lado del otro */
+  var TS=turnosDe(ui.nutri,di), lay={}, grp=[], gEnd=-1;
+  var flush=function(){if(!grp.length)return;var cols=[];grp.forEach(function(t){var a=toMin(t.time),c=0;while(cols[c]!=null&&cols[c]>a)c++;cols[c]=a+t.dur;lay[t.id]={c:c}});grp.forEach(function(t){lay[t.id].n=cols.length});grp=[]};
+  TS.forEach(function(t){var a=toMin(t.time);if(a>=gEnd){flush();gEnd=-1}grp.push(t);gEnd=Math.max(gEnd,a+t.dur)});flush();
+  TS.forEach(function(t){
+    var m=toMin(t.time), top=(m-START)/30*ROW+2, h=t.dur/30*ROW-4, pg=pagoDe(t.id), pay='', L=lay[t.id]||{c:0,n:1};
+    var pos=L.n>1?'left:calc(3px + (100% - 6px) * '+L.c+' / '+L.n+');width:calc((100% - 6px) / '+L.n+' - 2px);':'';
     var when=new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,m);
     if(t.estado==='c'){ if(pg)pay='<span class="pay ok" title="Pagado" aria-label="Pagado">$</span>'; else if(when<=now)pay='<span class="pay no" title="Sin pagar" aria-label="Sin pagar">$</span>'; }
-    inner+='<button type="button" class="ev '+t.estado+'" data-turno="'+t.id+'" style="top:'+top+'px;height:'+h+'px"><span class="t">'+show(m)+'</span><span class="nm">'+esc(t.name)+'</span><span class="meta">'+(t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+pay+'</span></button>';
+    inner+='<button type="button" class="ev '+t.estado+(L.n>1?' dup':'')+'" data-turno="'+t.id+'" title="'+esc(t.name)+'" style="top:'+top+'px;height:'+h+'px;'+pos+'">'+(L.n>1?'':'<span class="t">'+show(m)+'</span>')+'<span class="nm">'+esc(t.name)+'</span><span class="meta">'+(t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+pay+'</span></button>';
   });
   return '<div class="daycol'+(isT?' today':'')+'" data-date="'+di+'" style="height:'+H+'px" title="Tocá un horario libre para dar un turno">'+inner+'</div>';
 }
@@ -1066,8 +1075,14 @@ function saveNuevo(){
   if(!pid){e.textContent='Elegí un paciente de la lista, o cargalo con el botón +.';e.hidden=false;return}
   if(!date){e.textContent='Elegí la fecha.';e.hidden=false;return}
   if(!time){e.textContent='Elegí la hora.';e.hidden=false;return}
-  var p=findPac(pid);
-  data.turnos.push({id:uid(),nutri:ui.nutri,date:date,time:time,dur:+segVal('dur'),name:p.name,pid:p.id,tipo:segVal('tipo')||'',estado:segVal('estado')});
+  var p=findPac(pid), dur=+segVal('dur'), a0=toMin(time), btn=$('#dlg [data-act="saveNuevo"]');
+  /* aviso si ya hay un turno en ese horario (ej: pareja que viene junta) */
+  var choca=data.turnos.filter(function(t){return t.nutri===ui.nutri&&t.date===date&&t.estado!=='x'&&toMin(t.time)<a0+dur&&a0<toMin(t.time)+t.dur});
+  if(choca.length&&!btn.dataset.force){
+    e.innerHTML='<span class="warnin">Ese día en ese horario ya hay un turno asignado ('+choca.map(function(t){return esc(t.name)}).join(', ')+'). ¿Querés cargarlo de todas maneras?</span>';
+    e.hidden=false; btn.dataset.force='1'; btn.textContent='Sí, cargar igual'; return;
+  }
+  data.turnos.push({id:uid(),nutri:ui.nutri,date:date,time:time,dur:dur,name:p.name,pid:p.id,tipo:segVal('tipo')||'',estado:segVal('estado')});
   save();closeModal();goTo(date);
 }
 function goTo(di){var d=parse(di);if(d.getDay()!==0&&d.getDay()!==6)ui.date=d;render()}
@@ -1240,6 +1255,7 @@ document.addEventListener('change',function(ev){
   if(el.dataset&&el.dataset.fact){var p=findP(el.dataset.fact);if(p){p.fact=el.checked;save();render()}return}
   if(el.classList&&el.classList.contains('stin')){saveStat(el);return}
   if(el.id==='pMes'||el.id==='pAnio'){ui.month=new Date(+$('#pAnio').value,+$('#pMes').value,1);render();return}
+  if(/^n(Date|Time|Other)$/.test(el.id)){var fb=$('#dlg [data-act="saveNuevo"]');if(fb&&fb.dataset.force){delete fb.dataset.force;fb.textContent='Guardar';$('#nErr').hidden=true}}
   if(el.id==='nTime')$('#nOther').value='';
   if(el.id==='eTime')$('#eOther').value='';
 });
