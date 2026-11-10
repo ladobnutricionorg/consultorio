@@ -103,6 +103,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .thead,.prow{display:grid;grid-template-columns:44px minmax(0,1fr) 100px 128px 72px;align-items:center;column-gap:12px;padding:0 16px}
 .prow{border-top:1px solid #F0F2EE}
 .table .prow:nth-child(2){border-top:0}
+.amt.debe{color:#A12F22;font-weight:800}
+.prow.debe{background:#FFF8F6}
+.prow.debe:hover{background:#FFF1EE}
 .pdate{font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .thead{height:38px;background:#F6F7F3;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .r{text-align:right}.c{text-align:center}
@@ -999,9 +1002,20 @@ function renderPagos(){
     '<div class="tot hi"><span>Total del mes<em>('+list.length+')</em></span><b>'+money(tot)+'</b></div>'+
     '<div class="tot fc"><span>Facturado</span><b>'+money(tf)+'</b></div></div>';
   html+='<div class="table"><div class="thead"><span>Fecha</span><span>Paciente</span><span class="r">Monto</span><span>Medio</span><span class="c">Fact.</span></div>';
-  if(!list.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
-  list.forEach(function(p){
-    var t=p.turnoId?findT(p.turnoId):null;
+  /* Deudas: turnos confirmados que ya pasaron y no tienen pago (desde el 1/11/2026) */
+  var now=new Date(), deudas=data.turnos.filter(function(t){
+    if(t.nutri!==ui.nutri||t.estado!=='c'||t.date<'2026-11-01'||t.date.indexOf(pref)!==0||pagoDe(t.id))return false;
+    var d=parse(t.date);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,toMin(t.time))<=now;
+  });
+  var rows=list.map(function(p){return {k:p.date,p:p}}).concat(deudas.map(function(t){return {k:t.date+' '+t.time,t:t}}));
+  rows.sort(function(a,b){return a.k<b.k?-1:a.k>b.k?1:0});
+  if(!rows.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
+  rows.forEach(function(r){
+    if(r.t){var dt=r.t;
+      html+='<div class="prow debe"><span class="pdate">'+ddmm(dt.date)+'</span><button type="button" class="pname" data-turno="'+dt.id+'" title="Tocá para registrar el pago"><span>'+esc(dt.name)+'</span>'+(dt.tipo?'<span class="tag">'+esc(dt.tipo)+'</span>':'')+'</button>'+
+        '<span class="amt debe">Debe</span><span></span><span></span></div>';
+      return}
+    var p=r.p, t=p.turnoId?findT(p.turnoId):null;
     html+='<div class="prow"><span class="pdate">'+ddmm(p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
       '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio)+'</span>'+
       '<label class="ck"><input type="checkbox" data-fact="'+p.id+'"'+(p.fact?' checked':'')+' aria-label="Facturado: '+esc(p.name)+'"></label></div>';
