@@ -181,10 +181,17 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .psearch{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:360px}
 .psearch:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
 .slist{width:100%;max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.srow{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr) auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:46px;border-top:1px solid #F0F2EE}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) 64px 110px;align-items:center;column-gap:12px;padding:6px 16px;min-height:46px;border-top:1px solid #F0F2EE}
 .srow:first-child{border-top:0}
 .srow:hover{background:#FAFBF7}
 .srow .pc{font-size:12.5px}
+.srow .pc .lleg{font-style:normal}
+.srow.shead{min-height:34px;background:#F6F7F3;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.srow.shead:hover{background:#F6F7F3}
+.pwrap{width:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.ptitle{margin:6px 0 0;font-size:15px;font-weight:800}
+#row2 .psearch{max-width:420px}
+.ficha.ttl{vertical-align:middle;margin-left:8px;height:26px;font-size:10px}
 .yrs{display:inline-flex;background:#E9EBE5;border-radius:10px;padding:3px;gap:2px}
 .yrs button{border:0;background:transparent;font-size:13.5px;font-weight:700;height:34px;padding:0 16px;border-radius:8px;cursor:pointer;color:#3D4741}
 .yrs button.on{background:var(--ink);color:#fff}
@@ -369,10 +376,8 @@ details.edit[open] summary{margin-bottom:12px}
   .search{height:30px;font-size:13px}
   .msel{height:30px;font-size:12.5px;padding:0 6px}
   .psearch{height:30px;font-size:13px}
-  .srow{grid-template-columns:minmax(0,1fr) auto;row-gap:2px;padding:6px 12px}
-  .srow .pc{display:none}
-  .srow .pc.pn{display:block;grid-column:1/2;grid-row:2;font-size:11.5px;color:var(--muted)}
-  .srow .ficha{grid-row:1/3;grid-column:2}
+  .srow{grid-template-columns:minmax(0,1fr) 44px 86px;column-gap:8px;padding:6px 10px}
+  .srow .pc{font-size:11.5px}
   .yrs button{height:30px;padding:0 11px;font-size:12.5px}
   .stcard{padding:12px 10px 8px}
   .st{font-size:11.5px}
@@ -626,7 +631,7 @@ function pickPac(inputId,pid){var i=$('#'+inputId),p=findPac(pid);if(!i||!p)retu
 function pidOf(inputId){var i=$('#'+inputId);if(!i)return null;if(i.dataset.pid&&findPac(i.dataset.pid))return i.dataset.pid;var p=paciente(i.value);return p?p.id:null}
 function openPacForm(forId,pid){
   var p=pid?findPac(pid):null;
-  $('#dlg2').innerHTML=head(p?esc(p.name):'Paciente nuevo','','close2')+
+  $('#dlg2').innerHTML=head(p?esc(p.name)+' <button type="button" class="ficha ttl" data-act="fichaDe" data-id="'+p.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Ficha</button>':'Paciente nuevo','','close2')+
     '<div class="sec"><div class="fields">'+
       '<label class="fld"><span>Nombre</span><input id="qNom" autocomplete="off" value="'+esc(p?p.nombre:'')+'"></label>'+
       '<label class="fld"><span>Apellido</span><input id="qApe" autocomplete="off" value="'+esc(p?p.apellido:'')+'"></label>'+
@@ -662,7 +667,8 @@ function savePac(forId,pid){
     data.turnos.forEach(function(t){if(t.pid===p.id)t.name=full});
     data.pagos.forEach(function(x){if(x.pid===p.id)x.name=full});
   } else {
-    p={id:uid(),nombre:nom,apellido:ape,name:full,phone:tel,llegada:lle,notas:$('#qNotas').value.trim(),nutri:segVal('qNutri',$('#dlg2'))||ui.nutri};
+    var td0=today();
+    p={id:uid(),nombre:nom,apellido:ape,name:full,phone:tel,llegada:lle,notas:$('#qNotas').value.trim(),nutri:segVal('qNutri',$('#dlg2'))||ui.nutri,alta:cap(MESES[td0.getMonth()])+' '+td0.getFullYear(),altaKey:curAltaKey()};
     data.pacientes.push(p);
   }
   save();
@@ -767,32 +773,36 @@ function pacSortKey(p,k){
   return norm(pacVal(p,k));
 }
 function isAdmin(){return !!(staff&&staff.rol==='admin')}
+/* Pacientes (todos los usuarios): buscador centrado; sin búsqueda se muestran los ingresos del mes */
+function curAltaKey(){var t=today();return t.getFullYear()+'-'+pad(t.getMonth()+1)}
 function renderPacSimple(){
-  $('#row2').innerHTML='<input class="psearch" id="pSearch" type="search" placeholder="Buscar paciente…" aria-label="Buscar paciente" autocomplete="off" value="'+esc(ui.q||'')+'">'+
+  $('#row2').innerHTML='<input class="psearch" id="pSearch" type="search" placeholder="Buscar paciente (nombre o apellido)…" aria-label="Buscar paciente" autocomplete="off" value="'+esc(ui.q||'')+'">'+
     '<button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
-  $('#main').innerHTML='<div class="slist" id="sbody"></div><p class="foot" id="pcount" style="margin:0"></p>';
+  $('#main').innerHTML='<div class="pwrap"><h2 class="ptitle" id="ptitle"></h2><div class="slist" id="sbody"></div><p class="foot" id="pcount" style="margin:0"></p>'+
+    (isAdmin()?'<p class="foot" style="margin:0"><button type="button" data-act="ptabla">Ver tabla completa de pacientes</button></p>':'')+'</div>';
   renderPacSimpleList();
 }
 function renderPacSimpleList(){
-  var q=norm(ui.q||''), lim=ui.plim||100;
-  var list=data.pacientes.filter(function(p){return !q||norm(p.name).indexOf(q)>-1});
+  var q=norm(ui.q||''), lim=ui.plim||100, buscando=q.length>=2, ak=curAltaKey();
+  var list=data.pacientes.filter(function(p){return buscando?norm(p.name).indexOf(q)>-1:p.altaKey===ak});
   list.sort(function(a,b){var x=norm((a.apellido||'')+' '+a.name),y=norm((b.apellido||'')+' '+b.name);return x<y?-1:x>y?1:0});
+  $('#ptitle').textContent=buscando?'Resultados':'Pacientes nuevos '+cap(MESES[today().getMonth()]);
   var html='';
-  if(!list.length)html='<div class="empty">No hay pacientes que coincidan.'+(q?' Si es nuevo, cargalo con <b>+ Paciente</b>.':'')+'</div>';
+  if(!list.length)html='<div class="empty">'+(buscando?'No hay pacientes que coincidan. Si es nuevo, cargalo con <b>+ Paciente</b>.':'Todavía no hay pacientes nuevos este mes.')+'</div>';
+  else html='<div class="srow shead"><span>Paciente</span><span>Nutri</span><span>Llegada</span></div>';
   list.slice(0,lim).forEach(function(p){
     html+='<div class="srow"><button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b></button>'+
       '<span class="pc">'+esc(NUTRIS[p.nutri]||'')+'</span>'+
-      '<span class="pc pn" title="'+esc(p.notas||'')+'">'+esc(p.notas||'')+'</span>'+
-      '<button type="button" class="ficha" data-act="ficha" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>FICHA</button></div>';
+      '<span class="pc">'+(p.llegada?'<em class="lleg '+esc(p.llegada)+'">'+esc(p.llegada)+'</em>':'')+'</span></div>';
   });
   if(list.length>lim)html+='<div class="pmore"><button type="button" class="btn" data-act="pmore">Mostrar más ('+(list.length-lim)+' restantes)</button></div>';
   $('#sbody').innerHTML=html;
-  $('#pcount').textContent=q?list.length+' coincidencia'+(list.length===1?'':'s'):data.pacientes.length+' pacientes';
+  $('#pcount').textContent=buscando?list.length+' coincidencia'+(list.length===1?'':'s'):list.length+' paciente'+(list.length===1?'':'s')+' nuevo'+(list.length===1?'':'s')+' este mes';
 }
 function renderPacientes(){
-  if(!isAdmin()){renderPacSimple();return}
+  if(!isAdmin()||!ui.ptabla){renderPacSimple();return}
   ui.pf=ui.pf||{}; ui.ps=ui.ps||{k:'name',d:1}; ui.plim=ui.plim||200;
-  $('#row2').innerHTML='<button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
+  $('#row2').innerHTML='<button type="button" class="btn" data-act="ptabla">← Volver al buscador</button><button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
   var tpl=PCOLS.map(function(c){return c.w}).join(' ')+' 84px';
   var html='<div class="ptable"><div class="pt" style="--cols:'+tpl+'"><div class="ph">';
   PCOLS.forEach(function(c){
@@ -1153,13 +1163,15 @@ document.addEventListener('click',function(ev){
   var a=el.closest('[data-act]'); if(!a)return;
   var act=a.dataset.act, id=a.dataset.id, t2, pg, b2, r;
   switch(act){
-    case 'view': ui.view=a.dataset.view; ui.plim=null; render(); break;
+    case 'view': ui.view=a.dataset.view; ui.plim=null; if(ui.view==='pacientes')ui.ptabla=false; render(); break;
     case 'year': ui.sy=+a.dataset.y; renderStats(); break;
     case 'switch': ui.nutri=OTHER[ui.nutri]; render(); break;
     case 'hoy': ui.date=weekday(today()); render(); break;
     case 'prev': ui.date=addDays(ui.date,-7); render(); break;
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
+    case 'ptabla': ui.ptabla=!ui.ptabla; ui.plim=null; renderPacientes(); break;
+    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
     case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
