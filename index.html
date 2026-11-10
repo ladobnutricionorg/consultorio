@@ -419,6 +419,65 @@ details.edit[open] summary{margin-bottom:12px}
   .dlg{max-width:none;border-radius:16px 16px 0 0;max-height:92vh}
   .fields{grid-template-columns:1fr 1fr}
 }
+/* ===== Estilo sutil (opción 4): pestañas subrayadas, campos de línea, botones chicos y redondeados ===== */
+.btn{height:32px;font-size:12.5px;padding:0 14px;border-radius:999px;border-color:#D9DDD5;font-weight:600}
+.btn.icon{width:32px;padding:0}
+.btn.big{height:36px;font-size:13px;padding:0 18px;border-radius:999px}
+.btn.primary{border-color:var(--ink)}
+.nav{gap:16px;border-bottom:1px solid transparent}
+.nav button{height:32px;padding:0 2px;border-radius:0;border-bottom:2px solid transparent;font-weight:500;color:#7A837D}
+.nav button:hover{background:transparent;color:var(--ink)}
+.nav button.on{background:transparent;color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.yrs{background:transparent;padding:0;gap:16px;border-bottom:1px solid #E3E6E0;border-radius:0}
+.yrs button{height:32px;padding:0 2px;border-radius:0;border-bottom:2px solid transparent;font-weight:500;color:#7A837D}
+.yrs button.on{background:transparent;color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.msel,.psearch,#row2 .psearch{height:34px;border:0;border-bottom:1px solid #C9CFC8;border-radius:0;background:transparent;padding:0 4px}
+.msel:focus,.psearch:focus{outline:0;border-bottom-color:var(--ink)}
+/* ventanas */
+.dlg{border-radius:14px}
+.dh{padding:18px 22px 10px}.dh h2{font-size:18px;font-weight:700}.dh p{font-size:12.5px}
+.xbtn{width:30px;height:30px;background:transparent}
+.xbtn:hover{background:#F1F2EE}
+.sec{padding:12px 22px;gap:8px}
+.df{padding:12px 22px 18px}
+.fld>span{font-size:11.5px;font-weight:600;color:#56605A}
+.fld input,.fld select,.combo input{height:38px;font-size:14px;border:0;border-bottom:1px solid #D9DDD5;border-radius:0;padding:0 2px;background:transparent}
+.fld input:focus,.fld select:focus,.combo input:focus{outline:0;border-bottom:1.5px solid var(--ink)}
+.combo input.ok{background:transparent;border-bottom-color:#7BA319}
+.addpac{width:32px;height:32px;border-radius:50%;align-self:center}
+.lbl{font-size:10px;color:#9AA29C;margin-top:6px}
+.seg{gap:18px;grid-auto-columns:max-content;border-bottom:1px solid #ECEEE9}
+.seg button{height:30px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;padding:0 2px;font-size:13px;color:#7A837D;font-weight:500}
+.seg button.on{background:transparent;color:var(--ink);border-bottom-color:var(--ink);font-weight:700}
+.seg.estado button{color:#7A837D}
+.seg.estado button.on::before{content:""}
+.seg.estado button.on[data-val="p"]{background:transparent;border:0;border-bottom:2px dashed var(--pendLine);color:var(--ink)}
+.seg.estado button.on[data-val="c"]{background:transparent;border:0;border-bottom:2px solid #E0B12A;color:var(--ink)}
+.seg.estado button.on[data-val="x"]{background:transparent;border:0;border-bottom:2px solid #D9796C;color:var(--cancInk)}
+[data-seg="llegada"] button.on[data-val]{background:transparent!important}
+[data-seg="llegada"] button.on[data-val="Google"]{border-bottom-color:#C9574A}
+[data-seg="llegada"] button.on[data-val="Instagram"]{border-bottom-color:#C9468F}
+[data-seg="llegada"] button.on[data-val="Referido"]{border-bottom-color:#3F7CC4}
+[data-seg="llegada"] button.on[data-val="Otro"]{border-bottom-color:#D2A21E}
+.wa{height:36px;border-radius:999px;font-size:13px}
+.danger{height:36px;font-size:13px}
+.danger.sure{border-radius:999px}
+.ficha{border-radius:999px}
+.paid{border-radius:12px;padding:10px 14px}
+.hcform textarea{border:0;border-bottom:1px solid #D9DDD5;border-radius:0;background:transparent;padding:8px 2px}
+.lbox .fld input{height:40px}
+@media (max-width:760px){
+  .nav{background:transparent;padding:0;gap:14px;justify-content:center;border-bottom:1px solid #E3E6E0}
+  .nav button{flex:0 0 auto;height:32px;font-size:13px}
+  .btn{height:30px;font-size:12px;padding:0 11px}
+  .btn.icon{width:30px}
+  .tab{height:34px;background:transparent;border-radius:0;border-bottom:2px solid transparent}
+  .tab.on{background:transparent;color:var(--ink);border-bottom-color:var(--ink)}
+  .tab.on b{color:var(--ink)}
+  .tab span{color:#7A837D}
+  .seg{gap:14px}
+  .dh{padding:16px 18px 8px}.sec{padding:10px 18px}.df{padding:10px 18px 16px}
+}
 </style>
 </head>
 <body>
