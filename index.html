@@ -106,6 +106,19 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .amt.debe{color:#A12F22;font-weight:800}
 .prow.debe{background:#FFF8F6}
 .prow.debe:hover{background:#FFF1EE}
+.qwrap{display:flex;justify-content:flex-end;align-items:center;gap:7px}
+.qd{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #9A3324;background:#fff;color:#9A3324;font:inherit;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.qd:hover{background:#FFF1EE}.qd.on{background:#17201B;border-color:#17201B;color:#D4FF3A}
+.qpop{position:absolute;z-index:60;width:228px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(23,32,27,.18),0 0 0 1px rgba(23,32,27,.06);padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.qpop:before{content:'';position:absolute;top:-6px;left:var(--ax,190px);width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-1px -1px 0 rgba(23,32,27,.06)}
+.qnm{font-size:12px;font-weight:700;color:#3D4741;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qpop select,.qpop input{font:inherit;font-size:13px;font-weight:600;height:30px;width:100%;border:0;border-bottom:1.5px solid #C9CFC8;border-radius:0;background:transparent;padding:0 2px;color:#17201B;outline:none}
+.qpop select:focus,.qpop input:focus{border-bottom-color:#17201B}
+.qerr{margin:0;font-size:11.5px;font-weight:600;color:#9A3324}
+.qft{display:flex;justify-content:flex-end;gap:10px;align-items:center}
+.qcn,.qgo{font:inherit;font-size:12.5px;height:28px;padding:0 2px;border:0;background:none;cursor:pointer}
+.qcn{font-weight:600;color:#7A837D}
+.qgo{font-weight:800;color:#17201B;border-bottom:2px solid #17201B;border-radius:0}
 .pdate{font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .thead{height:38px;background:#F6F7F3;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .r{text-align:right}.c{text-align:center}
@@ -571,6 +584,7 @@ function weekday(d){var x=new Date(d);while(x.getDay()===0||x.getDay()===6)x=add
 function toMin(t){var p=t.split(':').map(Number);return p[0]*60+p[1]}
 function show(m){return Math.floor(m/60)+':'+pad(m%60)}
 function hhmm(m){return pad(Math.floor(m/60))+':'+pad(m%60)}
+function toast(msg){var o=document.querySelector('.toast');if(o)o.remove();var d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=msg;document.body.appendChild(d);setTimeout(function(){d.remove()},2200)}
 function money(n){return '$ '+Number(n||0).toLocaleString('es-AR')}
 function ddmm(s){var p=s.split('-');return p[2]+'/'+p[1]}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1096,7 +1110,7 @@ function renderPagos(){
   rows.forEach(function(r){
     if(r.t){var dt=r.t;
       html+='<div class="prow debe"><span class="pdate">'+ddmm(dt.date)+'</span><button type="button" class="pname" data-turno="'+dt.id+'" title="Tocá para registrar el pago"><span>'+esc(dt.name)+'</span>'+(dt.tipo?'<span class="tag">'+esc(dt.tipo)+'</span>':'')+'</button>'+
-        '<span class="amt debe">Debe</span><span></span><span></span></div>';
+        '<span class="amt debe qwrap">Debe <button type="button" class="qd" data-act="qpago" data-id="'+dt.id+'" aria-label="Cobrar a '+esc(dt.name)+'" title="Registrar pago">$</button></span><span></span><span></span></div>';
       return}
     var p=r.p, t=p.turnoId?findT(p.turnoId):null;
     html+='<div class="prow"><span class="pdate">'+ddmm(p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
@@ -1252,8 +1266,33 @@ function sure(btn){
 }
 
 /* ---------- eventos ---------- */
+/* ---------- Cobro rápido desde Pagos (fila "Debe") ---------- */
+var QMONTOS=[30000,40000,45000,60000,65000];
+function closeQp(){var q=$('#qpop');if(q)q.remove();$$('.qd.on').forEach(function(b){b.classList.remove('on')})}
+function openQp(btn,tid){
+  var t=findT(tid); if(!t)return; closeQp(); btn.classList.add('on');
+  var d=document.createElement('div'); d.id='qpop'; d.className='qpop'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Registrar pago');
+  d.innerHTML='<div class="qnm">'+esc(t.name)+' · '+ddmm(t.date)+'</div>'+
+    '<div class="qm"><select id="qMonto" aria-label="Monto"><option value="">Monto…</option>'+QMONTOS.map(function(v){return '<option value="'+v+'">'+money(v)+'</option>'}).join('')+'<option value="otro">Otro importe…</option></select></div>'+
+    '<select id="qMedio" aria-label="Medio de pago"><option value="">Medio de pago…</option>'+MEDIOS.map(function(m){return '<option>'+m+'</option>'}).join('')+'</select>'+
+    '<p class="qerr" id="qErr2" hidden></p>'+
+    '<div class="qft"><button type="button" class="qcn" data-act="qcancel">Cancelar</button><button type="button" class="qgo" data-act="qsave" data-id="'+t.id+'">Guardar</button></div>';
+  document.body.appendChild(d);
+  var r=btn.getBoundingClientRect(), w=d.offsetWidth, left=Math.min(Math.max(8,r.right+scrollX-w+18),scrollX+document.documentElement.clientWidth-w-8);
+  d.style.left=left+'px'; d.style.top=(r.bottom+scrollY+9)+'px'; d.style.setProperty('--ax',(r.left+scrollX+r.width/2-left-6)+'px');
+  d.addEventListener('input',function(){$('#qErr2').hidden=true});
+  $('#qMonto').addEventListener('change',function(){if(this.value==='otro'){$('.qm',d).innerHTML='<input id="qMonto" inputmode="numeric" placeholder="$ monto" aria-label="Monto">';$('#qMonto').focus()}});
+}
+function saveQp(tid){
+  var t=findT(tid), e=$('#qErr2'), raw=String($('#qMonto').value).replace(/[^\d]/g,''), monto=raw?parseInt(raw,10):0, medio=$('#qMedio').value;
+  if(!t)return closeQp();
+  if(!monto||!medio){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
+  if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:t.date,monto:monto,medio:medio,fact:false});
+  closeQp(); save(); render(); toast('Pago registrado');
+}
 document.addEventListener('click',function(ev){
   var el=ev.target;
+  if($('#qpop')&&!el.closest('#qpop')&&!el.closest('.qd'))closeQp();
   var segBtn=el.closest('[data-seg] button');
   if(segBtn){
     var g=segBtn.parentNode;
@@ -1280,6 +1319,9 @@ document.addEventListener('click',function(ev){
   switch(act){
     case 'view': ui.view=a.dataset.view; ui.plim=null; if(ui.view==='pacientes')ui.ptabla=false; render(); break;
     case 'year': ui.sy=+a.dataset.y; renderStats(); break;
+    case 'qpago': if(a.classList.contains('on'))closeQp(); else openQp(a,id); break;
+    case 'qcancel': closeQp(); break;
+    case 'qsave': saveQp(id); break;
     case 'switch': ui.nutri=OTHER[ui.nutri]; render(); break;
     case 'hoy': ui.date=weekday(today()); render(); break;
     case 'prev': ui.date=addDays(ui.date,-7); render(); break;
