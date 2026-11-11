@@ -211,7 +211,10 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .st th:first-child,.st td:first-child{text-align:left}
 .st td{padding:4px 6px;text-align:right;border-top:1px solid #F2F3EF;white-space:nowrap}
 .st td:first-child{color:#3D4741;text-transform:capitalize}
-.st tr.cur td{background:#FAFDEB}
+.st tr.best td{background:#EEF8CF;font-weight:700}
+.st tr.best td:first-child::after{content:' ★';color:#7BA319}
+.st tr.next td{background:#E3EEFB}
+.st tr.next td:first-child::after{content:' · próx. aumento';font-size:10px;font-weight:700;color:#2C5C9A}
 .st tr.totr td{border-top:1.5px solid var(--ink);font-weight:800}
 .st .neg{color:#A12F22}
 .st .dim{color:#B5BBB4}
@@ -937,29 +940,34 @@ function renderStats(){
   ui.sy=ui.sy||ty;
   $('#row2').innerHTML='<div class="yrs" role="group" aria-label="Año">'+years.map(function(y){return '<button type="button" data-act="year" data-y="'+y+'" class="'+(y===ui.sy?'on':'')+'" aria-pressed="'+(y===ui.sy)+'">'+y+'</button>'}).join('')+'</div>';
   if(!stats){$('#main').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto 10px"></div>Cargando estadísticas…</div>';loadStats();return}
-  var doc=stats[String(ui.sy)]||{m:{},tot:{}}, M=doc.m||{}, T=doc.tot||{}, curM=ui.sy===ty?today().getMonth()+1:0;
+  var doc=stats[String(ui.sy)]||{m:{},tot:{}}, M=doc.m||{}, T=doc.tot||{};
+  /* mejor mes de todo el historial para un campo */
+  var bestOf=function(k){var mx=null;Object.keys(stats).forEach(function(y){var mm=stats[y].m||{};for(var m=1;m<=12;m++){var v=(mm[m]||{})[k];if(typeof v==='number'&&(mx==null||v>mx))mx=v}});return mx};
+  /* próximo aumento del valor consulta: cada 3 meses (feb, may, ago, nov), el siguiente después del mes actual */
+  var nx=new Date(today().getFullYear(),today().getMonth()+1,1);while((nx.getMonth()+1)%3!==2)nx.setMonth(nx.getMonth()+1);
   var row=function(m){return M[m]||{}};
   var sum=function(k){var s=0,any=false;for(var m=1;m<=12;m++){var v=row(m)[k];if(typeof v==='number'){s+=v;any=true}}return any?s:null};
   var tv=function(blk,k){return T[blk]&&typeof T[blk][k]==='number'?T[blk][k]:sum(k)};
   var cell=function(v,money){if(v==null||v==='')return '<td class="dim">—</td>';return '<td'+(v<0?' class="neg"':'')+'>'+(money?fm(v):fn(v))+'</td>'};
   var inp=function(m,k,v){return '<td><input class="stin" inputmode="numeric" data-sy="'+ui.sy+'" data-sm="'+m+'" data-sk="'+k+'" value="'+(v!=null?'$ '+Math.round(v).toLocaleString('es-AR'):'')+'" aria-label="'+k+' '+MESES[m-1]+'"></td>'};
-  var table=function(title,sub,cols,fnRow,totRow){
+  var table=function(title,sub,cols,fnRow,totRow,bk){
+    var bv=bk?bestOf(bk):null;
     var h='<section class="stcard"><h3>'+title+(sub?'<small>'+sub+'</small>':'')+'</h3><table class="st"><thead><tr><th>Mes</th>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'</tr></thead><tbody>';
-    for(var m=1;m<=12;m++)h+='<tr'+(m===curM?' class="cur"':'')+'><td>'+MESES[m-1]+'</td>'+fnRow(m,row(m))+'</tr>';
+    for(var m=1;m<=12;m++)h+='<tr'+(bk==='next'?(ui.sy===nx.getFullYear()&&m===nx.getMonth()+1?' class="next"':''):(bv!=null&&row(m)[bk]===bv?' class="best" title="Mejor mes del historial"':''))+'><td>'+MESES[m-1]+'</td>'+fnRow(m,row(m))+'</tr>';
     if(totRow)h+='<tr class="totr"><td>Total</td>'+totRow+'</tr>';
     return h+'</tbody></table></section>';
   };
   var html='<div class="stgrid">';
-  html+=table('Pacientes nuevos atendidos','primera vez en el mes',['Fran','Car','Total'],function(m,r){return cell(r.nf)+cell(r.nc)+cell(r.nt)},cell(tv('a','nf'))+cell(tv('a','nc'))+cell(tv('a','nt')));
-  html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')));
-  html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1));
-  html+=table('Promedio por paciente','ingresos ÷ pacientes atendidos',['Fran','Car','Total'],function(m,r){return cell(r.pf,1)+cell(r.pc,1)+cell(r.pt,1)},null);
-  html+=table('Rendimiento mensual','ingreso − costo fijo',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+inp(m,'cos',r.cos)+cell(r.ren,1)},cell(sum('ing'),1)+cell(sum('cos'),1)+cell(sum('ren'),1));
+  html+=table('Pacientes nuevos atendidos','primera vez en el mes',['Fran','Car','Total'],function(m,r){return cell(r.nf)+cell(r.nc)+cell(r.nt)},cell(tv('a','nf'))+cell(tv('a','nc'))+cell(tv('a','nt')),'nt');
+  html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')),'tt');
+  html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1),'ft');
+  html+=table('Promedio por paciente','ingresos ÷ pacientes atendidos',['Fran','Car','Total'],function(m,r){return cell(r.pf,1)+cell(r.pc,1)+cell(r.pt,1)},null,'pt');
+  html+=table('Rendimiento mensual','ingreso − costo fijo',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+inp(m,'cos',r.cos)+cell(r.ren,1)},cell(sum('ing'),1)+cell(sum('cos'),1)+cell(sum('ren'),1),'ren');
   html+=table('Rendimiento redes','pacientes nuevos por canal',['Conv. Inst.','Ing. Inst.','Conv. Google','Ing. Google','Gasto Google','Rend. Google'],
     function(m,r){return cell(r.ci)+cell(r.ii,1)+cell(r.cg)+cell(r.ig,1)+inp(m,'gg',r.gg)+cell(r.rg,1)},
-    cell(sum('ci'))+cell(sum('ii'),1)+cell(sum('cg'))+cell(sum('ig'),1)+cell(sum('gg'),1)+cell(sum('rg'),1));
-  html+=table('Valor consulta','se actualiza cada 4 meses',['Nuevo','Control'],function(m,r){return inp(m,'vn',r.vn)+inp(m,'vc',r.vc)},null);
-  html+='</div><p class="stnote">Hasta octubre 2026 los datos son los de la planilla. Los casilleros punteados (costo fijo, gasto Google y valor consulta) los podés completar o corregir acá.</p>';
+    cell(sum('ci'))+cell(sum('ii'),1)+cell(sum('cg'))+cell(sum('ig'),1)+cell(sum('gg'),1)+cell(sum('rg'),1),'rg');
+  html+=table('Valor consulta','aumenta cada 3 meses',['Nuevo','Control'],function(m,r){return inp(m,'vn',r.vn)+inp(m,'vc',r.vc)},null,'next');
+  html+='</div><p class="stnote">Hasta octubre 2026 los datos son los de la planilla. La fila resaltada con ★ es el mejor mes de todo el historial (desde 2023). Los casilleros punteados (costo fijo, gasto Google y valor consulta) los podés completar o corregir acá.</p>';
   $('#main').innerHTML=html;
 }
 function saveStat(el){
