@@ -197,6 +197,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .srow.shead:hover{background:#F6F7F3}
 .pwrap{width:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .ptitle{margin:6px 0 0;font-size:15px;font-weight:800}
+.phead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:6px}.phead .ptitle{margin:0}
+.pcnt{display:flex;gap:6px;flex:none}.pcnt em{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#7A837D;border-bottom:2px solid #D9DED6;padding:0 4px 3px;white-space:nowrap}
+.pcnt b{font-size:13px;font-weight:400;color:#17201B;margin-left:3px;letter-spacing:0}.pcnt .t{border-color:#D4FF3A}
 #row2 .psearch{max-width:420px}
 .ficha.ttl{vertical-align:middle;margin-left:8px;height:26px;font-size:10px}
 .yrs{display:inline-flex;background:#E9EBE5;border-radius:10px;padding:3px;gap:2px}
@@ -858,7 +861,7 @@ function curAltaKey(){var t=today();return t.getFullYear()+'-'+pad(t.getMonth()+
 function renderPacSimple(){
   $('#row2').innerHTML='<input class="psearch" id="pSearch" type="search" placeholder="Buscar paciente (nombre o apellido)…" aria-label="Buscar paciente" autocomplete="off" value="'+esc(ui.q||'')+'">'+
     '<button type="button" class="btn primary" data-act="newPac">'+ICON.plus+'Paciente</button>';
-  $('#main').innerHTML='<div class="pwrap"><h2 class="ptitle" id="ptitle"></h2><div class="slist" id="sbody"></div><p class="foot" id="pcount" style="margin:0"></p>'+
+  $('#main').innerHTML='<div class="pwrap"><div class="phead"><h2 class="ptitle" id="ptitle"></h2><span class="pcnt" id="pcnt"></span></div><div class="slist" id="sbody"></div><p class="foot" id="pcount" style="margin:0"></p>'+
     (isAdmin()?'<p class="foot" style="margin:0"><button type="button" data-act="ptabla">Ver tabla completa de pacientes</button></p>':'')+'</div>';
   renderPacSimpleList();
 }
@@ -867,6 +870,8 @@ function renderPacSimpleList(){
   var list=data.pacientes.filter(function(p){return buscando?norm(p.name).indexOf(q)>-1:p.altaKey===ak});
   list.sort(function(a,b){var x=norm((a.apellido||'')+' '+a.name),y=norm((b.apellido||'')+' '+b.name);return x<y?-1:x>y?1:0});
   $('#ptitle').textContent=buscando?'Resultados':'Pacientes nuevos '+cap(MESES[today().getMonth()]);
+  var nF=list.filter(function(p){return p.nutri==='fran'}).length, nC=list.filter(function(p){return p.nutri==='car'}).length;
+  $('#pcnt').innerHTML=buscando?'':'<em>FRAN <b>'+nF+'</b></em><em>CAR <b>'+nC+'</b></em><em class="t">TOTAL <b>'+list.length+'</b></em>';
   var html='';
   if(!list.length)html='<div class="empty">'+(buscando?'No hay pacientes que coincidan. Si es nuevo, cargalo con <b>+ Paciente</b>.':'Todavía no hay pacientes nuevos este mes.')+'</div>';
   else html='<div class="srow shead"><span>Paciente</span><span>Nutri</span><span>Llegada</span><span></span></div>';
