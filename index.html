@@ -510,7 +510,7 @@ details.edit[open] summary{margin-bottom:12px}
       <button type="button" data-act="view" data-view="agenda">Agenda</button>
       <button type="button" data-act="view" data-view="pagos">Pagos</button>
       <button type="button" data-act="view" data-view="pacientes">Pacientes</button>
-      <button type="button" data-act="view" data-view="stats" id="navStats" hidden>Estadísticas</button>
+      <button type="button" data-act="view" data-view="stats" id="navStats">Estadísticas</button>
     </nav>
     <div class="logo"><img src="logo.png" alt="Lado B Nutrición" width="295" height="137"></div>
     <div class="who">
@@ -657,8 +657,6 @@ auth.onAuthStateChanged(function(u){
     staff=d.data();staff.email=email;
     if(staff.nutri==='fran'||staff.nutri==='car')ui.nutri=staff.nutri;
     $('#who').textContent=(staff.nombre||email);
-    $('#navStats').hidden=staff.rol!=='admin';
-    if(ui.view==='stats'&&staff.rol!=='admin')ui.view='agenda';
     $('#login').hidden=true;$('#splash').hidden=false;
     $('#splashTxt').textContent=lsGet('ladob_sync_pacientes')?'Cargando…':'Primera vez en este dispositivo: estamos descargando la base. Puede tardar unos segundos.';
     COLS.forEach(function(c){loaded[c]=false});
@@ -721,21 +719,25 @@ function openPacForm(forId,pid){
 }
 function savePac(forId,pid){
   var e=$('#qErr'), nom=$('#qNom').value.trim(), ape=$('#qApe').value.trim(), tel=$('#qTel').value.trim(), lle=segVal('llegada',$('#dlg2'));
-  var isNew=!pid, miss=[]; if(!nom)miss.push('nombre'); if(!ape&&isNew)miss.push('apellido'); if(!tel&&isNew)miss.push('teléfono'); if(!lle&&isNew)miss.push('medio de llegada');
+  var isNew=!pid, miss=[]; if(!nom)miss.push('nombre'); if(!ape&&isNew)miss.push('apellido'); if(!lle&&isNew)miss.push('medio de llegada');
   if(miss.length){e.textContent='Falta completar: '+miss.join(', ')+'.';e.hidden=false;return}
-  var full=(nom+' '+ape).trim(), dup=paciente(full), p=pid?findPac(pid):null;
-  if(dup&&dup!==p&&isNew){e.textContent='Ya existe un paciente con ese nombre. Buscalo en la lista.';e.hidden=false;return}
+  var full=(nom+' '+ape).trim(), p=pid?findPac(pid):null;
   e.hidden=true;
   var btn=$('#dlg2 [data-act="savePac"]'), w=$('#qWarn');
   if(!btn.dataset.force){
-    var dig=tel.replace(/\D/g,'').slice(-8), na=norm(ape);
-    var sim=data.pacientes.filter(function(x){return x!==p&&(norm(x.apellido)===na||(dig.length>=6&&x.phone.replace(/\D/g,'').slice(-8)===dig))});
+    var dig=tel.replace(/\D/g,'').slice(-8), nf=norm(full);
+    var sameTel=function(x){return dig.length>=6&&(x.phone||'').replace(/\D/g,'').slice(-8)===dig};
+    var sim=data.pacientes.filter(function(x){return x!==p&&(norm(x.name)===nf||sameTel(x))});
     if(sim.length){
-      w.innerHTML='<b>Ojo, puede estar repetido.</b> Ya hay '+(sim.length===1?'un paciente':'pacientes')+' con el mismo apellido o celular: '+
-        sim.slice(0,4).map(function(x){var why=[];if(norm(x.apellido)===na)why.push('apellido');if(dig.length>=6&&x.phone.replace(/\D/g,'').slice(-8)===dig)why.push('celular');return '<b>'+esc(x.name)+'</b> ('+NUTRIS[x.nutri]+', mismo '+why.join(' y ')+')'}).join(', ')+
+      w.innerHTML='<b>Ojo, puede estar repetido.</b> Ya hay '+(sim.length===1?'un paciente':'pacientes')+' con el mismo nombre y apellido o celular: '+
+        sim.slice(0,4).map(function(x){var why=[];if(norm(x.name)===nf)why.push('nombre');if(sameTel(x))why.push('celular');return '<b>'+esc(x.name)+'</b> ('+NUTRIS[x.nutri]+', mismo '+why.join(' y ')+')'}).join(', ')+
         '. Si es otra persona, tocá <b>Guardar igual</b>.';
       w.hidden=false; btn.dataset.force='1'; btn.textContent='Guardar igual'; return;
     }
+  }
+  if(isNew&&!tel&&!btn.dataset.notel){
+    w.innerHTML='<b>Está a punto de cargar un nuevo paciente sin teléfono.</b> ¿Desea continuar?';
+    w.hidden=false; btn.dataset.notel='1'; btn.dataset.force='1'; btn.textContent='Sí, continuar'; return;
   }
   if(p){
     p.nombre=nom;p.apellido=ape;p.name=full;p.phone=tel;p.llegada=lle;p.notas=$('#qNotas').value.trim();p.nutri=segVal('qNutri',$('#dlg2'))||p.nutri;
@@ -847,7 +849,7 @@ function pacSortKey(p,k){
   if(k==='name')return norm((p.apellido||'')+' '+(p.nombre||p.name));
   return norm(pacVal(p,k));
 }
-function isAdmin(){return !!(staff&&staff.rol==='admin')}
+function isAdmin(){return !!staff} /* todos los usuarios ven todo */
 /* Pacientes (todos los usuarios): buscador centrado; sin búsqueda se muestran los ingresos del mes */
 function curAltaKey(){var t=today();return t.getFullYear()+'-'+pad(t.getMonth()+1)}
 function renderPacSimple(){
@@ -984,7 +986,6 @@ function waLink(t){
 /* ---------- render ---------- */
 function render(){
   ensureRanges();
-  if(ui.view==='stats'&&(!staff||staff.rol!=='admin'))ui.view='agenda';
   var nv=ui.view==='ficha'?'pacientes':ui.view;
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
