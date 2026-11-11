@@ -480,6 +480,11 @@ details.edit[open] summary{margin-bottom:12px}
 }
 .pform{display:flex;flex-direction:column;gap:8px}
 .pbtns{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:6px}
+.grid{position:relative}
+.tm{transition:background .08s}
+.tm.hov{background:#D4FF3A;color:var(--ink);font-weight:800;border-radius:0 6px 6px 0}
+#hovRow{position:absolute;left:0;right:0;background:rgba(212,255,58,.12);border-top:1px solid rgba(23,32,27,.08);border-bottom:1px solid rgba(23,32,27,.08);pointer-events:none;z-index:1}
+#hovGhost{position:absolute;left:3px;right:3px;border:1.5px dashed #9AA29C;border-radius:4px;font-size:11px;font-weight:700;color:#56605A;display:flex;align-items:center;padding:0 8px;pointer-events:none;z-index:2;background:rgba(255,255,255,.6)}
 </style>
 </head>
 <body>
@@ -1349,6 +1354,23 @@ document.addEventListener('input',function(ev){
   if(el.classList&&el.classList.contains('pacin')){el.dataset.pid='';el.classList.remove('ok');if(el.setCustomValidity)el.setCustomValidity('');pacOptions(el)}
 });
 document.addEventListener('focusin',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('pacin')&&!el.dataset.pid)pacOptions(el)});
+/* Guía al pasar el mouse por la agenda (PC): resalta la hora a la izquierda, una línea en toda la fila y el casillero libre */
+var hovIdx=-1;
+function clearHover(){hovIdx=-1;$$('.tm.hov').forEach(function(x){x.classList.remove('hov')});var g=$('#hovRow');if(g)g.remove();var gh=$('#hovGhost');if(gh)gh.remove()}
+document.addEventListener('mousemove',function(ev){
+  if(ui.view!=='agenda'||isMobile())return;
+  var col=ev.target.closest&&ev.target.closest('.daycol');
+  if(!col){if(hovIdx>=0)clearHover();return}
+  var r=col.getBoundingClientRect(), idx=Math.floor((ev.clientY-r.top)/ROW), n=(END-START)/30;
+  if(idx<0||idx>=n){clearHover();return}
+  var onEmpty=ev.target===col, key=idx+'|'+col.dataset.date+'|'+onEmpty;
+  if(key===hovIdx)return; clearHover(); hovIdx=key;
+  var tms=$$('.times .tm'); if(tms[idx])tms[idx].classList.add('hov');
+  var grid=col.parentNode, gr=grid.getBoundingClientRect(), line=document.createElement('div');
+  line.id='hovRow'; line.style.top=(r.top-gr.top+idx*ROW)+'px'; line.style.height=ROW+'px'; grid.appendChild(line);
+  if(onEmpty){var g=document.createElement('div');g.id='hovGhost';g.style.top=(idx*ROW+2)+'px';g.style.height=(ROW-4)+'px';g.textContent='+ '+show(START+idx*30);col.appendChild(g)}
+});
+document.addEventListener('mouseleave',clearHover);
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Escape')return;
   if($$('.opts').some(function(l){return !l.hidden})){closeOpts();return}
