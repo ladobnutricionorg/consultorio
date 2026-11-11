@@ -478,6 +478,8 @@ details.edit[open] summary{margin-bottom:12px}
   .seg{gap:14px}
   .dh{padding:16px 18px 8px}.sec{padding:10px 18px}.df{padding:10px 18px 16px}
 }
+.pform{display:flex;flex-direction:column;gap:8px}
+.pbtns{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -1173,11 +1175,14 @@ function openTurno(id,editPago){
   if(link)html+='<a class="wa" href="'+link+'" target="_blank" rel="noopener">'+ICON.wa+'Enviar recordatorio por WhatsApp</a>';
   else html+='<div class="fields"><label class="fld full"><span>Teléfono <em>(para mandar el recordatorio)</em></span><input id="tPhone" inputmode="tel" placeholder="11 1234 5678"></label></div><button type="button" class="btn big" data-act="savePhone" data-id="'+t.id+'">Guardar teléfono</button>';
   html+='</div>';
-  html+='<div class="sec"><span class="lbl">Pago</span>';
   if(pg&&!editPago){
-    html+='<div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio)+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div>';
-  } else html+=pagoFields(pg,false)+'<button type="button" class="btn big primary" data-act="savePagoT" data-id="'+t.id+'">'+(pg?'Guardar cambios del pago':'Guardar pago')+'</button>'+(pg?'<button type="button" class="danger" data-act="delPagoT" data-id="'+t.id+'">Quitar pago</button>':'');
-  html+='</div>';
+    html+='<div class="sec"><span class="lbl">Pago</span><div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio)+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div></div>';
+  } else {
+    /* pago como desplegable, igual que "Editar datos del turno" */
+    html+='<div class="sec"><details class="edit"'+(pg?' open':'')+'><summary>'+(pg?'Editar pago':'Agregar pago')+'</summary><div class="pform">'+pagoFields(pg,false)+
+      '<div class="pbtns">'+(pg?'<button type="button" class="danger" data-act="delPagoT" data-id="'+t.id+'">Quitar pago</button>':'')+
+      '<button type="button" class="btn big primary" data-act="savePagoT" data-id="'+t.id+'">'+(pg?'Guardar cambios':'Guardar pago')+'</button></div></div></details></div>';
+  }
   html+='<div class="sec"><details class="edit"><summary>Editar datos del turno</summary><div class="fields">'+pacField('eName',p?p.id:null)+'</div>'+
     '<div style="margin-top:12px">'+whenFields('e',t.date,t.time)+'</div>'+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Duración</span>'+seg('eDur',[['30','30 min'],['60','60 min']],String(t.dur))+
