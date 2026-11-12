@@ -85,6 +85,12 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk .bln{font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
 .fab{display:none}
+@media(max-width:760px){
+  .app.fixmob{height:100vh;height:100dvh;overflow:hidden;padding-bottom:0}
+  .app.fixmob #main{flex:1;min-height:0;display:flex;flex-direction:column}
+  .app.fixmob .board{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-bottom-left-radius:0;border-bottom-right-radius:0}
+  .app.fixmob .foot{display:none}
+}
 
 /* Pagos */
 .col{width:100%;max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
@@ -106,6 +112,14 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .amt.debe{color:#A12F22;font-weight:800}
 .prow.debe{background:#FFF8F6}
 .prow.debe:hover{background:#FFF1EE}
+.wa.off{background:#F1F2EE;border-color:#E1E4DE;color:#A3AAA5;cursor:not-allowed;pointer-events:none}.wa.off svg{opacity:.45;filter:grayscale(1)}
+.prow2{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:4px 0 12px}.prow2 .lbl{margin:0;min-width:104px}.prow2 .seg{flex:1}
+.pdin{font:inherit;font-size:13.5px;font-weight:600;height:32px;border:0;border-bottom:1.5px solid #C9CFC8;background:transparent;padding:0 2px;color:var(--ink);outline:none}.pdin:focus{border-bottom-color:var(--ink)}
+.pmontos{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 14px}.pmontos .seg{flex:1}.pmontos{border-bottom:1px solid #ECEEE9;row-gap:0}.pmontos .seg{flex:none;border-bottom:0}
+.pmo{font:inherit;font-size:13px;font-weight:500;width:84px;height:30px;border:0;border-bottom:2px solid transparent;background:transparent;padding:0 2px;color:var(--ink);outline:none}
+.pmo::placeholder{color:#B3BAB4}.pmo:focus{border-bottom-color:#C9CFC8}.pmo.on{font-weight:700;border-bottom-color:var(--ink)}
+@media(max-width:700px){.prow2 .lbl{min-width:0}}
+.seg.mseg{display:flex;gap:14px;flex-wrap:wrap}
 .qwrap{display:flex;justify-content:flex-end;align-items:center;gap:7px}
 .qd{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #9A3324;background:#fff;color:#9A3324;font:inherit;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 .qd:hover{background:#FFF1EE}.qd.on{background:#17201B;border-color:#17201B;color:#D4FF3A}
@@ -1013,6 +1027,7 @@ function waLink(t){
 /* ---------- render ---------- */
 function render(){
   ensureRanges();
+  document.querySelector('.app').classList.toggle('fixmob',ui.view==='agenda'&&isMobile());
   var nv=ui.view==='ficha'?'pacientes':ui.view;
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
@@ -1061,7 +1076,9 @@ function renderAgenda(){
   days.forEach(function(d){html+=dayCol(d)});
   html+='</div></div>';
   if(mob)html+='<button type="button" class="fab" data-act="nuevo" aria-label="Nuevo turno">'+ICON.plusBig+'</button>';
+  var ob=$('.board'), st=ob?ob.scrollTop:null;
   $('#main').innerHTML=html;
+  if(st!=null)$('.board').scrollTop=st;
 }
 
 function dayCol(d){
@@ -1206,7 +1223,7 @@ function openTurno(id,editPago){
   var html=head(esc(t.name),esc(cap(sub)));
   html+='<div class="sec"><span class="lbl">Estado del turno</span>'+seg('estadoT',[['p','A confirmar'],['c','Confirmado'],['x','Cancelado']],t.estado,'estado');
   if(link)html+='<a class="wa" href="'+link+'" target="_blank" rel="noopener">'+ICON.wa+'Enviar recordatorio por WhatsApp</a>';
-  else html+='<div class="fields"><label class="fld full"><span>Teléfono <em>(para mandar el recordatorio)</em></span><input id="tPhone" inputmode="tel" placeholder="11 1234 5678"></label></div><button type="button" class="btn big" data-act="savePhone" data-id="'+t.id+'">Guardar teléfono</button>';
+  else html+='<span class="wa off" aria-disabled="true" title="El paciente no tiene teléfono cargado">'+ICON.wa+'Enviar recordatorio por WhatsApp</span>';
   html+='</div>';
   if(pg&&!editPago){
     html+='<div class="sec"><span class="lbl">Pago</span><div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio)+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div></div>';
@@ -1225,16 +1242,17 @@ function openTurno(id,editPago){
   openModal(html);
 }
 function pagoFields(pg,withName){
-  return '<div class="fields">'+
-    (withName?pacField('pName',pg?(pg.pid||(paciente(pg.name)||{}).id):null):'')+
-    '<label class="fld"><span>Fecha de pago</span><input id="pDate" type="date" value="'+(pg?pg.date:iso(today()))+'"></label>'+
-    '<label class="fld"><span>Monto</span><input id="pMonto" inputmode="numeric" placeholder="$" value="'+(pg?Number(pg.monto).toLocaleString('es-AR'):'')+'"></label></div>'+
-    '<span class="lbl">Medio de pago</span>'+seg('medio',MEDIOS.map(function(m){return [m,m]}),pg?pg.medio:null)+
+  return (withName?'<div class="fields">'+pacField('pName',pg?(pg.pid||(paciente(pg.name)||{}).id):null)+'</div>':'')+
+    '<div class="prow2"><span class="lbl">Fecha de pago</span><input id="pDate" class="pdin" type="date" value="'+(pg?pg.date:iso(today()))+'"></div>'+
+    (function(){var fijo=pg&&QMONTOS.indexOf(+pg.monto)>=0, mv=pg?(fijo?String(pg.monto):'otro'):null;
+      return '<div class="pmontos">'+seg('monto',QMONTOS.map(function(v){return [String(v),money(v)]}),mv,'mseg')+
+      '<input id="pMonto" class="pmo'+(mv==='otro'?' on':'')+'" inputmode="numeric" placeholder="Otro" aria-label="Otro importe" value="'+(mv==='otro'?Number(pg.monto).toLocaleString('es-AR'):'')+'"></div>'})()+
+    '<div class="prow2"><span class="lbl">Medio de pago</span>'+seg('medio',MEDIOS.map(function(m){return [m,m]}),pg?pg.medio:null)+'</div>'+
     '<p class="err" id="pErr" hidden></p>';
 }
 function readPago(){
-  var e=$('#pErr'), monto=parseInt(String($('#pMonto').value).replace(/\D/g,''),10), medio=segVal('medio'), date=$('#pDate').value;
-  if(!monto){e.textContent='Escribí el monto.';e.hidden=false;return null}
+  var e=$('#pErr'), otro=parseInt(String($('#pMonto').value).replace(/\D/g,''),10), mv=segVal('monto'), monto=otro||(mv?+mv:0), medio=segVal('medio'), date=$('#pDate').value;
+  if(!monto){e.textContent='Elegí o escribí el monto.';e.hidden=false;return null}
   if(!medio){e.textContent='Elegí el medio de pago.';e.hidden=false;return null}
   if(!date){e.textContent='Elegí la fecha de pago.';e.hidden=false;return null}
   return {monto:monto,medio:medio,date:date};
@@ -1298,6 +1316,7 @@ document.addEventListener('click',function(ev){
     var g=segBtn.parentNode;
     $$('button',g).forEach(function(b){b.classList.toggle('on',b===segBtn);b.setAttribute('aria-pressed',b===segBtn)});
     var name=g.dataset.seg;
+    if(name==='monto'){var pm=$('#pMonto');pm.value='';pm.classList.remove('on')}
     if(name==='kind'){$('#kTurno').hidden=segBtn.dataset.val!=='turno';$('#kBloq').hidden=segBtn.dataset.val==='turno'}
     if(name==='estadoT'){var t=findT($('[data-act="delTurno"]').dataset.id);if(t){t.estado=segBtn.dataset.val;save();render()}}
     return;
@@ -1413,6 +1432,12 @@ document.addEventListener('focusin',function(ev){var el=ev.target;if(el.classLis
 /* Guía al pasar el mouse por la agenda (PC): resalta la hora a la izquierda, una línea en toda la fila y el casillero libre */
 var hovIdx=-1;
 function clearHover(){hovIdx=-1;$$('.tm.hov').forEach(function(x){x.classList.remove('hov')});var g=$('#hovRow');if(g)g.remove();var gh=$('#hovGhost');if(gh)gh.remove()}
+document.addEventListener('input',function(ev){
+  if(ev.target.id!=='pMonto'||!ev.target.classList.contains('pmo'))return;
+  var v=ev.target.value.replace(/\D/g,''); ev.target.value=v?Number(v).toLocaleString('es-AR'):'';
+  ev.target.classList.toggle('on',!!v);
+  if(v)$$('[data-seg="monto"] button').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-pressed','false')});
+});
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
   var col=ev.target.closest&&ev.target.closest('.daycol');
