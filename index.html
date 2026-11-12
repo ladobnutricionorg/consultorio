@@ -431,7 +431,12 @@ details.edit[open] summary{margin-bottom:12px}
   .pacname{font-size:13px}
   .ficha{height:28px;font-size:10px;padding:0 9px}
   .thead{display:none}
-  .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n n k" "d a m k";padding:6px 12px;row-gap:2px}
+  .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n m k" "d a m k";padding:8px 12px;row-gap:2px;align-items:center}
+  .prow .pname{align-self:end}.prow .amt{align-self:start}
+  .prow.debe{grid-template-areas:"d n m k" "d n m k"}
+  .prow.debe .pname{align-self:center;padding:0}
+  .prow.debe .qwrap{grid-area:m;align-self:center}
+  .prow.debe>span:empty{display:none}
   .prow .pdate{grid-area:d}
   .prow .pname{grid-area:n;padding:4px 0 0}
   .fields.three{grid-template-columns:1fr 1fr}
@@ -666,7 +671,7 @@ function startCol(c){
     loaded[c]=true; scheduleRender();
     var q=db.collection(c).where('updatedAt','>',firebase.firestore.Timestamp.fromMillis(mx));
     unsubs.push(q.onSnapshot({includeMetadataChanges:false},function(s2){
-      var ch=s2.docChanges().map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
+      var ch=s2.docChanges().filter(function(x){return x.type!=='removed'}).map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
       ch.forEach(function(x){if(!x.pend&&x.ts>m2)m2=x.ts});
       lsSet(key,m2);
       if(ch.length){applyDocs(c,ch,false);scheduleRender()}
