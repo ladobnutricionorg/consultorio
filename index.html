@@ -1084,7 +1084,7 @@ function render(){
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
   var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes'],ficha:['Pacientes','pacientes'],stats:['Estadísticas','estadísticas']}[ui.view];
-  var pac=ui.view==='pacientes'||ui.view==='ficha'||ui.view==='stats';
+  var pac=ui.view==='ficha'||ui.view==='stats';
   $('#title').textContent=pac?V[0]:N;
   $('#title').className=pac?'plain':'';
   $('#switchBtn').hidden=pac;
