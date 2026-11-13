@@ -124,11 +124,17 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .qwrap{display:flex;justify-content:flex-end;align-items:center;gap:7px}
 .qd{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #9A3324;background:#fff;color:#9A3324;font:inherit;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 .qd:hover{background:#FFF1EE}.qd.on{background:#17201B;border-color:#17201B;color:#D4FF3A}
-.qpop{position:absolute;z-index:60;width:228px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(23,32,27,.18),0 0 0 1px rgba(23,32,27,.06);padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.qpop{position:absolute;z-index:60;width:252px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(23,32,27,.18),0 0 0 1px rgba(23,32,27,.06);padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
 .qpop:before{content:'';position:absolute;top:-6px;left:var(--ax,190px);width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-1px -1px 0 rgba(23,32,27,.06)}
 .qnm{font-size:12px;font-weight:700;color:#3D4741;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qpop select,.qpop input{font:inherit;font-size:13px;font-weight:600;height:30px;width:100%;border:0;border-bottom:1.5px solid #C9CFC8;border-radius:0;background:transparent;padding:0 2px;color:#17201B;outline:none}
 .qpop select:focus,.qpop input:focus{border-bottom-color:#17201B}
+.qopts{display:flex;flex-wrap:wrap;gap:2px 10px;border-bottom:1px solid #ECEEE9;padding-bottom:2px}
+.qopts button{font:inherit;font-size:12.5px;font-weight:500;color:#8A938D;border:0;background:none;padding:4px 1px;border-bottom:2px solid transparent;cursor:pointer}
+.qopts button:hover{color:var(--ink)}
+.qopts button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.qopts input{font:inherit;font-size:12.5px;width:62px;height:26px;border:0;border-bottom:2px solid transparent;background:none;padding:0 1px;color:var(--ink);outline:none}
+.qopts input::placeholder{color:#B3BAB4}.qopts input:focus{border-bottom-color:#C9CFC8}.qopts input.on{font-weight:700;border-bottom-color:var(--ink)}
 .qerr{margin:0;font-size:11.5px;font-weight:600;color:#9A3324}
 .qft{display:flex;justify-content:flex-end;gap:10px;align-items:center}
 .qcn,.qgo{font:inherit;font-size:12.5px;height:28px;padding:0 2px;border:0;background:none;cursor:pointer}
@@ -1331,18 +1337,26 @@ function openQp(btn,tid){
   var t=findT(tid); if(!t)return; closeQp(); btn.classList.add('on');
   var d=document.createElement('div'); d.id='qpop'; d.className='qpop'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Registrar pago');
   d.innerHTML='<div class="qnm">'+esc(t.name)+' · '+ddmm(t.date)+'</div>'+
-    '<div class="qm"><select id="qMonto" aria-label="Monto"><option value="">Monto…</option>'+QMONTOS.map(function(v){return '<option value="'+v+'">'+money(v)+'</option>'}).join('')+'<option value="otro">Otro importe…</option></select></div>'+
-    '<select id="qMedio" aria-label="Medio de pago"><option value="">Medio de pago…</option>'+MEDIOS.map(function(m){return '<option>'+m+'</option>'}).join('')+'</select>'+
+    '<div class="qopts" role="group" aria-label="Monto">'+QMONTOS.map(function(v){return '<button type="button" data-qm="'+v+'" aria-pressed="false">'+money(v).replace('$ ','$')+'</button>'}).join('')+
+      '<input id="qOtro" inputmode="numeric" placeholder="Otro" aria-label="Otro importe"></div>'+
+    '<div class="qopts med" role="group" aria-label="Medio de pago">'+MEDIOS.map(function(m){return '<button type="button" data-qmed="'+m+'" aria-pressed="false">'+m+'</button>'}).join('')+'</div>'+
     '<p class="qerr" id="qErr2" hidden></p>'+
     '<div class="qft"><button type="button" class="qcn" data-act="qcancel">Cancelar</button><button type="button" class="qgo" data-act="qsave" data-id="'+t.id+'">Guardar</button></div>';
   document.body.appendChild(d);
   var r=btn.getBoundingClientRect(), w=d.offsetWidth, left=Math.min(Math.max(8,r.right+scrollX-w+18),scrollX+document.documentElement.clientWidth-w-8);
   d.style.left=left+'px'; d.style.top=(r.bottom+scrollY+9)+'px'; d.style.setProperty('--ax',(r.left+scrollX+r.width/2-left-6)+'px');
   d.addEventListener('input',function(){$('#qErr2').hidden=true});
-  $('#qMonto').addEventListener('change',function(){if(this.value==='otro'){$('.qm',d).innerHTML='<input id="qMonto" inputmode="numeric" placeholder="$ monto" aria-label="Monto">';$('#qMonto').focus()}});
+  d.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-qm],[data-qmed]'); if(!b)return;
+    var attr=b.hasAttribute('data-qm')?'data-qm':'data-qmed';
+    $$('['+attr+']',d).forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b?'true':'false')});
+    if(attr==='data-qm'){var o=$('#qOtro');o.value='';o.classList.remove('on')}
+    $('#qErr2').hidden=true;
+  });
+  $('#qOtro').addEventListener('input',function(){var v=this.value.replace(/\D/g,'');this.value=v?Number(v).toLocaleString('es-AR'):'';this.classList.toggle('on',!!v);if(v)$$('[data-qm]',d).forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false')})});
 }
 function saveQp(tid){
-  var t=findT(tid), e=$('#qErr2'), raw=String($('#qMonto').value).replace(/[^\d]/g,''), monto=raw?parseInt(raw,10):0, medio=$('#qMedio').value;
+  var t=findT(tid), e=$('#qErr2'), q=$('#qpop'), sel=$('[data-qm].on',q), raw=String($('#qOtro').value).replace(/[^\d]/g,''), monto=raw?parseInt(raw,10):(sel?+sel.dataset.qm:0), mb=$('[data-qmed].on',q), medio=mb?mb.dataset.qmed:'';
   if(!t)return closeQp();
   if(!monto||!medio){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
   if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:t.date,monto:monto,medio:medio,fact:false});
