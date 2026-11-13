@@ -126,6 +126,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .qd:hover{background:#FFF1EE}.qd.on{background:#17201B;border-color:#17201B;color:#D4FF3A}
 .qpop{position:absolute;z-index:60;width:252px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(23,32,27,.18),0 0 0 1px rgba(23,32,27,.06);padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
 .qpop:before{content:'';position:absolute;top:-6px;left:var(--ax,190px);width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-1px -1px 0 rgba(23,32,27,.06)}
+.qpop.free .qopts.med{opacity:.3;pointer-events:none}
 .qpop.up:before{top:auto;bottom:-6px;box-shadow:1px 1px 0 rgba(23,32,27,.06)}
 .qnm{font-size:12px;font-weight:700;color:#3D4741;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qpop select,.qpop input{font:inherit;font-size:13px;font-weight:600;height:30px;width:100%;border:0;border-bottom:1.5px solid #C9CFC8;border-radius:0;background:transparent;padding:0 2px;color:#17201B;outline:none}
@@ -1170,7 +1171,7 @@ function renderPagos(){
       return}
     var p=r.p, t=p.turnoId?findT(p.turnoId):null;
     html+='<div class="prow"><span class="pdate">'+ddmm(p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
-      '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio)+'</span>'+
+      '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio||'Sin cargo')+'</span>'+
       '<label class="ck"><input type="checkbox" data-fact="'+p.id+'"'+(p.fact?' checked':'')+' aria-label="Facturado: '+esc(p.name)+'"></label></div>';
   });
   html+='</div></div>';
@@ -1273,7 +1274,7 @@ function openTurno(id,editPago){
   else html+='<span class="wa off" aria-disabled="true" title="El paciente no tiene teléfono cargado">'+ICON.wa+'Enviar recordatorio por WhatsApp</span>';
   html+='</div>';
   if(pg&&!editPago){
-    html+='<div class="sec"><span class="lbl">Pago</span><div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio)+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div></div>';
+    html+='<div class="sec"><span class="lbl">Pago</span><div class="paid"><span class="pay ok" aria-hidden="true">$</span><div><b>'+money(pg.monto)+'</b> · '+esc(pg.medio||'Sin cargo')+' · '+ddmm(pg.date)+(pg.fact?' · Facturado':'')+'</div><div class="acts"><button type="button" class="btn" data-act="editPago" data-id="'+t.id+'">Editar</button></div></div></div>';
   } else {
     /* pago como desplegable, igual que "Editar datos del turno" */
     html+='<div class="sec"><details class="edit"'+(pg?' open':'')+'><summary>'+(pg?'Editar pago':'Agregar pago')+'</summary><div class="pform">'+pagoFields(pg,false)+
@@ -1298,7 +1299,8 @@ function pagoFields(pg,withName){
     '<p class="err" id="pErr" hidden></p>';
 }
 function readPago(){
-  var e=$('#pErr'), otro=parseInt(String($('#pMonto').value).replace(/\D/g,''),10), mv=segVal('monto'), monto=otro||(mv?+mv:0), medio=segVal('medio'), date=$('#pDate').value;
+  var e=$('#pErr'), oraw=String($('#pMonto').value).replace(/\D/g,''), otro=parseInt(oraw,10), mv=segVal('monto'), monto=otro||(mv?+mv:0), medio=segVal('medio'), date=$('#pDate').value;
+  if(oraw!==''&&otro===0){if(!date){e.textContent='Elegí la fecha de pago.';e.hidden=false;return null}return {monto:0,medio:'',date:date}}
   if(!monto){e.textContent='Elegí o escribí el monto.';e.hidden=false;return null}
   if(!medio){e.textContent='Elegí el medio de pago.';e.hidden=false;return null}
   if(!date){e.textContent='Elegí la fecha de pago.';e.hidden=false;return null}
@@ -1353,15 +1355,16 @@ function openQp(btn,tid){
     var b=ev.target.closest('[data-qm],[data-qmed]'); if(!b)return;
     var attr=b.hasAttribute('data-qm')?'data-qm':'data-qmed';
     $$('['+attr+']',d).forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b?'true':'false')});
-    if(attr==='data-qm'){var o=$('#qOtro');o.value='';o.classList.remove('on')}
+    if(attr==='data-qm'){var o=$('#qOtro');o.value='';o.classList.remove('on');d.classList.remove('free')}
     $('#qErr2').hidden=true;
   });
-  $('#qOtro').addEventListener('input',function(){var v=this.value.replace(/\D/g,'');this.value=v?Number(v).toLocaleString('es-AR'):'';this.classList.toggle('on',!!v);if(v)$$('[data-qm]',d).forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false')})});
+  $('#qOtro').addEventListener('input',function(){var v=this.value.replace(/\D/g,'');this.value=v?Number(v).toLocaleString('es-AR'):'';this.classList.toggle('on',!!v);d.classList.toggle('free',v!==''&&+v===0);if(v)$$('[data-qm]',d).forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false')})});
 }
 function saveQp(tid){
   var t=findT(tid), e=$('#qErr2'), q=$('#qpop'), sel=$('[data-qm].on',q), raw=String($('#qOtro').value).replace(/[^\d]/g,''), monto=raw?parseInt(raw,10):(sel?+sel.dataset.qm:0), mb=$('[data-qmed].on',q), medio=mb?mb.dataset.qmed:'';
   if(!t)return closeQp();
-  if(!monto||!medio){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
+  var gratis=raw!==''&&monto===0; if(gratis)medio='';
+  if(!gratis&&(!monto||!medio)){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
   if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:t.date,monto:monto,medio:medio,fact:false});
   closeQp(); save(); render(); toast('Pago registrado');
 }
