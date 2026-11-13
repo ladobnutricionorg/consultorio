@@ -224,8 +224,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .psearch{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:360px}
 .psearch:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
 .slist{width:100%;max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.srow{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px auto;align-items:center;column-gap:12px;padding:6px 16px;min-height:46px;border-top:1px solid #F0F2EE}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 104px;align-items:center;column-gap:12px;padding:6px 16px;min-height:46px;border-top:1px solid #F0F2EE}
 .srow:first-child{border-top:0}
+.srow .ficha{justify-self:end}
 .srow:hover{background:#FAFBF7}
 .srow .pc{font-size:12.5px}
 .srow .pc .lleg{font-style:normal}
@@ -429,7 +430,7 @@ details.edit[open] summary{margin-bottom:12px}
   .search{height:30px;font-size:13px}
   .msel{height:30px;font-size:12.5px;padding:0 6px}
   .psearch{height:30px;font-size:13px}
-  .srow{grid-template-columns:minmax(0,1fr) 36px 78px auto;column-gap:6px;padding:6px 8px}
+  .srow{grid-template-columns:minmax(0,1fr) 36px 78px 60px;column-gap:6px;padding:6px 8px}
   .srow .ficha{padding:0 7px;font-size:9.5px;letter-spacing:.06em}
   .srow .ficha svg{display:none}
   .srow .pc{font-size:11.5px}
@@ -1018,13 +1019,22 @@ function renderStats(){
   var cell=function(v,money){if(v==null||v==='')return '<td class="dim">—</td>';return '<td'+(v<0?' class="neg"':'')+'>'+(money?fm(v):fn(v))+'</td>'};
   var inp=function(m,k,v){return '<td><input class="stin" inputmode="numeric" data-sy="'+ui.sy+'" data-sm="'+m+'" data-sk="'+k+'" value="'+(v!=null?'$ '+Math.round(v).toLocaleString('es-AR'):'')+'" aria-label="'+k+' '+MESES[m-1]+'"></td>'};
   var table=function(title,sub,cols,fnRow,totRow,bk){
-    var bv=bk?bestOf(bk):null;
+    var bv=bk&&typeof bk!=='function'?bestOf(bk):null;
     var h='<section class="stcard'+(cols.length>4?' wide':'')+'"><h3>'+title+(sub?'<small>'+sub+'</small>':'')+'</h3><table class="st"><thead><tr><th>Mes</th>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'</tr></thead><tbody>';
-    for(var m=1;m<=12;m++)h+='<tr'+(bk==='next'?(ui.sy===nx.getFullYear()&&m===nx.getMonth()+1?' class="next"':''):(bv!=null&&row(m)[bk]===bv?' class="best" title="Mejor mes del historial"':''))+'><td>'+MESES[m-1]+'</td>'+fnRow(m,row(m))+'</tr>';
+    for(var m=1;m<=12;m++)h+='<tr'+(typeof bk==='function'?(bk(m)?' class="best" title="Mejor mes del historial"':''):bk==='next'?(ui.sy===nx.getFullYear()&&m===nx.getMonth()+1?' class="next"':''):(bv!=null&&row(m)[bk]===bv?' class="best" title="Mejor mes del historial"':''))+'><td>'+MESES[m-1]+'</td>'+fnRow(m,row(m))+'</tr>';
     if(totRow)h+='<tr class="totr"><td>Total</td>'+totRow+'</tr>';
     return h+'</tbody></table></section>';
   };
   var html='<div class="stgrid">';
+  /* ingresos del mes: pacientes dados de alta en el mes (por fecha de ingreso), se hayan atendido o no */
+  var ing={};
+  data.pacientes.forEach(function(p){var k=p.altaKey||'';if(k.slice(0,4)!==String(ui.sy))return;var m=+k.slice(5,7);if(!m)return;var c=ing[m]=ing[m]||{f:0,c:0};c[p.nutri==='car'?'c':'f']++});
+  var iz=function(m){return ing[m]||{f:null,c:null}}, itot=function(k){var n=0,any=false;Object.keys(ing).forEach(function(m){any=true;n+=ing[m][k]});return any?n:null};
+  var porMes={},imax=0;data.pacientes.forEach(function(p){var k=p.altaKey||'';if(/^\d{4}-\d{2}$/.test(k))porMes[k]=(porMes[k]||0)+1});
+  Object.keys(porMes).forEach(function(k){imax=Math.max(imax,porMes[k])});
+  var ibest=function(m){var c=ing[m];return !!c&&imax>0&&c.f+c.c===imax};
+  html+=table('Ingresos del mes','pacientes cargados en el mes, se atiendan o no',['Fran','Car','Total'],function(m){var c=iz(m);return cell(c.f)+cell(c.c)+cell(c.f==null?null:c.f+c.c)},
+    cell(itot('f'))+cell(itot('c'))+cell(itot('f')==null?null:itot('f')+itot('c')),ibest);
   html+=table('Pacientes nuevos atendidos','primera vez en el mes',['Fran','Car','Total'],function(m,r){return cell(r.nf)+cell(r.nc)+cell(r.nt)},cell(tv('a','nf'))+cell(tv('a','nc'))+cell(tv('a','nt')),'nt');
   html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')),'tt');
   html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1),'ft');
