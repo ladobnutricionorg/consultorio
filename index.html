@@ -107,11 +107,12 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .tot.fc{background:var(--lima);border-color:var(--lima)}
 .tot.fc span,.tot.fc small{color:#2C3A0A}
 .table{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.thead,.prow{display:grid;grid-template-columns:44px minmax(0,1fr) 100px 128px 72px;align-items:center;column-gap:12px;padding:0 16px}
+.thead,.prow{display:grid;grid-template-columns:44px minmax(0,1fr) 100px 128px 82px 56px;align-items:center;column-gap:12px;padding:0 16px}
 .prow{border-top:1px solid #F0F2EE}
 .table .prow:nth-child(2){border-top:0}
 .amt.debe{color:#A12F22;font-weight:800}
 .prow.debe{background:#FFF8F6}
+.prow .fp{font-size:11px;color:#9AA29C;font-variant-numeric:tabular-nums}.thead .fp{font-size:inherit;color:inherit;white-space:nowrap}
 .prow.debe:hover{background:#FFF1EE}
 .wa.off{background:#F1F2EE;border-color:#E1E4DE;color:#A3AAA5;cursor:not-allowed;pointer-events:none}.wa.off svg{opacity:.45;filter:grayscale(1)}
 .prow2{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:4px 0 12px}.prow2 .lbl{margin:0;min-width:104px}.prow2 .seg{flex:1}
@@ -445,9 +446,9 @@ details.edit[open] summary{margin-bottom:12px}
   .pacname{font-size:13px}
   .ficha{height:28px;font-size:10px;padding:0 9px}
   .thead{display:none}
-  .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n m k" "d a m k";padding:8px 12px;row-gap:2px;align-items:center}
+  .prow{grid-template-columns:40px minmax(0,1fr) 36px 98px 40px;grid-template-areas:"d n n m k" "d a f m k";column-gap:8px;padding:8px 12px;row-gap:2px;align-items:center}
   .prow .pname{align-self:end}.prow .amt{align-self:start}
-  .prow.debe{grid-template-areas:"d n m k" "d n m k"}
+  .prow.debe{grid-template-areas:"d n n m k" "d n n m k"}
   .prow.debe .pname{align-self:center;padding:0}
   .prow.debe .qwrap{grid-area:m;align-self:center}
   .prow.debe>span:empty{display:none}
@@ -466,6 +467,7 @@ details.edit[open] summary{margin-bottom:12px}
   .fields.three .fld:first-child{grid-column:1/-1}
   .prow .amt{grid-area:a;text-align:left}
   .prow .chip{grid-area:m;justify-self:end}
+  .prow .fp{grid-area:f;justify-self:end;align-self:start;padding-top:3px;font-size:10.5px}
   .prow .ck{grid-area:k;width:44px}
   .dayrow{padding:12px 12px 4px}
   .overlay{align-items:flex-end;padding:0}
@@ -1165,23 +1167,25 @@ function renderPagos(){
   var html='<div class="col"><div class="totals">'+
     '<div class="tot hi"><span>Total del mes<em>('+list.length+')</em></span><b>'+money(tot)+'</b></div>'+
     '<div class="tot fc"><span>Facturado</span><b>'+money(tf)+'</b></div></div>';
-  html+='<div class="table"><div class="thead"><span>Fecha</span><span>Paciente</span><span class="r">Monto</span><span>Medio</span><span class="c">Fact.</span></div>';
+  html+='<div class="table"><div class="thead"><span>Fecha</span><span>Paciente</span><span class="r">Monto</span><span>Medio</span><span class="fp">Fecha pago</span><span class="c">Fact.</span></div>';
   /* Deudas: turnos confirmados que ya pasaron y no tienen pago (desde el 1/11/2026) */
   var now=new Date(), deudas=data.turnos.filter(function(t){
     if(t.nutri!==ui.nutri||t.estado!=='c'||t.date<'2026-11-01'||t.date.indexOf(pref)!==0||pagoDe(t.id))return false;
     var d=parse(t.date);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,toMin(t.time))<=now;
   });
-  var rows=list.map(function(p){return {k:p.date,p:p}}).concat(deudas.map(function(t){return {k:t.date+' '+t.time,t:t}}));
+  /* la fecha de la izquierda es la de atención (el turno); el mes se arma por fecha de pago */
+  var atte=function(p){var t=p.turnoId?findT(p.turnoId):null;return t?t.date:p.date};
+  var rows=list.map(function(p){return {k:atte(p),p:p}}).concat(deudas.map(function(t){return {k:t.date+' '+t.time,t:t}}));
   rows.sort(function(a,b){return a.k<b.k?-1:a.k>b.k?1:0});
   if(!rows.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
   rows.forEach(function(r){
     if(r.t){var dt=r.t;
       html+='<div class="prow debe"><span class="pdate">'+ddmm(dt.date)+'</span><button type="button" class="pname" data-turno="'+dt.id+'" title="Tocá para registrar el pago"><span>'+esc(dt.name)+'</span>'+(dt.tipo?'<span class="tag">'+esc(dt.tipo)+'</span>':'')+'</button>'+
-        '<span class="amt debe qwrap">Debe <button type="button" class="qd" data-act="qpago" data-id="'+dt.id+'" aria-label="Cobrar a '+esc(dt.name)+'" title="Registrar pago">$</button></span><span></span><span></span></div>';
+        '<span class="amt debe qwrap">Debe <button type="button" class="qd" data-act="qpago" data-id="'+dt.id+'" aria-label="Cobrar a '+esc(dt.name)+'" title="Registrar pago">$</button></span><span></span><span></span><span></span></div>';
       return}
     var p=r.p, t=p.turnoId?findT(p.turnoId):null;
-    html+='<div class="prow"><span class="pdate">'+ddmm(p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
-      '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio||'Sin cargo')+'</span>'+
+    html+='<div class="prow"><span class="pdate">'+ddmm(t?t.date:p.date)+'</span><button type="button" class="pname" data-pago="'+p.id+'"><span>'+esc(p.name)+'</span>'+(t&&t.tipo?'<span class="tag">'+esc(t.tipo)+'</span>':'')+'</button>'+
+      '<span class="amt">'+money(p.monto)+'</span><span class="chip '+(MEDIO_CLS[p.medio]||'')+'">'+esc(p.medio||'Sin cargo')+'</span><span class="fp" title="Fecha en que se cargó el pago">'+ddmm(p.date)+'</span>'+
       '<label class="ck"><input type="checkbox" data-fact="'+p.id+'"'+(p.fact?' checked':'')+' aria-label="Facturado: '+esc(p.name)+'"></label></div>';
   });
   html+='</div></div>';
@@ -1375,7 +1379,7 @@ function saveQp(tid){
   if(!t)return closeQp();
   var gratis=raw!==''&&monto===0; if(gratis)medio='';
   if(!gratis&&(!monto||!medio)){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
-  if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:t.date,monto:monto,medio:medio,fact:false});
+  if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:iso(today()),monto:monto,medio:medio,fact:false});
   closeQp(); save(); render(); toast('Pago registrado');
 }
 document.addEventListener('click',function(ev){
