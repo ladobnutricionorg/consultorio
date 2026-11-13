@@ -303,6 +303,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:9px 0;border-top:1px solid #F0F2EE}
 .kv span:first-child{color:#7A837D}
 .kv span:last-child{font-weight:500;text-align:right}
+.altasel{font:inherit;font-size:12.5px;font-weight:500;border:0;border-bottom:1px dashed #C9CFC8;background:transparent;padding:0 2px 1px;color:var(--ink);cursor:pointer;text-align:right}.altasel:focus{outline:0;border-bottom:1px solid var(--ink)}
 .kv em{font-style:normal}
 .fwa{display:flex;align-items:center;justify-content:center;gap:7px;height:36px;border:1px solid #CFE5C8;background:#F1F9EE;color:#1D4D17;border-radius:8px;font-size:12.5px;font-weight:600;text-decoration:none}
 .fwa svg{width:15px;height:15px}
@@ -841,6 +842,7 @@ function renderFicha(){
     '<div><h2>'+esc(p.name)+'</h2><span class="fsub" id="fSub">'+(ed!=null?ed+' años · ':'')+'Paciente de '+NUTRIS[p.nutri]+'</span></div>'+
     '<div class="kvs"><div class="kv"><span>Teléfono</span><span>'+esc(p.phone)+'</span></div>'+
     '<div class="kv"><span>Llegó por</span><span><em class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'—')+'</em></span></div>'+
+    '<div class="kv"><span>Ingreso</span><span>'+altaSelect(p)+'</span></div>'+
     '<div class="kv"><span>Primera consulta</span><span>'+(first?ddmm(first.date)+'/'+first.date.slice(0,4):'—')+'</span></div>'+
     '<div class="kv"><span>Próximo turno</span><span>'+(next?DCORTO[parse(next.date).getDay()]+' '+ddmm(next.date)+' · '+show(toMin(next.time)):'—')+'</span></div>'+
     '<div class="kv"><span>Turnos</span><span>'+ts.length+'</span></div></div>'+
@@ -922,6 +924,21 @@ function pacSortKey(p,k){
 }
 function isAdmin(){return !!staff} /* todos los usuarios ven todo */
 /* Pacientes (todos los usuarios): buscador centrado; sin búsqueda se muestran los ingresos del mes */
+/* fecha de ingreso (mes y año); lo anterior a mayo 2023 queda como "Antes de Mayo 2023" */
+var ANTES_KEY='02023-05';
+function altaSelect(p){
+  var k=p.altaKey||'', o='<option value="'+ANTES_KEY+'"'+(k&&k.charAt(0)==='0'?' selected':'')+'>Antes de may. 2023</option>', t=today(), y=t.getFullYear(), m=t.getMonth()+1, found=k.charAt(0)==='0';
+  var opts=[];
+  while(y>2023||(y===2023&&m>=5)){var v=y+'-'+pad(m);if(v===k)found=true;opts.push('<option value="'+v+'"'+(v===k?' selected':'')+'>'+cap(MESES[m-1]).slice(0,3)+'. '+y+'</option>');m--;if(!m){m=12;y--}}
+  if(!found&&k)opts.unshift('<option value="'+esc(k)+'" selected>'+esc(p.alta||k)+'</option>');
+  if(!k)opts.unshift('<option value="" selected>—</option>');
+  return '<select class="altasel" data-alta="'+p.id+'" aria-label="Mes de ingreso">'+opts.join('')+o+'</select>';
+}
+function setAlta(pid,k){
+  var p=findPac(pid); if(!p||!k)return;
+  p.altaKey=k; p.alta=k.charAt(0)==='0'?'Antes de Mayo 2023':cap(MESES[+k.slice(5,7)-1])+' '+k.slice(0,4);
+  save(); toast('Ingreso: '+p.alta);
+}
 function curAltaKey(){var t=today();return t.getFullYear()+'-'+pad(t.getMonth()+1)}
 function renderPacSimple(){
   $('#row2').innerHTML='<input class="psearch" id="pSearch" type="search" placeholder="Buscar paciente (nombre o apellido)…" aria-label="Buscar paciente" autocomplete="off" value="'+esc(ui.q||'')+'">'+
@@ -1517,6 +1534,7 @@ document.addEventListener('input',function(ev){
   ev.target.classList.toggle('on',!!v);
   if(v)$$('[data-seg="monto"] button').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-pressed','false')});
 });
+document.addEventListener('change',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('altasel'))setAlta(el.dataset.alta,el.value)});
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
   var col=ev.target.closest&&ev.target.closest('.daycol');
