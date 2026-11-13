@@ -1018,6 +1018,12 @@ function renderStats(){
   html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1),'ft');
   html+=table('Promedio por paciente','ingresos ÷ pacientes atendidos',['Fran','Car','Total'],function(m,r){return cell(r.pf,1)+cell(r.pc,1)+cell(r.pt,1)},null,'pt');
   html+=table('Rendimiento mensual','ingreso − costo fijo',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+inp(m,'cos',r.cos)+cell(r.ren,1)},cell(sum('ing'),1)+cell(sum('cos'),1)+cell(sum('ren'),1),'ren');
+  /* cancelaciones: turnos cancelados por nutri, calculados de la agenda (solo meses ya cerrados) */
+  var canc={}, hoyK=iso(today()).slice(0,7);
+  data.turnos.forEach(function(t){if(t.estado!=='x'||!t.date||t.date.slice(0,4)!==String(ui.sy)||t.date.slice(0,7)>=hoyK)return;var m=+t.date.slice(5,7);var c=canc[m]=canc[m]||{f:0,c:0};c[t.nutri==='car'?'c':'f']++});
+  var cz=function(m){var c=canc[m];return c?c:{f:null,c:null}}, ctot=function(k){var n=0,any=false;Object.keys(canc).forEach(function(m){any=true;n+=canc[m][k]});return any?n:null};
+  html+=table('Cancelaciones','turnos cancelados en la agenda',['Fran','Car','Total'],function(m){var c=cz(m);return cell(c.f)+cell(c.c)+cell(c.f==null?null:c.f+c.c)},
+    cell(ctot('f'))+cell(ctot('c'))+cell(ctot('f')==null?null:ctot('f')+ctot('c')));
   html+=table('Valor consulta','aumenta cada 3 meses',['Nuevo','Control'],function(m,r){return inp(m,'vn',r.vn)+inp(m,'vc',r.vc)},null,'next');
   html+=table('Rendimiento redes','pacientes nuevos por canal',['Conv. Inst.','Ing. Inst.','Conv. Google','Ing. Google','Gasto Google','Rend. Google'],
     function(m,r){return cell(r.ci)+cell(r.ii,1)+cell(r.cg)+cell(r.ig,1)+inp(m,'gg',r.gg)+cell(r.rg,1)},
