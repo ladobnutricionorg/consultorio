@@ -82,8 +82,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk.tall{flex-direction:column;gap:2px}
 .blk .bl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .blk .blr{font-size:11px}
-.blk .bln{font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
+.blk .bln{text-transform:uppercase;font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
+#bNota{text-transform:uppercase}
 .fab{display:none}
 @media(max-width:760px){
   .app.fixmob{height:100vh;height:100dvh;overflow:hidden;padding-bottom:0}
@@ -1220,7 +1221,7 @@ function readBloq(){
   var a=$('#bFrom').value, z=$('#bTo').value, err=$('#bErr');
   if(!$('#bDate').value){err.textContent='Elegí la fecha.';err.hidden=false;return null}
   if(toMin(z)<=toMin(a)){err.textContent='El horario "hasta" tiene que ser después de "desde".';err.hidden=false;return null}
-  return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim()};
+  return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim().toLocaleUpperCase('es-AR')};
 }
 function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
