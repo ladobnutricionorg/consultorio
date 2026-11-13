@@ -352,6 +352,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .opts{position:absolute;left:0;right:0;top:48px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 24px rgba(23,32,27,.15);max-height:260px;overflow:auto;padding:4px}
 .opts button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;text-align:left;padding:10px 10px;border-radius:6px;font-size:14px;cursor:pointer;min-height:40px}
 .opts button:hover,.opts button:focus{background:#F1F2EE;outline:0}
+.opts button.act{background:#EEF8CF}
 .opts button small{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .opts .none{padding:10px;font-size:13px;color:var(--muted)}
 .addpac{flex:none;width:44px;height:44px;border-radius:8px;border:0;background:var(--ink);color:var(--lima);display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -735,9 +736,24 @@ function pacOptions(input){
   var all=data.pacientes.filter(function(p){return !q||norm(p.name).indexOf(q)>-1});
   all.sort(function(a,b){var x=(a.nutri===ui.nutri?0:1)-(b.nutri===ui.nutri?0:1);return x||a.name.localeCompare(b.name)});
   all=all.slice(0,8);
-  list.innerHTML=all.length?all.map(function(p){return '<button type="button" role="option" data-pick="'+p.id+'" data-for="'+input.id+'"><span>'+esc(p.name)+'</span>'+(p.nutri!==ui.nutri?'<small>de '+NUTRIS[p.nutri]+'</small>':'')+'</button>'}).join('')
+  list.innerHTML=all.length?all.map(function(p,i){return '<button type="button" role="option" id="'+input.id+'O'+i+'"'+(q&&i===0?' class="act" aria-selected="true"':'')+' data-pick="'+p.id+'" data-for="'+input.id+'"><span>'+esc(p.name)+'</span>'+(p.nutri!==ui.nutri?'<small>de '+NUTRIS[p.nutri]+'</small>':'')+'</button>'}).join('')
     :'<div class="none">No está en la lista. Tocá <b>+</b> para cargarlo.</div>';
   list.hidden=false; input.setAttribute('aria-expanded','true');
+  if(q&&all.length)input.setAttribute('aria-activedescendant',input.id+'O0');else input.removeAttribute('aria-activedescendant');
+}
+/* flechas arriba/abajo para moverse entre las opciones y Enter para elegir */
+function pacKey(ev){
+  var input=ev.target, list=$('#'+input.id+'L'); if(!list||list.hidden)return;
+  var opts=$$('[data-pick]',list); if(!opts.length)return;
+  var i=opts.findIndex(function(o){return o.classList.contains('act')});
+  if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){
+    ev.preventDefault();
+    i=ev.key==='ArrowDown'?(i<0?0:Math.min(i+1,opts.length-1)):(i<=0?0:i-1);
+    opts.forEach(function(o,k){o.classList.toggle('act',k===i);o.setAttribute('aria-selected',k===i?'true':'false')});
+    input.setAttribute('aria-activedescendant',opts[i].id); opts[i].scrollIntoView({block:'nearest'});
+  } else if(ev.key==='Enter'&&i>=0){
+    ev.preventDefault(); pickPac(input.id,opts[i].dataset.pick);
+  }
 }
 function closeOpts(){$$('.opts').forEach(function(l){l.hidden=true});$$('.pacin').forEach(function(i){i.setAttribute('aria-expanded','false')})}
 function pickPac(inputId,pid){var i=$('#'+inputId),p=findPac(pid);if(!i||!p)return;i.value=p.name;i.dataset.pid=p.id;i.classList.add('ok');closeOpts()}
@@ -1185,6 +1201,7 @@ function openNuevo(di,time){
     '<p class="err" id="nErr" hidden></p></div>'+
     '<div class="sec" id="kBloq" hidden>'+bloqFields(null,d,t)+'<p class="err" id="bErr" hidden></p></div>'+
     '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveNuevo">Guardar</button></div></div>');
+  if(!isMobile())setTimeout(function(){var i=$('#nName');if(i)i.focus()},30);
 }
 function bloqFields(b,d,t){
   return '<div class="fields">'+
@@ -1459,6 +1476,7 @@ document.addEventListener('mousemove',function(ev){
 });
 document.addEventListener('mouseleave',clearHover);
 document.addEventListener('keydown',function(ev){
+  if(ev.target.classList&&ev.target.classList.contains('pacin')&&/^(ArrowDown|ArrowUp|Enter)$/.test(ev.key)){pacKey(ev);return}
   if(ev.key!=='Escape')return;
   if($$('.opts').some(function(l){return !l.hidden})){closeOpts();return}
   if(!$('#overlay2').hidden){$('#overlay2').hidden=true;return}
