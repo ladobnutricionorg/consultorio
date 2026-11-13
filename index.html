@@ -448,9 +448,9 @@ details.edit[open] summary{margin-bottom:12px}
   .pacname{font-size:13px}
   .ficha{height:28px;font-size:10px;padding:0 9px}
   .thead{display:none}
-  .prow{grid-template-columns:40px minmax(0,1fr) 36px 98px 40px;grid-template-areas:"d n n m k" "d a f m k";column-gap:8px;padding:8px 12px;row-gap:2px;align-items:center}
+  .prow{grid-template-columns:40px minmax(0,1fr) auto 44px;grid-template-areas:"d n m k" "d a m k";padding:8px 12px;row-gap:2px;align-items:center}
   .prow .pname{align-self:end}.prow .amt{align-self:start}
-  .prow.debe{grid-template-areas:"d n n m k" "d n n m k"}
+  .prow.debe{grid-template-areas:"d n m k" "d n m k"}
   .prow.debe .pname{align-self:center;padding:0}
   .prow.debe .qwrap{grid-area:m;align-self:center}
   .prow.debe>span:empty{display:none}
@@ -469,7 +469,7 @@ details.edit[open] summary{margin-bottom:12px}
   .fields.three .fld:first-child{grid-column:1/-1}
   .prow .amt{grid-area:a;text-align:left}
   .prow .chip{grid-area:m;justify-self:end}
-  .prow .fp{grid-area:f;justify-self:end;align-self:start;padding-top:3px;font-size:10.5px}
+  .prow .fp{display:none}
   .prow .ck{grid-area:k;width:44px}
   .dayrow{padding:12px 12px 4px}
   .overlay{align-items:flex-end;padding:0}
@@ -1058,6 +1058,12 @@ function renderStats(){
   var ibest=function(m){var c=ing[m];return !!c&&imax>0&&c.f+c.c===imax};
   html+=table('Ingresos del mes','pacientes cargados en el mes, se atiendan o no',['Fran','Car','Total'],function(m){var c=iz(m);return cell(c.f)+cell(c.c)+cell(c.f==null?null:c.f+c.c)},
     cell(itot('f'))+cell(itot('c'))+cell(itot('f')==null?null:itot('f')+itot('c')),ibest);
+  /* solo para el admin (Fede): ingresos del mes por Google e Instagram, sin separar por nutri */
+  if(staff&&staff.rol==='admin'){
+    var red={};data.pacientes.forEach(function(p){var k=p.altaKey||'';if(k.slice(0,4)!==String(ui.sy))return;var m=+k.slice(5,7);if(!m||(p.llegada!=='Google'&&p.llegada!=='Instagram'))return;var c=red[m]=red[m]||{g:0,i:0};c[p.llegada==='Google'?'g':'i']++});
+    var rz=function(m){return red[m]||(ing[m]?{g:0,i:0}:{g:null,i:null})}, rtot=function(k){var n=0,any=false;for(var m=1;m<=12;m++){var c=rz(m);if(c[k]!=null){any=true;n+=c[k]}}return any?n:null};
+    html+=table('Ingresos del mes por red','contactos que entraron por Google o Instagram',['Google','Instagram'],function(m){var c=rz(m);return cell(c.g)+cell(c.i)},cell(rtot('g'))+cell(rtot('i')));
+  }
   html+=table('Pacientes nuevos atendidos','primera vez en el mes',['Fran','Car','Total'],function(m,r){return cell(r.nf)+cell(r.nc)+cell(r.nt)},cell(tv('a','nf'))+cell(tv('a','nc'))+cell(tv('a','nt')),'nt');
   html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')),'tt');
   html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1),'ft');
