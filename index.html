@@ -345,6 +345,8 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .pacrowl small{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-top:1px}
 .pacrowl .pl{font-size:12.5px;color:var(--muted)}
 .fields.three{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr)}
+.fields.when{grid-template-columns:minmax(0,1.15fr) minmax(0,.8fr) minmax(0,1.7fr)}
+.otr{display:flex;align-items:center;gap:6px}.otr input{flex:1;min-width:0}.otr i{font-style:normal;color:var(--muted)}
 .pacrow{display:flex;gap:8px;align-items:stretch}
 .combo{position:relative;flex:1;min-width:0}
 .combo input{font:inherit;font-size:15px;font-weight:500;height:44px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;width:100%;color:var(--ink);background:#fff}
@@ -443,6 +445,7 @@ details.edit[open] summary{margin-bottom:12px}
   .prow .pdate{grid-area:d}
   .prow .pname{grid-area:n;padding:4px 0 0}
   .fields.three{grid-template-columns:1fr 1fr}
+  .fields.when{grid-template-columns:1fr 1fr}.fields.when .fld:first-child,.fields.when .otra{grid-column:1/-1}
   .fcard{flex:1 1 100%;position:static;padding:16px}
   .fsec{padding:18px 16px;gap:16px}
   .fgrid{grid-template-columns:1fr 1fr;gap:14px 16px}
@@ -1187,13 +1190,19 @@ function slotSelect(id,val){
 function endSelect(id,val){var o='';for(var m=START+30;m<=END;m+=30){var v=hhmm(m);o+='<option value="'+v+'"'+(v===val?' selected':'')+'>'+show(m)+'</option>'}return '<select id="'+id+'">'+o+'</select>'}
 /* "Otra hora" pisa a la hora del desplegable cuando está completa */
 function timeVal(selId,otherId){var v=$('#'+otherId).value;return v||$('#'+selId).value}
-function whenFields(p,date,time){
-  var half=time&&toMin(time)%30===0, sel=half?time:hhmm(Math.floor(toMin(time||'09:00')/30)*30);
-  return '<div class="fields three">'+
+function whenFields(p,date,time,dur){
+  var half=time&&toMin(time)%30===0, std=!dur||dur===30||dur===60, sel=half?time:hhmm(Math.floor(toMin(time||'09:00')/30)*30);
+  var custom=!half||!std;
+  return '<div class="fields when">'+
     '<label class="fld"><span>Fecha</span><input id="'+p+'Date" type="date" value="'+date+'"></label>'+
     '<label class="fld"><span>Hora</span>'+slotSelect(p+'Time',sel)+'</label>'+
-    '<label class="fld"><span>Otra hora</span><input id="'+p+'Other" type="time" step="300" value="'+(half?'':(time||''))+'"></label></div>';
+    '<div class="fld otra"><span>Otra hora <em>(desde / hasta)</em></span><div class="otr">'+
+      '<input id="'+p+'Other" type="time" step="300" aria-label="Otra hora desde" value="'+(custom?(time||''):'')+'">'+
+      '<i aria-hidden="true">–</i>'+
+      '<input id="'+p+'OtherTo" type="time" step="300" aria-label="Otra hora hasta" value="'+(custom&&time&&dur?hhmm(toMin(time)+dur):'')+'"></div></div></div>';
 }
+/* duración: si se completó "hasta", sale de ahí; si no, de los botones 30/60 */
+function durVal(p,segName,start){var to=$('#'+p+'OtherTo').value;if(to&&start)return toMin(to)-toMin(start);return +segVal(segName)}
 
 /* Nuevo turno / bloqueo */
 function openNuevo(di,time){
@@ -1233,7 +1242,8 @@ function saveNuevo(){
   if(!pid){e.textContent='Elegí un paciente de la lista, o cargalo con el botón +.';e.hidden=false;return}
   if(!date){e.textContent='Elegí la fecha.';e.hidden=false;return}
   if(!time){e.textContent='Elegí la hora.';e.hidden=false;return}
-  var p=findPac(pid), dur=+segVal('dur'), a0=toMin(time), btn=$('#dlg [data-act="saveNuevo"]');
+  var p=findPac(pid), dur=durVal('n','dur',time), a0=toMin(time), btn=$('#dlg [data-act="saveNuevo"]');
+  if(!(dur>0)){e.textContent='La hora "hasta" tiene que ser después de "desde".';e.hidden=false;return}
   /* aviso si ya hay un turno en ese horario (ej: pareja que viene junta) */
   var choca=data.turnos.filter(function(t){return t.nutri===ui.nutri&&t.date===date&&t.estado!=='x'&&toMin(t.time)<a0+dur&&a0<toMin(t.time)+t.dur});
   if(choca.length&&!btn.dataset.force){
@@ -1264,7 +1274,7 @@ function openTurno(id,editPago){
       '<button type="button" class="btn big primary" data-act="savePagoT" data-id="'+t.id+'">'+(pg?'Guardar cambios':'Guardar pago')+'</button></div></div></details></div>';
   }
   html+='<div class="sec"><details class="edit"><summary>Editar datos del turno</summary><div class="fields">'+pacField('eName',p?p.id:null)+'</div>'+
-    '<div style="margin-top:12px">'+whenFields('e',t.date,t.time)+'</div>'+
+    '<div style="margin-top:12px">'+whenFields('e',t.date,t.time,t.dur)+'</div>'+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Duración</span>'+seg('eDur',[['30','30 min'],['60','60 min']],String(t.dur))+
     '<span class="lbl" style="display:block;margin:12px 0 8px">Tipo</span>'+seg('eTipo',TIPOS,t.tipo||'')+
     '<div style="margin-top:14px;display:flex;justify-content:flex-end"><button type="button" class="btn big primary" data-act="saveEdit" data-id="'+t.id+'">Guardar cambios</button></div></details></div>';
@@ -1410,9 +1420,11 @@ document.addEventListener('click',function(ev){
     case 'saveEdit':
       t2=findT(id); if(!t2)break;
       var epid=pidOf('eName'), tm=timeVal('eTime','eOther'), dt=$('#eDate').value;
+      var edur=durVal('e','eDur',tm);
+      if(!(edur>0)){var et=$('#eOtherTo');et.setCustomValidity('Tiene que ser después de "desde"');et.reportValidity();et.addEventListener('input',function(){et.setCustomValidity('')},{once:true});break}
       if(!epid||!tm||!dt){var ee=$('#eName');ee.focus();ee.setCustomValidity&&ee.setCustomValidity('Elegí un paciente de la lista');ee.reportValidity&&ee.reportValidity();break}
       var pp=findPac(epid);
-      t2.name=pp.name; t2.pid=pp.id; t2.date=dt; t2.time=tm; t2.dur=+segVal('eDur'); t2.tipo=segVal('eTipo')||'';
+      t2.name=pp.name; t2.pid=pp.id; t2.date=dt; t2.time=tm; t2.dur=edur; t2.tipo=segVal('eTipo')||'';
       pg=pagoDe(t2.id); if(pg)pg.name=t2.name;
       save(); goTo(dt); openTurno(id); break;
     case 'delTurno': if(!sure(a))break; data.turnos=data.turnos.filter(function(x){return x.id!==id}); data.pagos.forEach(function(x){if(x.turnoId===id)x.turnoId=null}); save(); closeModal(); render(); break;
@@ -1447,8 +1459,8 @@ document.addEventListener('change',function(ev){
   if(el.classList&&el.classList.contains('stin')){saveStat(el);return}
   if(el.id==='pMes'||el.id==='pAnio'){ui.month=new Date(+$('#pAnio').value,+$('#pMes').value,1);render();return}
   if(/^n(Date|Time|Other)$/.test(el.id)){var fb=$('#dlg [data-act="saveNuevo"]');if(fb&&fb.dataset.force){delete fb.dataset.force;fb.textContent='Guardar';$('#nErr').hidden=true}}
-  if(el.id==='nTime')$('#nOther').value='';
-  if(el.id==='eTime')$('#eOther').value='';
+  if(el.id==='nTime'){$('#nOther').value='';$('#nOtherTo').value=''}
+  if(el.id==='eTime'){$('#eOther').value='';$('#eOtherTo').value=''}
 });
 document.addEventListener('input',function(ev){
   var el=ev.target;
