@@ -948,7 +948,10 @@ function renderPacSimpleList(){
   });
   if(list.length>lim)html+='<div class="pmore"><button type="button" class="btn" data-act="pmore">Mostrar más ('+(list.length-lim)+' restantes)</button></div>';
   $('#sbody').innerHTML=html;
-  $('#pcount').textContent=buscando?list.length+' coincidencia'+(list.length===1?'':'s'):list.length+' paciente'+(list.length===1?'':'s')+' nuevo'+(list.length===1?'':'s')+' este mes';
+  $('#pcount').textContent=buscando?list.length+' coincidencia'+(list.length===1?'':'s'):list.length+' paciente'+(list.length===1?'':'s')+' nuevo'+(list.length===1?'':'s')+' este mes'+(function(){
+    var c={Google:0,Instagram:0,Referido:0,Otro:0};list.forEach(function(p){var k=c.hasOwnProperty(p.llegada)?p.llegada:'Otro';c[k]++});
+    var parts=[['Google','Google','Google'],['Instagram','Instagram','Instagram'],['Referido','Referido','Referidos'],['Otro','Otro','Otros']].filter(function(x){return c[x[0]]}).map(function(x){return c[x[0]]+' '+(c[x[0]]===1?x[1]:x[2])});
+    return parts.length?' ('+parts.join(' / ')+')':''})();
 }
 function renderPacientes(){
   if(!isAdmin()||!ui.ptabla){renderPacSimple();return}
