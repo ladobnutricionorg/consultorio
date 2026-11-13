@@ -126,6 +126,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .qd:hover{background:#FFF1EE}.qd.on{background:#17201B;border-color:#17201B;color:#D4FF3A}
 .qpop{position:absolute;z-index:60;width:252px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(23,32,27,.18),0 0 0 1px rgba(23,32,27,.06);padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
 .qpop:before{content:'';position:absolute;top:-6px;left:var(--ax,190px);width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-1px -1px 0 rgba(23,32,27,.06)}
+.qpop.up:before{top:auto;bottom:-6px;box-shadow:1px 1px 0 rgba(23,32,27,.06)}
 .qnm{font-size:12px;font-weight:700;color:#3D4741;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qpop select,.qpop input{font:inherit;font-size:13px;font-weight:600;height:30px;width:100%;border:0;border-bottom:1.5px solid #C9CFC8;border-radius:0;background:transparent;padding:0 2px;color:#17201B;outline:none}
 .qpop select:focus,.qpop input:focus{border-bottom-color:#17201B}
@@ -1344,7 +1345,9 @@ function openQp(btn,tid){
     '<div class="qft"><button type="button" class="qcn" data-act="qcancel">Cancelar</button><button type="button" class="qgo" data-act="qsave" data-id="'+t.id+'">Guardar</button></div>';
   document.body.appendChild(d);
   var r=btn.getBoundingClientRect(), w=d.offsetWidth, left=Math.min(Math.max(8,r.right+scrollX-w+18),scrollX+document.documentElement.clientWidth-w-8);
-  d.style.left=left+'px'; d.style.top=(r.bottom+scrollY+9)+'px'; d.style.setProperty('--ax',(r.left+scrollX+r.width/2-left-6)+'px');
+  var h=d.offsetHeight, up=r.bottom+9+h>innerHeight-8&&r.top-9-h>8;
+  d.classList.toggle('up',up);
+  d.style.left=left+'px'; d.style.top=(up?r.top+scrollY-9-h:r.bottom+scrollY+9)+'px'; d.style.setProperty('--ax',(r.left+scrollX+r.width/2-left-6)+'px');
   d.addEventListener('input',function(){$('#qErr2').hidden=true});
   d.addEventListener('click',function(ev){
     var b=ev.target.closest('[data-qm],[data-qmed]'); if(!b)return;
