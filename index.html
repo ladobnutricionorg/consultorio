@@ -798,7 +798,7 @@ function openPacForm(forId,pid){
 }
 function savePac(forId,pid){
   var e=$('#qErr'), nom=$('#qNom').value.trim(), ape=$('#qApe').value.trim(), tel=$('#qTel').value.trim(), lle=segVal('llegada',$('#dlg2'));
-  var isNew=!pid, miss=[]; if(!nom)miss.push('nombre'); if(!ape&&isNew)miss.push('apellido'); if(!lle&&isNew)miss.push('medio de llegada');
+  var isNew=!pid, miss=[]; if(!nom)miss.push('nombre'); if(!ape&&isNew)miss.push('apellido'); if(!lle)miss.push('medio de llegada');
   if(miss.length){e.textContent='Falta completar: '+miss.join(', ')+'.';e.hidden=false;return}
   var full=(nom+' '+ape).trim(), p=pid?findPac(pid):null;
   e.hidden=true;
@@ -1304,6 +1304,11 @@ function saveNuevo(){
   if(choca.length&&!btn.dataset.force){
     e.innerHTML='<span class="warnin">Ese día en ese horario ya hay un turno asignado ('+choca.map(function(t){return esc(t.name)}).join(', ')+'). ¿Querés cargarlo de todas maneras?</span>';
     e.hidden=false; btn.dataset.force='1'; btn.textContent='Sí, cargar igual'; return;
+  }
+  /* aviso si una nutri carga un turno en la agenda de la otra */
+  if(staff&&staff.nutri&&NUTRIS[staff.nutri]&&staff.nutri!==ui.nutri&&!btn.dataset.otra){
+    e.innerHTML='<span class="warnin">Estás cargando un paciente en la agenda de <b>'+NUTRIS[ui.nutri]+'</b>. ¿Querés continuar?</span>';
+    e.hidden=false; btn.dataset.otra='1'; btn.textContent='Sí, continuar'; return;
   }
   data.turnos.push({id:uid(),nutri:ui.nutri,date:date,time:time,dur:dur,name:p.name,pid:p.id,tipo:segVal('tipo')||'',estado:segVal('estado')});
   save();closeModal();goTo(date);
