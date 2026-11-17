@@ -328,6 +328,16 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .ibt{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#8A938D;text-transform:uppercase}
 .ibv{font-size:22px;font-weight:800;margin:2px 0 4px}.ibv small{font-size:12px;font-weight:600;color:#8A938D}
 .ibsvg{width:100%;height:auto;display:block}.ibsvg text{font-family:inherit}
+.ibx{border-top:1px solid #EEF0EB;padding-top:14px}
+.ibxh{margin:0 0 10px;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#8A938D;text-transform:uppercase}
+.ibxg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.ibk{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;background:#F7F8F5}
+.ibkt{font-size:11.5px;font-weight:600;color:#56605A}
+.ibk b{font-size:19px;font-weight:800}.ibk b small{font-size:11.5px;font-weight:600;color:#8A938D}
+.ibkr{font-size:10.5px;font-weight:600;color:#8A938D}.ibkr.ok{color:#3E7A1E}.ibkr.hi{color:#C0532F}.ibkr.lo{color:#2F6DB5}
+@media(max-width:760px){.ibxg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ib .hch .btn{flex:none}
+.ibf .fld.miss input{background:#FFF7DA}
 .ibempty{margin:0;font-size:13px;color:#8A938D}
 @media(max-width:760px){.ibg{grid-template-columns:1fr}}
 .fsec{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:26px 30px;display:flex;flex-direction:column;gap:20px}
@@ -620,6 +630,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  up:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
   next:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
   plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
@@ -863,11 +874,106 @@ function ibChart(pts,k,color){
   pts.forEach(function(x,i){var l=i===n-1;s+='<circle cx="'+X(i)+'" cy="'+Y(x[k])+'" r="'+(l?4.2:2.7)+'" fill="'+(l?color:'#fff')+'" stroke="'+color+'" stroke-width="1.8"><title>'+ddmm(x.d)+'/'+x.d.slice(2,4)+': '+String(x[k]).replace('.',',')+'</title></circle>'});
   return s+'</svg>';
 }
+/* Lectura de la hoja principal del InBody (foto JPG). La imagen se procesa en el navegador y no se guarda en ningún lado. */
+var IB_W=1640,IB_H=2310;
+var IB_REG={fecha:[730,178,925,215],agua:[688,325,795,362],ragua:[815,325,950,362],grasa:[700,478,795,518],peso:[700,528,795,568],
+  musc:[232,826,990,856,1],imc:[232,1101,990,1133,1],pgrasa:[232,1168,990,1199,1],score:[1170,338,1280,402],
+  tmb:[1238,690,1330,726],rtmb:[1375,690,1510,726],icc:[1238,730,1330,766],ricc:[1375,730,1510,766],visc:[1270,767,1330,801],rvisc:[1375,767,1510,801]};
+var IB_KIND={fecha:'f',agua:'d1',grasa:'d1',peso:'d1',musc:'d1',imc:'d1',pgrasa:'d1',icc:'d2',score:'i',tmb:'i',visc:'i',ragua:'r',rtmb:'r',ricc:'r',rvisc:'r'};
+var ibWorker=null;
+function ibLoadScript(){return new Promise(function(res,rej){if(window.Tesseract)return res();var sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';sc.onload=res;sc.onerror=function(){rej(new Error('No se pudo cargar el lector'))};document.head.appendChild(sc)})}
+function ibCrop(img,box){
+  var sx=img.naturalWidth/IB_W,sy=img.naturalHeight/IB_H,x0=Math.round(box[0]*sx),y0=Math.round(box[1]*sy),w=Math.round((box[2]-box[0])*sx),h=Math.round((box[3]-box[1])*sy);
+  var c=document.createElement('canvas');c.width=w;c.height=h;var g=c.getContext('2d');g.drawImage(img,x0,y0,w,h,0,0,w,h);
+  var d=g.getImageData(0,0,w,h).data,b=new Uint8Array(w*h),i,x,y;
+  for(i=0;i<w*h;i++)b[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114)<150?1:0;
+  if(box[4]){for(y=0;y<h;y++){x=0;while(x<w){if(b[y*w+x]){var st=x;while(x<w&&b[y*w+x])x++;if(x-st>30*sx)for(i=st;i<x;i++)b[y*w+i]=0}else x++}}}
+  var mx0=w,mx1=-1,my0=h,my1=-1;for(y=0;y<h;y++)for(x=0;x<w;x++)if(b[y*w+x]){if(x<mx0)mx0=x;if(x>mx1)mx1=x;if(y<my0)my0=y;if(y>my1)my1=y}
+  if(mx1<0)return null;
+  var W=mx1-mx0+1,H=my1-my0+1,S=3/Math.max(sx,.5),o=document.createElement('canvas');o.width=Math.round((W+24)*S);o.height=Math.round((H+24)*S);
+  var t=document.createElement('canvas');t.width=W+24;t.height=H+24;var tg=t.getContext('2d'),td=tg.createImageData(W+24,H+24);
+  for(i=0;i<td.data.length;i++)td.data[i]=255;
+  for(y=0;y<H;y++)for(x=0;x<W;x++)if(b[(y+my0)*w+x+mx0]){var p=((y+12)*(W+24)+x+12)*4;td.data[p]=td.data[p+1]=td.data[p+2]=0}
+  tg.putImageData(td,0,0);var og=o.getContext('2d');og.imageSmoothingEnabled=true;og.fillStyle='#fff';og.fillRect(0,0,o.width,o.height);og.drawImage(t,0,0,o.width,o.height);
+  return o;
+}
+function ibParse(k,txt){
+  var kind=IB_KIND[k],t=String(txt||'').replace(/\s+/g,' ').trim(),m;
+  if(kind==='f'){m=t.match(/(\d{2})[.,](\d{2})[.,](\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:null}
+  if(kind==='r'){m=t.replace(/\s/g,'').match(/(\d+(?:,\d+)?)~(\d+(?:,\d+)?)/);return m?[+m[1].replace(',','.'),+m[2].replace(',','.')]:null}
+  var toks=t.split(' ').filter(Boolean),tok=toks[toks.length-1]||'';tok=tok.replace(/\./g,',').replace(/^,+|,+$/g,'');
+  if(kind==='i'){m=tok.match(/^\d+$/);return m?+tok:null}
+  var dec=kind==='d2'?2:1;
+  if(/^\d+,\d+$/.test(tok))return +tok.replace(',','.');
+  if(/^\d+$/.test(tok)&&tok.length>dec)return +(tok.slice(0,-dec)+'.'+tok.slice(-dec));
+  return null;
+}
+var IB_RANGO={peso:[20,300],musc:[5,100],grasa:[1,150],pgrasa:[2,70],imc:[10,70],score:[20,120],visc:[1,30],tmb:[500,4000],icc:[.5,1.5],agua:[10,100]};
+function ibOk(k,v){if(v==null)return false;var kind=IB_KIND[k];if(kind==='f')return true;if(kind==='r')return v[0]<v[1];var r=IB_RANGO[k];return !r||(v>=r[0]&&v<=r[1])}
+async function ibRead(file,onStep){
+  await ibLoadScript();
+  if(!ibWorker){onStep('Preparando el lector (solo la primera vez)…');ibWorker=await Tesseract.createWorker('eng',1)}
+  await ibWorker.setParameters({tessedit_char_whitelist:'0123456789.,~'});
+  var url=URL.createObjectURL(file),img=new Image();
+  await new Promise(function(res,rej){img.onload=res;img.onerror=function(){rej(new Error('No se pudo abrir la imagen'))};img.src=url});
+  var out={},ks=Object.keys(IB_REG),n=0,ratio=img.naturalWidth/img.naturalHeight;
+  out._formato=Math.abs(ratio-IB_W/IB_H)<.04;
+  for(var k of ks){
+    onStep('Leyendo… '+Math.round(++n*100/ks.length)+'%');
+    var cv=ibCrop(img,IB_REG[k]);if(!cv){out[k]=null;continue}
+    /* se lee de dos maneras y se queda con la lectura válida más completa (a veces una se come el primer dígito) */
+    var v=null,best=-1;
+    for(var psm of (IB_REG[k][4]?['11','7']:['7','8'])){
+      await ibWorker.setParameters({tessedit_pageseg_mode:psm});
+      var r=await ibWorker.recognize(cv),txt=r.data.text,c=ibParse(k,txt);
+      if(!ibOk(k,c)&&c!=null&&IB_KIND[k].charAt(0)==='d'){var c2=ibParse(k,String(txt).trim().replace(/^\S/,''));if(ibOk(k,c2))c=c2}
+      if(ibOk(k,c)){var sc=String(c).replace(/\D/g,'').length;if(sc>best){best=sc;v=c}}
+    }
+    out[k]=ibOk(k,v)?v:null;
+  }
+  URL.revokeObjectURL(url);img.src='';
+  return out;
+}
+var IB_FORM=[['d','Fecha de la medición','date'],['peso','Peso (kg)'],['musc','Músculo esquelético (kg)'],['grasa','Masa grasa (kg)'],['pgrasa','% Grasa corporal'],['imc','IMC'],['score','Puntuación InBody'],['visc','Grasa visceral'],['tmb','Metabolismo basal (kcal)'],['icc','Cintura-cadera'],['agua','Agua corporal (L)']];
+function openIbForm(pid,v,aviso){
+  v=v||{};var fx=function(x){return x==null?'':String(x).replace('.',',')};
+  $('#dlg2').innerHTML=head('Nueva medición InBody','Revisá los números antes de guardar','close2')+
+    '<div class="sec">'+(aviso?'<p class="warn">'+aviso+'</p>':'')+'<div class="fields ibf">'+IB_FORM.map(function(f){var k=f[0],val=k==='d'?(v.fecha||''):fx(v[k]);
+      return '<label class="fld'+(k==='d'?' full':'')+(k!=='d'&&val===''?' miss':'')+'"><span>'+f[1]+'</span><input id="ib_'+k+'" '+(f[2]==='date'?'type="date"':'inputmode="decimal"')+' value="'+esc(val)+'"></label>'}).join('')+
+    '</div><p class="err" id="ibErr" hidden></p></div>'+
+    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'">Guardar medición</button></div></div>';
+  $('#dlg2')._ib={ragua:v.ragua,rtmb:v.rtmb,ricc:v.ricc,rvisc:v.rvisc};
+  $('#overlay2').hidden=false;
+}
+function saveIb(pid){
+  var p=findPac(pid),e=$('#ibErr'),d=$('#ib_d').value,o={d:d},num=function(k){var t=$('#ib_'+k).value.trim().replace(/\./g,'').replace(',','.');return t===''?null:+t};
+  if(!p)return;
+  if(!d){e.textContent='Falta la fecha de la medición.';e.hidden=false;return}
+  for(var i=1;i<IB_FORM.length;i++){var k=IB_FORM[i][0],x=num(k);if(x!=null&&isNaN(x)){e.textContent='Revisá el número de "'+IB_FORM[i][1]+'".';e.hidden=false;return}if(x!=null)o[k]=x}
+  if(o.peso==null){e.textContent='Falta el peso.';e.hidden=false;return}
+  var rg=$('#dlg2')._ib||{};['ragua','rtmb','ricc','rvisc'].forEach(function(k){if(rg[k])o[k]=rg[k]});
+  p.inbody=(p.inbody||[]).filter(function(x){return x.d!==d});p.inbody.push(o);
+  $('#overlay2').hidden=true;$('#dlg2').innerHTML='';save();render();toast('Medición del '+ddmm(d)+' guardada');
+}
 function inbodyCard(p){
   var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
-  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p></div>';
-  if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones cargadas.</p></section>';
+  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p><button type="button" class="btn" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" hidden></div>';
+  if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones. Tocá <b>Cargar InBody</b> y elegí la foto de la hoja principal.</p></section>';
   h+='<div class="ibg">'+IBM.map(function(m){var v=pts[pts.length-1][m[0]];if(v==null)return '';return '<div class="ibm"><div class="ibt">'+m[1]+'</div><div class="ibv">'+String(v).replace('.',',')+' <small>'+m[2]+'</small></div>'+ibChart(pts.filter(function(x){return x[m[0]]!=null}),m[0],m[3])+'</div>'}).join('')+'</div>';
+  /* datos extra de la última medición (hoja principal del InBody) */
+  var L=pts[pts.length-1], fx=function(v){return String(v).replace('.',',')};
+  var X=[['score','Puntuación InBody',function(v){return fx(v)+'<small>/100</small>'},null],
+         ['visc','Grasa visceral',fx,'rvisc'],
+         ['tmb','Metabolismo basal',function(v){return fx(v)+'<small> kcal</small>'},'rtmb'],
+         ['icc','Cintura-cadera',function(v){return fx(v.toFixed(2))},'ricc'],
+         ['imc','IMC',fx,null],
+         ['agua','Agua corporal',function(v){return fx(v)+'<small> L</small>'},'ragua']].filter(function(x){return L[x[0]]!=null});
+  if(X.length){
+    h+='<div class="ibx"><p class="ibxh">Última medición · '+ddmm(L.d)+'/'+L.d.slice(2,4)+'</p><div class="ibxg">'+X.map(function(x){
+      var r=x[3]&&L[x[3]], v=L[x[0]], st='';
+      if(r&&r.length===2)st=v<r[0]?'lo':v>r[1]?'hi':'ok';
+      return '<div class="ibk"><span class="ibkt">'+x[1]+'</span><b>'+x[2](v)+'</b>'+(r?'<span class="ibkr '+st+'">'+(st==='ok'?'Normal':st==='hi'?'Alto':'Bajo')+' · '+(x[0]==='icc'?fx(r[0].toFixed(2))+'–'+fx(r[1].toFixed(2)):fx(r[0])+'–'+fx(r[1]))+'</span>':'')+'</div>'}).join('')+'</div></div>';
+  }
   return h+'</section>';
 }
 function renderFicha(){
@@ -1516,6 +1622,8 @@ document.addEventListener('click',function(ev){
     case 'newPac': openPacForm(a.dataset.for); break;
     case 'savePac': savePac(a.dataset.for,a.dataset.id); break;
     case 'close2': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; break;
+    case 'ibLoad': var fi=$('#ibFile'); fi.value=''; fi.dataset.pid=id; fi.click(); break;
+    case 'ibSave': saveIb(id); break;
     case 'editPago': openTurno(id,true); break;
     case 'savePagoT':
       t2=findT(id); r=readPago(); if(!t2||!r)break;
@@ -1588,6 +1696,16 @@ document.addEventListener('input',function(ev){
   if(v)$$('[data-seg="monto"] button').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-pressed','false')});
 });
 document.addEventListener('change',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('altasel'))setAlta(el.dataset.alta,el.value)});
+document.addEventListener('change',function(ev){
+  if(ev.target.id!=='ibFile'||!ev.target.files.length)return;
+  var file=ev.target.files[0],pid=ev.target.dataset.pid,btn=$('[data-act="ibLoad"]'),lbl=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true}
+  ibRead(file,function(t){if(btn)btn.textContent=t}).then(function(v){
+    var falt=IB_FORM.slice(1).filter(function(f){return v[f[0]]==null}).length;
+    openIbForm(pid,v,!v._formato?'La imagen no parece la hoja principal del InBody. Completá los datos a mano.':falt?'Hay '+falt+' dato'+(falt===1?'':'s')+' que no se pudo leer (marcado'+(falt===1?'':'s')+' en amarillo). Completalo'+(falt===1?'':'s')+' o dejalo'+(falt===1?'':'s')+' vacío'+(falt===1?'':'s')+'.':null);
+  }).catch(function(err){openIbForm(pid,{},'No se pudo leer la imagen ('+err.message+'). Podés cargar los datos a mano.')})
+  .then(function(){if(btn){btn.disabled=false;btn.innerHTML=lbl}});
+});
 document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
