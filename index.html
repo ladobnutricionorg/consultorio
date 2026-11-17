@@ -316,6 +316,20 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .fwa svg{width:15px;height:15px}
 .flink{border:0;background:none;font-size:12px;color:#56605A;text-decoration:underline;cursor:pointer;padding:2px}
 .fmain{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.fdet>summary{cursor:pointer;list-style:none;font-size:13.5px;font-weight:700;letter-spacing:0}
+.fdet>summary::-webkit-details-marker{display:none}
+.fdet>summary::before{content:"›";display:inline-block;font-size:20px;line-height:1;transition:transform .15s}
+.fdet[open]>summary::before{transform:rotate(90deg)}
+.fdet:not([open]){padding-top:18px;padding-bottom:18px;gap:0}
+.ib .fh small{font-size:12px;font-weight:500;color:#8A938D;letter-spacing:0;margin-left:4px}
+.ib .fh{font-size:13.5px;font-weight:700;letter-spacing:0}
+.ibg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ibm{border:1px solid #EEF0EB;border-radius:10px;padding:12px 14px 6px}
+.ibt{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#8A938D;text-transform:uppercase}
+.ibv{font-size:22px;font-weight:800;margin:2px 0 4px}.ibv small{font-size:12px;font-weight:600;color:#8A938D}
+.ibsvg{width:100%;height:auto;display:block}.ibsvg text{font-family:inherit}
+.ibempty{margin:0;font-size:13px;color:#8A938D}
+@media(max-width:760px){.ibg{grid-template-columns:1fr}}
 .fsec{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:26px 30px;display:flex;flex-direction:column;gap:20px}
 .fh{margin:0;font-size:12px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:10px;flex:1}
 .fh::after{content:"";flex:1;height:1px;background:#EBEDE8}
@@ -834,6 +848,28 @@ function savePac(forId,pid){
 /* ---------- Ficha del paciente ---------- */
 function edad(nac){if(!nac)return null;var b=parse(nac),t=today(),e=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))e--;return e>=0&&e<130?e:null}
 function initials(p){return ((p.nombre||'')[0]||'')+((p.apellido||'')[0]||'')}
+/* ---------- Seguimiento InBody (solo se guardan los números de cada medición) ---------- */
+var IBM=[['peso','Peso','kg','#17201B'],['musc','Músculo esquelético','kg','#2F6DB5'],['grasa','Masa grasa','kg','#E0761C'],['pgrasa','% Grasa corporal','%','#F3AE62']];
+function ibChart(pts,k,color){
+  var w=400,h=130,pl=30,pr=12,pt=12,pb=24,n=pts.length,vals=pts.map(function(x){return x[k]});
+  var mn=Math.floor(Math.min.apply(0,vals)-1),mx=Math.ceil(Math.max.apply(0,vals)+1);
+  var X=function(i){return n===1?(pl+w-pr)/2:pl+(w-pl-pr)*i/(n-1)},Y=function(v){return pt+(h-pt-pb)*(1-(v-mn)/(mx-mn))};
+  var s='<svg viewBox="0 0 '+w+' '+h+'" class="ibsvg" role="img" aria-label="Evolución">';
+  for(var g=0;g<=3;g++){var gv=mn+(mx-mn)*g/3,y=Y(gv);s+='<line x1="'+pl+'" x2="'+(w-pr)+'" y1="'+y+'" y2="'+y+'" stroke="#EEF0EB"/><text x="'+(pl-6)+'" y="'+(y+3.5)+'" font-size="9.5" fill="#9AA29C" text-anchor="end">'+gv.toFixed(0)+'</text>'}
+  var step=Math.max(1,Math.ceil(n/5));
+  pts.forEach(function(x,i){if(i!==n-1&&(i%step||n-1-i<step*.6))return;s+='<text x="'+X(i)+'" y="'+(h-7)+'" font-size="9.5" fill="#9AA29C" text-anchor="middle">'+x.d.slice(8,10)+'/'+x.d.slice(5,7)+'</text>'});
+  var line=pts.map(function(x,i){return X(i)+','+Y(x[k])}).join(' ');
+  if(n>1)s+='<polygon points="'+X(0)+','+(h-pb)+' '+line+' '+X(n-1)+','+(h-pb)+'" fill="'+color+'" opacity=".1"/><polyline points="'+line+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round"/>';
+  pts.forEach(function(x,i){var l=i===n-1;s+='<circle cx="'+X(i)+'" cy="'+Y(x[k])+'" r="'+(l?4.2:2.7)+'" fill="'+(l?color:'#fff')+'" stroke="'+color+'" stroke-width="1.8"><title>'+ddmm(x.d)+'/'+x.d.slice(2,4)+': '+String(x[k]).replace('.',',')+'</title></circle>'});
+  return s+'</svg>';
+}
+function inbodyCard(p){
+  var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
+  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p></div>';
+  if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones cargadas.</p></section>';
+  h+='<div class="ibg">'+IBM.map(function(m){var v=pts[pts.length-1][m[0]];if(v==null)return '';return '<div class="ibm"><div class="ibt">'+m[1]+'</div><div class="ibv">'+String(v).replace('.',',')+' <small>'+m[2]+'</small></div>'+ibChart(pts.filter(function(x){return x[m[0]]!=null}),m[0],m[3])+'</div>'}).join('')+'</div>';
+  return h+'</section>';
+}
 function renderFicha(){
   var p=findPac(ui.fichaId), f=p.ficha||{}, mo=f.motivo||{}, td=iso(today());
   var seenT={}, srcT=(ui.fichaTs||[]).concat(data.turnos).filter(function(t){if(seenT[t.id])return false;seenT[t.id]=1;return true});
@@ -855,8 +891,7 @@ function renderFicha(){
     '<div class="kv"><span>Turnos</span><span>'+ts.length+'</span></div></div>'+
     (wa?'<a class="fwa" href="'+wa+'" target="_blank" rel="noopener">'+ICON.wa+'Escribir por WhatsApp</a>':'')+
     '<button type="button" class="flink" data-act="fichaDatos" data-id="'+p.id+'">Editar nombre, teléfono o llegada</button></aside>';
-  html+='<div class="fmain"><section class="fsec">'+
-    '<p class="fh">Datos personales</p><div class="fgrid">'+
+  html+='<div class="fmain"><details class="fsec fdet" id="fDet"'+(ui.fdOpen?' open':'')+'><summary class="fh">Datos personales</summary><div class="fgrid">'+
     fld('f_dni','DNI',f.dni)+
     '<label class="ff"><span>Fecha de nacimiento</span><div class="fnac"><input id="f_nac" type="date" value="'+esc(f.nac||'')+'"><em id="fEdad">'+(ed!=null?ed+' años':'')+'</em></div></label>'+
     fld('f_email','Email',f.email)+
@@ -868,7 +903,7 @@ function renderFicha(){
     '<div class="fmot"><span>Motivo de consulta</span>'+cb('aspecto','Aspecto')+cb('enfermedad','Enfermedad')+cb('riesgo','Riesgo')+'</div>'+
     '<label class="ff"><span>Medicación actual</span><textarea id="f_medic" rows="2">'+esc(f.medic||'')+'</textarea></label>'+
     '<label class="ff"><span>Observaciones</span><textarea id="f_obs" rows="2">'+esc(f.obs||'')+'</textarea></label>'+
-    '</section>';
+    '</details>'+inbodyCard(p);
   var hc=(p.historia||[]).slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.created||0)-(a.created||0)});
   html+='<section class="fsec hc"><div class="hch"><p class="fh">Historia clínica</p>'+(ui.hcEdit?'':'<button type="button" class="btn" data-act="hcNew">'+ICON.plus+'Agregar consulta</button>')+'</div>';
   var form=function(h){return '<div class="hcform"><label class="ff hcdate"><span>Fecha de la consulta</span><input id="hcDate" type="date" value="'+(h?h.date:td)+'"></label>'+
@@ -1459,10 +1494,10 @@ document.addEventListener('click',function(ev){
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'ptabla': ui.ptabla=!ui.ptabla; ui.plim=null; renderPacientes(); break;
-    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
+    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.fdOpen=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
-    case 'ficha': ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
+    case 'ficha': ui.fdOpen=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
     case 'fichaDatos': openPacForm(null,id); break;
@@ -1553,6 +1588,7 @@ document.addEventListener('input',function(ev){
   if(v)$$('[data-seg="monto"] button').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-pressed','false')});
 });
 document.addEventListener('change',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('altasel'))setAlta(el.dataset.alta,el.value)});
+document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
   var col=ev.target.closest&&ev.target.closest('.daycol');
