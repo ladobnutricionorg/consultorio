@@ -91,6 +91,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk .bln{text-transform:uppercase;font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
 #bNota{text-transform:uppercase}
+.bcol{display:flex;gap:10px;flex-wrap:wrap;padding:6px 0 2px}
+.bcol .sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #D9DED6;background-color:var(--sw);background-image:repeating-linear-gradient(135deg,transparent 0 4px,rgba(255,255,255,.55) 4px 6px);cursor:pointer;padding:0}
+.bcol .sw.on{box-shadow:0 0 0 2px #17201B}
 .brep{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;margin:14px 0 4px;cursor:pointer}.brep input{width:18px;height:18px;accent-color:#17201B}
 #bRepBox{display:flex;flex-direction:column;gap:10px;margin-top:6px}#bRepBox .seg{flex-wrap:wrap}.bhasta{max-width:220px}
 .bdel{display:flex;gap:14px;flex-wrap:wrap}
@@ -1413,7 +1416,7 @@ function dayCol(d){
   if(isT){var nm=now.getHours()*60+now.getMinutes(); if(nm>=START&&nm<=END)inner+='<div class="now" style="top:'+((nm-START)/30*ROW)+'px" aria-hidden="true"></div>';}
   bloqueosDe(ui.nutri,di).forEach(function(b){
     var a=toMin(b.from), z=toMin(b.to), top=(a-START)/30*ROW+2, h=(z-a)/30*ROW-4, tall=h>40;
-    inner+='<button type="button" class="blk'+(tall?' tall':'')+'" data-blk="'+b.id+'" style="top:'+top+'px;height:'+h+'px"><span class="bl">Bloqueado</span>'+(tall?'<span class="blr">'+show(a)+' – '+show(z)+'</span>':'')+(b.nota?'<span class="bln">'+esc(b.nota)+'</span>':'')+'</button>';
+    inner+='<button type="button" class="blk'+(tall?' tall':'')+'" data-blk="'+b.id+'" style="top:'+top+'px;height:'+h+'px'+(b.color&&BCOL[b.color]?';--bloq:'+BCOL[b.color][1]+';--bloqInk:'+BCOL[b.color][2]:'')+'"><span class="bl">Bloqueado</span>'+(tall?'<span class="blr">'+show(a)+' – '+show(z)+'</span>':'')+(b.nota?'<span class="bln">'+esc(b.nota)+'</span>':'')+'</button>';
   });
   /* turnos en el mismo horario se reparten el ancho, uno al lado del otro */
   var TS=turnosDe(ui.nutri,di), lay={}, grp=[], gEnd=-1;
@@ -1519,12 +1522,16 @@ function openNuevo(di,time){
   /* cursor en Paciente: se hace en el mismo toque (si no, el iPhone no abre el teclado) */
   var ni=$('#nName');if(ni){try{ni.focus({preventScroll:true})}catch(e){ni.focus()}}
 }
+/* colores de bloqueo (pastel, distintos a los de los turnos) */
+var BCOL={'':['Gris','',''],verde:['Verde','#CFE2C6','#2F4A26'],violeta:['Violeta','#DCD2EE','#43356A'],naranja:['Naranja','#F5D2B4','#6A3A12'],rosa:['Rosa','#F1CCDD','#6B2948'],arena:['Arena','#E4D6C6','#5A4430'],menta:['Menta','#C9E6DA','#1F5141']};
+function colorPick(sel){sel=sel||'';return '<div class="bcol" role="radiogroup" aria-label="Color">'+Object.keys(BCOL).map(function(k){var c=BCOL[k];return '<button type="button" role="radio" aria-checked="'+(k===sel)+'" class="sw'+(k===sel?' on':'')+'" data-bcol="'+k+'" title="'+c[0]+'" aria-label="'+c[0]+'" style="--sw:'+(c[1]||'var(--bloq)')+'"></button>'}).join('')+'</div>'}
 function bloqFields(b,d,t){
   return '<div class="fields">'+
     '<label class="fld full"><span>Detalle <em>(opcional)</em></span><input id="bNota" placeholder="Ej: Congreso, feriado…" value="'+esc(b?b.nota:'')+'"></label>'+
     '<label class="fld full"><span>Fecha</span><input id="bDate" type="date" value="'+(b?b.date:d)+'"></label>'+
     '<label class="fld"><span>Desde</span>'+slotSelect('bFrom',b?b.from:t)+'</label>'+
-    '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b?b.to:hhmm(Math.min(toMin(t)+60,END)))+'</label></div>'+
+    '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b?b.to:hhmm(Math.min(toMin(t)+60,END)))+'</label>'+
+    '<div class="fld full"><span>Color</span>'+colorPick(b&&b.color)+'</div></div>'+
     (b?'':'<label class="brep"><input type="checkbox" id="bRep"> Repetir este bloqueo</label>'+
       '<div id="bRepBox" hidden>'+seg('brep',[['sem',''],['mes','']],'sem')+
       '<label class="fld bhasta"><span>Repetir hasta</span><input id="bUntil" type="date"></label></div>');
@@ -1552,7 +1559,8 @@ function readBloq(){
   var a=$('#bFrom').value, z=$('#bTo').value, err=$('#bErr');
   if(!$('#bDate').value){err.textContent='Elegí la fecha.';err.hidden=false;return null}
   if(toMin(z)<=toMin(a)){err.textContent='El horario "hasta" tiene que ser después de "desde".';err.hidden=false;return null}
-  return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim().toLocaleUpperCase('es-AR')};
+  var cb=$('.bcol .sw.on');
+  return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim().toLocaleUpperCase('es-AR'),color:cb?cb.dataset.bcol:''};
 }
 function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
@@ -1562,7 +1570,7 @@ function saveNuevo(){
       if(!un){be.textContent='Elegí hasta cuándo se repite.';be.hidden=false;return}
       if(un<b.date){be.textContent='La fecha "repetir hasta" tiene que ser después del primer bloqueo.';be.hidden=false;return}
       var mode=segVal('brep')||'sem',sid=uid(),ds=bRepDates(b.date,mode,un);
-      ds.forEach(function(dd){data.bloqueos.push({id:uid(),nutri:ui.nutri,date:dd,from:b.from,to:b.to,nota:b.nota,serie:sid,rep:mode})});
+      ds.forEach(function(dd){data.bloqueos.push({id:uid(),nutri:ui.nutri,date:dd,from:b.from,to:b.to,nota:b.nota,color:b.color,serie:sid,rep:mode})});
       save();closeModal();goTo(b.date);toast(ds.length+' bloqueos creados');return;
     }
     b.id=uid(); b.nutri=ui.nutri; data.bloqueos.push(b);
@@ -1708,6 +1716,7 @@ document.addEventListener('click',function(ev){
     if(name==='estadoT'){var t=findT($('[data-act="delTurno"]').dataset.id);if(t){t.estado=segBtn.dataset.val;save();render()}}
     return;
   }
+  var sw=el.closest('[data-bcol]');if(sw){$$('.bcol .sw').forEach(function(x){var on=x===sw;x.classList.toggle('on',on);x.setAttribute('aria-checked',on)});return}
   var pick=el.closest('[data-pick]'); if(pick){pickPac(pick.dataset.for,pick.dataset.pick);return}
   if(!el.closest('.combo'))closeOpts();
   if(el===$('#overlay2')){$('#overlay2').hidden=true;return}
@@ -1791,7 +1800,7 @@ document.addEventListener('click',function(ev){
     case 'saveBloq':
       b2=findB(id); if(!b2)break;
       var rb=readBloq(); if(!rb)break;
-      b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;
+      b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;b2.color=rb.color;
       save(); closeModal(); goTo(b2.date); break;
     case 'delBloq': if(!sure(a))break; data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
     case 'delBloqSig': if(!sure(a))break; b2=findB(id); if(!b2)break;
