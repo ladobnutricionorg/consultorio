@@ -337,6 +337,10 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .ibkr{font-size:10.5px;font-weight:600;color:#8A938D}.ibkr.ok{color:#3E7A1E}.ibkr.hi{color:#C0532F}.ibkr.lo{color:#2F6DB5}
 @media(max-width:760px){.ibxg{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ib .hch .btn{flex:none}
+.ibh{margin-top:14px}.ibht{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.ibht th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#8A938D;text-align:left;padding:4px}
+.ibht td{padding:2px 4px;border-top:1px solid #F0F2EE}.ibht td:first-child{font-weight:600;white-space:nowrap}
+.ibhin{font:inherit;width:100%;min-width:0;border:0;border-bottom:1px solid #E1E4DE;background:transparent;padding:4px 2px}.ibhin.miss{background:#FFF7DA}
 .ibf .fld.miss input{background:#FFF7DA}
 .ibempty{margin:0;font-size:13px;color:#8A938D}
 @media(max-width:760px){.ibg{grid-template-columns:1fr}}
@@ -934,14 +938,79 @@ async function ibRead(file,onStep){
   URL.revokeObjectURL(url);img.src='';
   return out;
 }
+/* Hoja de historial (…_BodyHistory_0.jpg): viene girada, hasta 15 mediciones por columna */
+var IBH={W:2310,H:1640,C0:464,DX:120.86,DATE:[1360,1425],ROWS:{peso:[412,600],musc:[600,788],grasa:[788,976],pgrasa:[976,1164]}};
+function ibBin(g,x0,y0,w,h){var d=g.getImageData(x0,y0,w,h).data,b=new Uint8Array(w*h);for(var i=0;i<w*h;i++)b[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114)<150?1:0;return b}
+function ibClean(b,w,h,sc){ /* saca puntos y líneas del gráfico, deja solo los números */
+  var lab=new Int32Array(w*h),st=[],i;
+  for(var y=0;y<h;y++)for(var x=0;x<w;x++){var p=y*w+x;if(!b[p]||lab[p])continue;
+    var pts=[],mx0=x,mx1=x,my0=y,my1=y;lab[p]=1;st.push(p);
+    while(st.length){var q=st.pop(),qx=q%w,qy=(q-qx)/w;pts.push(q);if(qx<mx0)mx0=qx;if(qx>mx1)mx1=qx;if(qy<my0)my0=qy;if(qy>my1)my1=qy;
+      for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++){var nx=qx+dx,ny=qy+dy;if(nx<0||ny<0||nx>=w||ny>=h)continue;var r=ny*w+nx;if(b[r]&&!lab[r]){lab[r]=1;st.push(r)}}}
+    var cw=mx1-mx0+1,ch=my1-my0+1,fill=pts.length/(cw*ch);
+    if(cw>30*sc||ch>34*sc||(fill>.62&&cw>7*sc&&ch>7*sc)||(cw>20*sc&&ch<4*sc))for(i=0;i<pts.length;i++)b[pts[i]]=0;}
+  return b;
+}
+function ibCanvas(b,w,h){ /* recorta al contenido, agrega margen y agranda x3 para el lector */
+  var mx0=w,mx1=-1,my0=h,my1=-1,x,y;for(y=0;y<h;y++)for(x=0;x<w;x++)if(b[y*w+x]){if(x<mx0)mx0=x;if(x>mx1)mx1=x;if(y<my0)my0=y;if(y>my1)my1=y}
+  if(mx1<0)return null;var W=mx1-mx0+25,H=my1-my0+25,t=document.createElement('canvas');t.width=W;t.height=H;var tg=t.getContext('2d'),td=tg.createImageData(W,H);
+  for(var i=0;i<td.data.length;i++)td.data[i]=255;
+  for(y=my0;y<=my1;y++)for(x=mx0;x<=mx1;x++)if(b[y*w+x]){var p=((y-my0+12)*W+x-mx0+12)*4;td.data[p]=td.data[p+1]=td.data[p+2]=0}
+  tg.putImageData(td,0,0);var o=document.createElement('canvas');o.width=W*3;o.height=H*3;var og=o.getContext('2d');og.fillStyle='#fff';og.fillRect(0,0,o.width,o.height);og.drawImage(t,0,0,o.width,o.height);return o;
+}
+function ibDot(b,w,h,R){ /* centro del punto negro (zona totalmente oscura de (2R+1)²) */
+  var ii=new Int32Array((w+1)*(h+1)),x,y;for(y=0;y<h;y++){var rs=0;for(x=0;x<w;x++){rs+=b[y*w+x];ii[(y+1)*(w+1)+x+1]=ii[y*(w+1)+x+1]+rs}}
+  var sx=0,sy=0,n=0,A=(2*R+1)*(2*R+1);
+  for(y=R;y<h-R;y++)for(x=R;x<w-R;x++){var s2=ii[(y+R+1)*(w+1)+x+R+1]-ii[(y-R)*(w+1)+x+R+1]-ii[(y+R+1)*(w+1)+x-R]+ii[(y-R)*(w+1)+x-R];if(s2===A){sx+=x;sy+=y;n++}}
+  return n?[sx/n,sy/n]:null;
+}
+async function ibOcr(cv,psms){var out=[];for(var psm of psms){await ibWorker.setParameters({tessedit_pageseg_mode:psm});var r=await ibWorker.recognize(cv);out.push(r.data.text)}return out}
+async function ibReadHistory(file,onStep){
+  await ibLoadScript();
+  if(!ibWorker){onStep('Preparando el lector…');ibWorker=await Tesseract.createWorker('eng',1)}
+  await ibWorker.setParameters({tessedit_char_whitelist:'0123456789.,:'});
+  var url=URL.createObjectURL(file),img=new Image();
+  await new Promise(function(res,rej){img.onload=res;img.onerror=function(){rej(new Error('No se pudo abrir el historial'))};img.src=url});
+  var W=img.naturalHeight,H=img.naturalWidth,c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d',{willReadFrequently:true});
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);g.translate(0,H);g.rotate(-Math.PI/2);g.drawImage(img,0,0);g.setTransform(1,0,0,1,0,0);
+  URL.revokeObjectURL(url);
+  var s=W/IBH.W,res=[];
+  for(var i=0;i<15;i++){
+    onStep('Leyendo historial… '+Math.round((i+1)*100/15)+'%');
+    var x0=Math.round((IBH.C0+(i-.5)*IBH.DX+3)*s),cw=Math.round((IBH.DX-6)*s);
+    var dy0=Math.round(IBH.DATE[0]*s),dh=Math.round((IBH.DATE[1]-IBH.DATE[0])*s);
+    var dcv=ibCanvas(ibBin(g,x0,dy0,cw,dh),cw,dh);if(!dcv)break;
+    var dt=(await ibOcr(dcv,['6'])).join(' '),m=dt.match(/(\d{2})[.,](\d{2})[.,](\d{2})/);if(!m)continue;
+    var o={d:'20'+m[3]+'-'+m[2]+'-'+m[1]};
+    for(var k in IBH.ROWS){
+      var ry0=Math.round(IBH.ROWS[k][0]*s),rh=Math.round((IBH.ROWS[k][1]-IBH.ROWS[k][0])*s),band=ibBin(g,x0,ry0,cw,rh),dot=ibDot(band,cw,rh,Math.max(2,Math.round(3*s)));
+      if(!dot){o[k]=null;continue}
+      var bx=Math.max(0,Math.round(x0+dot[0]-50*s)),by=Math.max(0,Math.round(ry0+dot[1]-50*s)),bw=Math.round(130*s),bh=Math.round(44*s);
+      var v=null,cands=[];
+      var cl=ibCanvas(ibClean(ibBin(g,bx,by,bw,bh),bw,bh,s),bw,bh);if(cl)cands=cands.concat(await ibOcr(cl,['11']));
+      var raw=ibCanvas(ibBin(g,bx,by,bw,bh),bw,bh);if(raw)cands=cands.concat(await ibOcr(raw,['11']));
+      /* de las lecturas válidas, la más completa (con coma y más dígitos) */
+      var bs=-1;cands.forEach(function(t){var c2=ibParse(k,t);if(!ibOk(k,c2))return;var sc=(/\d[.,]\d/.test(t)?10:0)+String(t).replace(/\D/g,'').length;if(sc>bs){bs=sc;v=c2}});
+      o[k]=v;
+    }
+    res.push(o);
+  }
+  img.src='';
+  var by={};res.forEach(function(x){by[x.d]=x});return Object.keys(by).sort().map(function(k){return by[k]});
+}
 var IB_FORM=[['d','Fecha de la medición','date'],['peso','Peso (kg)'],['musc','Músculo esquelético (kg)'],['grasa','Masa grasa (kg)'],['pgrasa','% Grasa corporal'],['imc','IMC'],['score','Puntuación InBody'],['visc','Grasa visceral'],['tmb','Metabolismo basal (kcal)'],['icc','Cintura-cadera'],['agua','Agua corporal (L)']];
-function openIbForm(pid,v,aviso){
+function openIbForm(pid,v,aviso,hist){
   v=v||{};var fx=function(x){return x==null?'':String(x).replace('.',',')};
+  hist=(hist||[]).filter(function(x){return x.d!==v.fecha});
+  var HK=[['peso','Peso'],['musc','Músculo'],['grasa','Grasa kg'],['pgrasa','% Grasa']];
+  var hmiss=hist.some(function(x){return HK.some(function(k){return x[k[0]]==null})});
+  var htab=hist.length?'<details class="edit ibh"'+(hmiss?' open':'')+'><summary>Historial: '+hist.length+' mediciones anteriores leídas</summary><table class="ibht"><tr><th>Fecha</th>'+HK.map(function(k){return '<th>'+k[1]+'</th>'}).join('')+'</tr>'+
+    hist.map(function(x,i){return '<tr data-hd="'+x.d+'"><td>'+ddmm(x.d)+'/'+x.d.slice(2,4)+'</td>'+HK.map(function(k){var val=x[k[0]]==null?'':fx(x[k[0]].toFixed(1));return '<td><input class="ibhin'+(val===''?' miss':'')+'" data-k="'+k[0]+'" inputmode="decimal" value="'+esc(val)+'" aria-label="'+k[1]+' '+ddmm(x.d)+'"></td>'}).join('')+'</tr>'}).join('')+'</table></details>':'';
   $('#dlg2').innerHTML=head('Nueva medición InBody','Revisá los números antes de guardar','close2')+
     '<div class="sec">'+(aviso?'<p class="warn">'+aviso+'</p>':'')+'<div class="fields ibf">'+IB_FORM.map(function(f){var k=f[0],val=k==='d'?(v.fecha||''):fx(v[k]);
       return '<label class="fld'+(k==='d'?' full':'')+(k!=='d'&&val===''?' miss':'')+'"><span>'+f[1]+'</span><input id="ib_'+k+'" '+(f[2]==='date'?'type="date"':'inputmode="decimal"')+' value="'+esc(val)+'"></label>'}).join('')+
-    '</div><p class="err" id="ibErr" hidden></p></div>'+
-    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'">Guardar medición</button></div></div>';
+    '</div>'+htab+'<p class="err" id="ibErr" hidden></p></div>'+
+    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'">'+(hist.length?'Guardar '+(hist.length+1)+' mediciones':'Guardar medición')+'</button></div></div>';
   $('#dlg2')._ib={ragua:v.ragua,rtmb:v.rtmb,ricc:v.ricc,rvisc:v.rvisc};
   $('#overlay2').hidden=false;
 }
@@ -953,7 +1022,11 @@ function saveIb(pid){
   if(o.peso==null){e.textContent='Falta el peso.';e.hidden=false;return}
   var rg=$('#dlg2')._ib||{};['ragua','rtmb','ricc','rvisc'].forEach(function(k){if(rg[k])o[k]=rg[k]});
   p.inbody=(p.inbody||[]).filter(function(x){return x.d!==d});p.inbody.push(o);
-  $('#overlay2').hidden=true;$('#dlg2').innerHTML='';save();render();toast('Medición del '+ddmm(d)+' guardada');
+  /* mediciones anteriores del historial: completan sin pisar lo que ya estaba cargado */
+  var nh=0;$$('#dlg2 tr[data-hd]').forEach(function(tr){var hd=tr.dataset.hd,ex=p.inbody.filter(function(x){return x.d===hd})[0],nw=ex||{d:hd},any=false;
+    $$('.ibhin',tr).forEach(function(inp){var t=inp.value.trim().replace(/\./g,'').replace(',','.');if(t!==''&&!isNaN(+t)){if(nw[inp.dataset.k]==null)nw[inp.dataset.k]=+t;any=true}});
+    if(any&&nw.peso!=null&&!ex){p.inbody.push(nw);nh++}});
+  $('#overlay2').hidden=true;$('#dlg2').innerHTML='';save();render();toast(nh?(nh+1)+' mediciones guardadas':'Medición del '+ddmm(d)+' guardada');
 }
 function inbodyCard(p){
   var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
@@ -1704,10 +1777,14 @@ document.addEventListener('change',function(ev){
   var file=main,pid=ev.target.dataset.pid,btn=$('[data-act="ibLoad"]'),lbl=btn?btn.innerHTML:'';
   if(btn){btn.disabled=true}
   var fm=file.name.match(/_(\d{4})(\d{2})(\d{2})\d{6}_/);
+  var hf=fs.filter(function(f){return /history_?0/i.test(f.name)})[0],hist=[];
   ibRead(file,function(t){if(btn)btn.textContent=t}).then(function(v){
+    if(!hf)return v;
+    return ibReadHistory(hf,function(t){if(btn)btn.textContent=t}).then(function(h){hist=h;return v},function(){return v});
+  }).then(function(v){
     if(!v.fecha&&fm)v.fecha=fm[1]+'-'+fm[2]+'-'+fm[3];
     var falt=IB_FORM.slice(1).filter(function(f){return v[f[0]]==null}).length;
-    openIbForm(pid,v,!v._formato?'La imagen no parece la hoja principal del InBody. Completá los datos a mano.':falt?'Hay '+falt+' dato'+(falt===1?'':'s')+' que no se pudo leer (marcado'+(falt===1?'':'s')+' en amarillo). Completalo'+(falt===1?'':'s')+' o dejalo'+(falt===1?'':'s')+' vacío'+(falt===1?'':'s')+'.':null);
+    openIbForm(pid,v,!v._formato?'La imagen no parece la hoja principal del InBody. Completá los datos a mano.':falt?'Hay '+falt+' dato'+(falt===1?'':'s')+' que no se pudo leer (marcado'+(falt===1?'':'s')+' en amarillo). Completalo'+(falt===1?'':'s')+' o dejalo'+(falt===1?'':'s')+' vacío'+(falt===1?'':'s')+'.':null,hist);
   }).catch(function(err){openIbForm(pid,{},'No se pudo leer la imagen ('+err.message+'). Podés cargar los datos a mano.')})
   .then(function(){if(btn){btn.disabled=false;btn.innerHTML=lbl}});
 });
