@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#F4F5F1">
 <title>Lado B · Consultorio</title>
 <link rel="manifest" href="manifest.webmanifest?v=4">
@@ -92,6 +92,10 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .tabs{display:none}
 #bNota{text-transform:uppercase}
 .sprog{display:flex;gap:12px;justify-content:center;font-size:12px;color:#9AA29C;margin:4px 0 0;min-height:16px}.sprog .ok{color:#3E7A1E;font-weight:600}
+/* iPhone: evita el zoom automático al tocar un campo (pasa con letra menor a 16px) y que la página quede corrida */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@supports (-webkit-touch-callout:none){@media(max-width:760px){input,select,textarea{font-size:16px!important}}}
+body{overflow-x:hidden}
 .fab{display:none}
 /* Agenda: el encabezado queda fijo y solo scrollea la grilla (PC y celular) */
 .app.fixmob{height:100vh;height:100dvh;overflow:hidden;padding-bottom:0}
