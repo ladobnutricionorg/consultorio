@@ -1523,7 +1523,7 @@ function openNuevo(di,time){
   var ni=$('#nName');if(ni){try{ni.focus({preventScroll:true})}catch(e){ni.focus()}}
 }
 /* colores de bloqueo (pastel, distintos a los de los turnos) */
-var BCOL={'':['Gris','',''],verde:['Verde','#CFE2C6','#2F4A26'],violeta:['Violeta','#DCD2EE','#43356A'],naranja:['Naranja','#F5D2B4','#6A3A12'],rosa:['Rosa','#F1CCDD','#6B2948'],ciruela:['Ciruela','#D8BED5','#5A2F55'],menta:['Menta','#C9E6DA','#1F5141']};
+var BCOL={'':['Gris','',''],verde:['Verde','#CFE2C6','#2F4A26'],violeta:['Violeta','#DCD2EE','#43356A'],naranja:['Naranja','#F5D2B4','#6A3A12'],rosa:['Rosa','#F1CCDD','#6B2948'],azul:['Azul','#C4D6F2','#22406E'],menta:['Menta','#C9E6DA','#1F5141']};
 function colorPick(sel){sel=sel||'';return '<div class="bcol" role="radiogroup" aria-label="Color">'+Object.keys(BCOL).map(function(k){var c=BCOL[k];return '<button type="button" role="radio" aria-checked="'+(k===sel)+'" class="sw'+(k===sel?' on':'')+'" data-bcol="'+k+'" title="'+c[0]+'" aria-label="'+c[0]+'" style="--sw:'+(c[1]||'var(--bloq)')+'"></button>'}).join('')+'</div>'}
 function bloqFields(b,d,t){
   return '<div class="fields">'+
