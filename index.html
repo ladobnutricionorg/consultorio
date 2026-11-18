@@ -91,6 +91,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk .bln{text-transform:uppercase;font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
 #bNota{text-transform:uppercase}
+.wahint{display:block;font-size:11.5px;color:#7A837D;margin-top:4px;min-height:14px}.wahint b{color:#B5462E}
 .bcol{display:flex;gap:10px;flex-wrap:wrap;padding:6px 0 2px}
 .bcol .sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #D9DED6;background-color:var(--sw);background-image:repeating-linear-gradient(135deg,transparent 0 4px,rgba(255,255,255,.55) 4px 6px);cursor:pointer;padding:0}
 .bcol .sw.on{box-shadow:0 0 0 2px #17201B}
@@ -847,7 +848,7 @@ function openPacForm(forId,pid){
     '<div class="sec"><div class="fields">'+
       '<label class="fld"><span>Nombre</span><input id="qNom" autocomplete="off" value="'+esc(p?p.nombre:'')+'"></label>'+
       '<label class="fld"><span>Apellido</span><input id="qApe" autocomplete="off" value="'+esc(p?p.apellido:'')+'"></label>'+
-      '<label class="fld full"><span>Teléfono</span><input id="qTel" inputmode="tel" placeholder="11 1234 5678" value="'+esc(p?p.phone:'')+'"></label>'+
+      '<label class="fld full"><span>Teléfono</span><input id="qTel" inputmode="tel" placeholder="11 1234 5678 · 0384 15 412-3456" value="'+esc(p?p.phone:'')+'"><small class="wahint" id="qTelHint">'+telHint(p?p.phone:'')+'</small></label>'+
     '</div><span class="lbl">Medio de llegada</span>'+seg('llegada',LLEGADAS.map(function(x){return [x,x]}),p?p.llegada:null)+
     '<div class="fields"><label class="fld full"><span>Notas <em>(opcional)</em></span><input id="qNotas" placeholder="Ej: hijo de…" value="'+esc(p?p.notas:'')+'"></label></div>'+
     '<span class="lbl">Nutricionista</span>'+seg('qNutri',[['fran','Fran'],['car','Car']],p?p.nutri:ui.nutri)+
@@ -1085,7 +1086,7 @@ function renderFicha(){
   var seenT={}, srcT=(ui.fichaTs||[]).concat(data.turnos).filter(function(t){if(seenT[t.id])return false;seenT[t.id]=1;return true});
   var ts=srcT.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
   var first=ts[0], next=ts.filter(function(t){return t.date>=td})[0], ed=edad(f.nac);
-  var wa=p.phone?('https://wa.me/'+(function(n){n=n.replace(/\D/g,'');if(n.indexOf('54')!==0){if(n[0]==='0')n=n.slice(1);n='549'+n}return n})(p.phone)):null;
+  var wa=waNum(p.phone)?'https://wa.me/'+waNum(p.phone):null;
   $('#row2').innerHTML='';
   var cb=function(k,l){return '<label class="fcb"><input type="checkbox" id="fm_'+k+'"'+(mo[k]?' checked':'')+'><span>'+l+'</span></label>'};
   var fld=function(id,l,v,extra){return '<label class="ff'+(extra||'')+'"><span>'+l+'</span><input id="'+id+'" value="'+esc(v||'')+'"></label>'};
@@ -1345,10 +1346,29 @@ function saveStat(el){
   renderStats();
 }
 function turnosCount(p){var n=data.turnos.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).length;return n+' turno'+(n===1?'':'s')}
+/* Número para WhatsApp: acepta cualquier forma de escribir un celular argentino
+   (11 / 0384 / 3854 / con o sin 15 / con +54 / con 9 / sin característica = CABA) y lo deja como 549 + característica + número */
+function waNum(raw){
+  if(!raw)return null;
+  var intl=/^\s*(\+|00)/.test(raw), d=String(raw).replace(/\D/g,'');
+  if(d.indexOf('00')===0)d=d.slice(2);
+  if(d.indexOf('54')===0&&d.length>=12){d=d.slice(2);if(d.charAt(0)==='9')d=d.slice(1)}
+  else if(intl&&d.indexOf('54')!==0)return d.length>=8?d:null; /* número de otro país */
+  if(d.charAt(0)==='0')d=d.slice(1);
+  if(d.length===12){ /* tiene el 15 después de la característica */
+    if(d.indexOf('11')===0&&d.substr(2,2)==='15')d='11'+d.slice(4);
+    else if(d.substr(3,2)==='15')d=d.slice(0,3)+d.slice(5);
+    else if(d.substr(4,2)==='15')d=d.slice(0,4)+d.slice(6);
+  }
+  if(d.length===10&&d.indexOf('15')===0)d='11'+d.slice(2); /* 15 + 8 cifras sin característica: CABA */
+  if(d.length===8)d='11'+d; /* 8 cifras sin característica: CABA */
+  return d.length===10?'549'+d:null;
+}
+function waShow(n){if(!n)return '';if(n.indexOf('549')!==0||n.length!==13)return '+'+n;var d=n.slice(3);return d.indexOf('11')===0?'+54 9 11 '+d.slice(2,6)+'-'+d.slice(6):'+54 9 '+d}
+function telHint(v){if(!String(v||'').trim())return '';var n=waNum(v);return n?'WhatsApp: '+waShow(n):'<b>Revisá el número:</b> no parece un celular válido'}
 function waLink(t){
   var p=pacDe(t); if(!p||!p.phone)return null;
-  var num=p.phone.replace(/\D/g,'');
-  if(num.indexOf('54')!==0){ if(num.indexOf('0')===0)num=num.slice(1); num='549'+num; }
+  var num=waNum(p.phone); if(!num)return null;
   var d=parse(t.date);
   var msg='¡Hola '+t.name.split(' ')[0]+'! Te recordamos tu turno en Lado B Nutrición el '+DIAS[d.getDay()].toLowerCase()+' '+d.getDate()+' de '+MESES[d.getMonth()]+' a las '+show(toMin(t.time))+' hs con '+NUTRIS[t.nutri]+'. Charcas 3331. ¡Te esperamos!';
   return 'https://wa.me/'+num+'?text='+encodeURIComponent(msg);
@@ -1866,6 +1886,7 @@ document.addEventListener('change',function(ev){
   if(t.id==='bRep'){$('#bRepBox').hidden=!t.checked;if(t.checked){bRepLabels();var u=$('#bUntil');if(!u.value){var d=parse($('#bDate').value);u.value=iso(new Date(d.getFullYear(),d.getMonth()+3,d.getDate()))}}}
   if(t.id==='bDate')bRepLabels();
 });
+document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
 document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
