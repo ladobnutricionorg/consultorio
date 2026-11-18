@@ -98,6 +98,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .brep{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;margin:14px 0 4px;cursor:pointer}.brep input{width:18px;height:18px;accent-color:#17201B}
 #bRepBox{display:flex;flex-direction:column;gap:10px;margin-top:6px}#bRepBox .seg{flex-wrap:wrap}.bhasta{max-width:220px}
 .bdel{display:flex;gap:14px;flex-wrap:wrap}
+.bhrow{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}.brep.sm{font-size:13px;font-weight:500;margin:0 0 10px}.fld.off{opacity:.4}
 .sprog{display:flex;gap:12px;justify-content:center;font-size:12px;color:#9AA29C;margin:4px 0 0;min-height:16px}.sprog .ok{color:#3E7A1E;font-weight:600}
 /* iPhone: evita el zoom automático al tocar un campo (pasa con letra menor a 16px) y que la página quede corrida */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -714,6 +715,7 @@ function busy(){
 var COL_TXT={pacientes:'pacientes',turnos:'agenda',bloqueos:'bloqueos',pagos:'pagos'};
 function splashProg(){var t=$('#splashProg');if(!t)return;t.innerHTML=COLS.map(function(c){return '<span class="'+(loaded[c]?'ok':'')+'">'+(loaded[c]?'✓ ':'')+cap(COL_TXT[c])+'</span>'}).join('')}
 function scheduleRender(){if(!staff||!['pacientes','turnos','bloqueos'].every(function(c){return loaded[c]}))return;
+  if(!window.__rulesDone){window.__rulesDone=1;try{extendAllRules()}catch(e){console.error(e)}}
   if($('.app').hidden){$('.app').hidden=false;$('#splash').hidden=true;$('#login').hidden=true;pendingRender=false;render();return}if(busy()){pendingRender=true;return}pendingRender=false;render()}
 /* Sincronización con lecturas mínimas:
    - la primera vez en cada dispositivo se lee todo y queda guardado en el navegador;
@@ -1554,7 +1556,8 @@ function bloqFields(b,d,t){
     '<div class="fld full"><span>Color</span>'+colorPick(b&&b.color)+'</div></div>'+
     (b?'':'<label class="brep"><input type="checkbox" id="bRep"> Repetir este bloqueo</label>'+
       '<div id="bRepBox" hidden>'+seg('brep',[['sem',''],['mes','']],'sem')+
-      '<label class="fld bhasta"><span>Repetir hasta</span><input id="bUntil" type="date"></label></div>');
+      '<div class="bhrow"><label class="fld bhasta"><span>Repetir hasta</span><input id="bUntil" type="date"></label>'+
+      '<label class="brep sm"><input type="checkbox" id="bNoEnd"> Sin fecha de finalización</label></div></div>');
 }
 /* bloqueos recurrentes */
 var DIAS_L=['domingos','lunes','martes','miércoles','jueves','viernes','sábados'],DIAS_1=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],ORD=['primer','segundo','tercer','cuarto','último'];
@@ -1565,8 +1568,26 @@ function bRepLabels(){
   bs[0].textContent='Todos los '+DIAS_L[d.getDay()];
   bs[1].textContent='El '+ORD[n-1]+' '+DIAS_1[d.getDay()]+' de cada mes';
 }
+/* Bloqueos "sin fecha de finalización": se guarda la regla y se crean los bloqueos de los próximos 6 meses.
+   Cada vez que alguien abre la app, se completan solos hasta 6 meses adelante (nunca se arma un archivo eterno).
+   Los ids son fijos (serie_fecha) para que dos dispositivos no dupliquen. */
+var SERIE_MESES=6;
+function extendRule(r){
+  var t=today(),hor=iso(new Date(t.getFullYear(),t.getMonth()+SERIE_MESES,t.getDate()));
+  if(r.hasta&&r.hasta<hor)hor=r.hasta;
+  var ds=bRepDates(r.start,r.rep,hor,true),n=0,skip=r.skip||[];
+  ds.forEach(function(dd){
+    if((r.gen&&dd<=r.gen)||skip.indexOf(dd)>=0)return;
+    var id=r.serie+'_'+dd;if(findB(id))return;
+    data.bloqueos.push({id:id,nutri:r.nutri,date:dd,from:r.from,to:r.to,nota:r.nota,color:r.color,serie:r.serie,rep:r.rep});n++;
+  });
+  if(ds.length&&(!r.gen||ds[ds.length-1]>r.gen))r.gen=ds[ds.length-1];
+  return n;
+}
+function extendAllRules(){var ch=0;data.bloqueos.forEach(function(r){if(r.regla&&!r.fin)ch+=extendRule(r)});if(ch)save();}
+function reglaDe(serie){return data.bloqueos.find(function(x){return x.regla&&x.serie===serie})}
 function bRepDates(start,mode,until){
-  var d0=parse(start),out=[],lim=parse(until),max=new Date(d0.getFullYear()+2,d0.getMonth(),d0.getDate());if(lim>max)lim=max;
+  var d0=parse(start),out=[],lim=parse(until),max=new Date(d0.getFullYear()+2,d0.getMonth(),d0.getDate());if(lim>max&&!arguments[3])lim=max;
   if(mode==='sem'){for(var d=new Date(d0);d<=lim;d.setDate(d.getDate()+7))out.push(iso(d));return out}
   var n=nthOf(d0),wd=d0.getDay();
   for(var m=0;;m++){var y=d0.getFullYear(),mo=d0.getMonth()+m,x;
@@ -1586,7 +1607,12 @@ function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
     var b=readBloq(); if(!b)return;
     if($('#bRep')&&$('#bRep').checked){
-      var un=$('#bUntil').value,be=$('#bErr');
+      var un=$('#bUntil').value,be=$('#bErr'),noEnd=$('#bNoEnd').checked;
+      if(noEnd){
+        var sid0=uid(),mode0=segVal('brep')||'sem',rule={id:'regla_'+sid0,regla:1,serie:sid0,nutri:ui.nutri,date:'',start:b.date,from:b.from,to:b.to,nota:b.nota,color:b.color,rep:mode0,gen:'',skip:[]};
+        data.bloqueos.push(rule);var nn=extendRule(rule);
+        save();closeModal();goTo(b.date);toast(nn+' bloqueos creados (se siguen agregando solos)');return;
+      }
       if(!un){be.textContent='Elegí hasta cuándo se repite.';be.hidden=false;return}
       if(un<b.date){be.textContent='La fecha "repetir hasta" tiene que ser después del primer bloqueo.';be.hidden=false;return}
       var mode=segVal('brep')||'sem',sid=uid(),ds=bRepDates(b.date,mode,un);
@@ -1822,9 +1848,11 @@ document.addEventListener('click',function(ev){
       var rb=readBloq(); if(!rb)break;
       b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;b2.color=rb.color;
       save(); closeModal(); goTo(b2.date); break;
-    case 'delBloq': if(!sure(a))break; data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
+    case 'delBloq': if(!sure(a))break; var bx=findB(id),rx=bx&&bx.serie&&reglaDe(bx.serie); if(rx){rx.skip=(rx.skip||[]).concat([bx.date])}
+      data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
     case 'delBloqSig': if(!sure(a))break; b2=findB(id); if(!b2)break;
-      var nq=0; data.bloqueos=data.bloqueos.filter(function(x){var out=x.serie===b2.serie&&x.date>=b2.date;if(out)nq++;return !out});
+      var rg=reglaDe(b2.serie); if(rg){var dprev=parse(b2.date);dprev.setDate(dprev.getDate()-1);rg.hasta=iso(dprev);rg.fin=1}
+      var nq=0; data.bloqueos=data.bloqueos.filter(function(x){var out=!x.regla&&x.serie===b2.serie&&x.date>=b2.date;if(out)nq++;return !out});
       save(); closeModal(); render(); toast(nq+' bloqueo'+(nq===1?'':'s')+' quitado'+(nq===1?'':'s')); break;
     case 'logout': auth.signOut(); break;
     case 'forgot': var fm=$('#lMail').value.trim(); if(!fm){$('#lErr').textContent='Escribí tu mail arriba y tocá de nuevo.';$('#lErr').hidden=false;break}
@@ -1885,6 +1913,7 @@ document.addEventListener('change',function(ev){
   var t=ev.target;
   if(t.id==='bRep'){$('#bRepBox').hidden=!t.checked;if(t.checked){bRepLabels();var u=$('#bUntil');if(!u.value){var d=parse($('#bDate').value);u.value=iso(new Date(d.getFullYear(),d.getMonth()+3,d.getDate()))}}}
   if(t.id==='bDate')bRepLabels();
+  if(t.id==='bNoEnd'){var u2=$('#bUntil');u2.disabled=t.checked;u2.closest('.fld').classList.toggle('off',t.checked)}
 });
 document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
 document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
