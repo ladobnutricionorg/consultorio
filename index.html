@@ -91,6 +91,9 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk .bln{text-transform:uppercase;font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
 #bNota{text-transform:uppercase}
+.brep{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;margin:14px 0 4px;cursor:pointer}.brep input{width:18px;height:18px;accent-color:#17201B}
+#bRepBox{display:flex;flex-direction:column;gap:10px;margin-top:6px}#bRepBox .seg{flex-wrap:wrap}.bhasta{max-width:220px}
+.bdel{display:flex;gap:14px;flex-wrap:wrap}
 .sprog{display:flex;gap:12px;justify-content:center;font-size:12px;color:#9AA29C;margin:4px 0 0;min-height:16px}.sprog .ok{color:#3E7A1E;font-weight:600}
 /* iPhone: evita el zoom automático al tocar un campo (pasa con letra menor a 16px) y que la página quede corrida */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -1520,7 +1523,29 @@ function bloqFields(b,d,t){
     '<label class="fld full"><span>Detalle <em>(opcional)</em></span><input id="bNota" placeholder="Ej: Congreso, feriado…" value="'+esc(b?b.nota:'')+'"></label>'+
     '<label class="fld full"><span>Fecha</span><input id="bDate" type="date" value="'+(b?b.date:d)+'"></label>'+
     '<label class="fld"><span>Desde</span>'+slotSelect('bFrom',b?b.from:t)+'</label>'+
-    '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b?b.to:hhmm(Math.min(toMin(t)+60,END)))+'</label></div>';
+    '<label class="fld"><span>Hasta</span>'+endSelect('bTo',b?b.to:hhmm(Math.min(toMin(t)+60,END)))+'</label></div>'+
+    (b?'':'<label class="brep"><input type="checkbox" id="bRep"> Repetir este bloqueo</label>'+
+      '<div id="bRepBox" hidden>'+seg('brep',[['sem',''],['mes','']],'sem')+
+      '<label class="fld bhasta"><span>Repetir hasta</span><input id="bUntil" type="date"></label></div>');
+}
+/* bloqueos recurrentes */
+var DIAS_L=['domingos','lunes','martes','miércoles','jueves','viernes','sábados'],DIAS_1=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],ORD=['primer','segundo','tercer','cuarto','último'];
+function nthOf(d){var n=Math.ceil(d.getDate()/7);return n>=5?5:n}
+function bRepLabels(){
+  var v=$('#bDate')&&$('#bDate').value, bs=$$('[data-seg="brep"] button');if(!v||bs.length<2)return;
+  var d=parse(v),n=nthOf(d);
+  bs[0].textContent='Todos los '+DIAS_L[d.getDay()];
+  bs[1].textContent='El '+ORD[n-1]+' '+DIAS_1[d.getDay()]+' de cada mes';
+}
+function bRepDates(start,mode,until){
+  var d0=parse(start),out=[],lim=parse(until),max=new Date(d0.getFullYear()+2,d0.getMonth(),d0.getDate());if(lim>max)lim=max;
+  if(mode==='sem'){for(var d=new Date(d0);d<=lim;d.setDate(d.getDate()+7))out.push(iso(d));return out}
+  var n=nthOf(d0),wd=d0.getDay();
+  for(var m=0;;m++){var y=d0.getFullYear(),mo=d0.getMonth()+m,x;
+    if(n===5){x=new Date(y,mo+1,0);while(x.getDay()!==wd)x.setDate(x.getDate()-1)}
+    else{x=new Date(y,mo,1);while(x.getDay()!==wd)x.setDate(x.getDate()+1);x.setDate(x.getDate()+7*(n-1));if(x.getMonth()!==((mo%12)+12)%12)continue}
+    if(x>lim)break;out.push(iso(x))}
+  return out;
 }
 function readBloq(){
   var a=$('#bFrom').value, z=$('#bTo').value, err=$('#bErr');
@@ -1531,6 +1556,14 @@ function readBloq(){
 function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
     var b=readBloq(); if(!b)return;
+    if($('#bRep')&&$('#bRep').checked){
+      var un=$('#bUntil').value,be=$('#bErr');
+      if(!un){be.textContent='Elegí hasta cuándo se repite.';be.hidden=false;return}
+      if(un<b.date){be.textContent='La fecha "repetir hasta" tiene que ser después del primer bloqueo.';be.hidden=false;return}
+      var mode=segVal('brep')||'sem',sid=uid(),ds=bRepDates(b.date,mode,un);
+      ds.forEach(function(dd){data.bloqueos.push({id:uid(),nutri:ui.nutri,date:dd,from:b.from,to:b.to,nota:b.nota,serie:sid,rep:mode})});
+      save();closeModal();goTo(b.date);toast(ds.length+' bloqueos creados');return;
+    }
     b.id=uid(); b.nutri=ui.nutri; data.bloqueos.push(b);
     save();closeModal();goTo(b.date);return;
   }
@@ -1614,7 +1647,7 @@ function openBloq(id){
   var b=findB(id); if(!b)return;
   openModal(head('Bloqueado',esc(cap(largo(parse(b.date))))+' · '+show(toMin(b.from))+' – '+show(toMin(b.to)))+
     '<div class="sec">'+bloqFields(b)+'<p class="err" id="bErr" hidden></p></div>'+
-    '<div class="df"><button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar bloqueo</button><div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveBloq" data-id="'+b.id+'">Guardar</button></div></div>');
+    '<div class="df">'+(b.serie?'<div class="bdel"><button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar solo este</button><button type="button" class="danger" data-act="delBloqSig" data-id="'+b.id+'">Quitar este y los siguientes</button></div>':'<button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar bloqueo</button>')+'<div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveBloq" data-id="'+b.id+'">Guardar</button></div></div>');
 }
 
 /* confirmación en dos toques (sin ventanas del navegador) */
@@ -1760,6 +1793,9 @@ document.addEventListener('click',function(ev){
       b2.date=rb.date;b2.from=rb.from;b2.to=rb.to;b2.nota=rb.nota;
       save(); closeModal(); goTo(b2.date); break;
     case 'delBloq': if(!sure(a))break; data.bloqueos=data.bloqueos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
+    case 'delBloqSig': if(!sure(a))break; b2=findB(id); if(!b2)break;
+      var nq=0; data.bloqueos=data.bloqueos.filter(function(x){var out=x.serie===b2.serie&&x.date>=b2.date;if(out)nq++;return !out});
+      save(); closeModal(); render(); toast(nq+' bloqueo'+(nq===1?'':'s')+' quitado'+(nq===1?'':'s')); break;
     case 'logout': auth.signOut(); break;
     case 'forgot': var fm=$('#lMail').value.trim(); if(!fm){$('#lErr').textContent='Escribí tu mail arriba y tocá de nuevo.';$('#lErr').hidden=false;break}
       auth.sendPasswordResetEmail(fm).then(function(){$('#lErr').textContent='Te mandamos un mail para cambiar la contraseña.';$('#lErr').hidden=false}).catch(function(){$('#lErr').textContent='No se pudo enviar el mail. Revisá que esté bien escrito.';$('#lErr').hidden=false}); break;
@@ -1814,6 +1850,11 @@ document.addEventListener('change',function(ev){
     openIbForm(pid,v,!v._formato?'La imagen no parece la hoja principal del InBody. Completá los datos a mano.':falt?'Hay '+falt+' dato'+(falt===1?'':'s')+' que no se pudo leer (marcado'+(falt===1?'':'s')+' en amarillo). Completalo'+(falt===1?'':'s')+' o dejalo'+(falt===1?'':'s')+' vacío'+(falt===1?'':'s')+'.':null,hist);
   }).catch(function(err){openIbForm(pid,{},'No se pudo leer la imagen ('+err.message+'). Podés cargar los datos a mano.')})
   .then(function(){if(btn){btn.disabled=false;btn.innerHTML=lbl}});
+});
+document.addEventListener('change',function(ev){
+  var t=ev.target;
+  if(t.id==='bRep'){$('#bRepBox').hidden=!t.checked;if(t.checked){bRepLabels();var u=$('#bUntil');if(!u.value){var d=parse($('#bDate').value);u.value=iso(new Date(d.getFullYear(),d.getMonth()+3,d.getDate()))}}}
+  if(t.id==='bDate')bRepLabels();
 });
 document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
 document.addEventListener('mousemove',function(ev){
