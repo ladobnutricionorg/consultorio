@@ -1516,7 +1516,8 @@ function openNuevo(di,time){
     '<p class="err" id="nErr" hidden></p></div>'+
     '<div class="sec" id="kBloq" hidden>'+bloqFields(null,d,t)+'<p class="err" id="bErr" hidden></p></div>'+
     '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveNuevo">Guardar</button></div></div>');
-  if(!isMobile())setTimeout(function(){var i=$('#nName');if(i)i.focus()},30);
+  /* cursor en Paciente: se hace en el mismo toque (si no, el iPhone no abre el teclado) */
+  var ni=$('#nName');if(ni){try{ni.focus({preventScroll:true})}catch(e){ni.focus()}}
 }
 function bloqFields(b,d,t){
   return '<div class="fields">'+
