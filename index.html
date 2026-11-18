@@ -91,6 +91,7 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .blk .bln{text-transform:uppercase;font-size:12px;font-weight:600;background:#fff;padding:1px 6px;border-radius:3px;margin-top:3px;max-width:100%;text-align:center}
 .tabs{display:none}
 #bNota{text-transform:uppercase}
+.sprog{display:flex;gap:12px;justify-content:center;font-size:12px;color:#9AA29C;margin:4px 0 0;min-height:16px}.sprog .ok{color:#3E7A1E;font-weight:600}
 .fab{display:none}
 /* Agenda: el encabezado queda fijo y solo scrollea la grilla (PC y celular) */
 .app.fixmob{height:100vh;height:100dvh;overflow:hidden;padding-bottom:0}
@@ -582,6 +583,7 @@ details.edit[open] summary{margin-bottom:12px}
 <div class="splash" id="splash" role="status" aria-live="polite">
   <img src="logo.png" alt="Lado B Nutrición" width="295" height="137">
   <div class="spin" aria-hidden="true"></div>
+  <p class="sprog" id="splashProg"></p>
   <p id="splashTxt">Cargando…</p>
 </div>
 <div class="login" id="login" hidden>
@@ -698,7 +700,9 @@ function busy(){
   var a=document.activeElement;
   return a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=='checkbox';
 }
-function scheduleRender(){if(!staff||!COLS.every(function(c){return loaded[c]}))return;
+var COL_TXT={pacientes:'pacientes',turnos:'agenda',bloqueos:'bloqueos',pagos:'pagos'};
+function splashProg(){var t=$('#splashProg');if(!t)return;t.innerHTML=COLS.map(function(c){return '<span class="'+(loaded[c]?'ok':'')+'">'+(loaded[c]?'✓ ':'')+cap(COL_TXT[c])+'</span>'}).join('')}
+function scheduleRender(){if(!staff||!['pacientes','turnos','bloqueos'].every(function(c){return loaded[c]}))return;
   if($('.app').hidden){$('.app').hidden=false;$('#splash').hidden=true;$('#login').hidden=true;pendingRender=false;render();return}if(busy()){pendingRender=true;return}pendingRender=false;render()}
 /* Sincronización con lecturas mínimas:
    - la primera vez en cada dispositivo se lee todo y queda guardado en el navegador;
@@ -713,16 +717,33 @@ function applyDocs(c,list,replace){
   data[c]=Object.keys(map).map(function(k){return map[k]});
   synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
 }
+/* Pagos: la primera vez en un dispositivo se bajan solo los del año pasado en adelante;
+   los años anteriores se bajan cuando alguien los abre en la pestaña Pagos (y quedan guardados). */
+var PAGOS_DESDE=(today().getFullYear()-1)+'-01-01', pagosYrs=null, pagosYrLoading={};
+function pagosYearOk(y){
+  if(!pagosYrs)pagosYrs=lsGet('ladob_pagos_yrs')||(lsGet('ladob_sync_pagos')?{all:1}:{});
+  return pagosYrs.all||String(y)>=PAGOS_DESDE.slice(0,4)||pagosYrs[y];
+}
+function loadPagosYear(y){
+  if(pagosYearOk(y)||pagosYrLoading[y])return;
+  pagosYrLoading[y]=1;
+  db.collection('pagos').where('date','>=',y+'-01-01').where('date','<=',y+'-12-31').get({source:'server'}).then(function(sn){
+    applyDocs('pagos',sn.docs.map(docObj).filter(function(x){return !x.del}),false);
+    pagosYrs[y]=1;lsSet('ladob_pagos_yrs',pagosYrs);delete pagosYrLoading[y];render();
+  }).catch(function(e){console.error(e);delete pagosYrLoading[y];toast('No se pudieron bajar los pagos de '+y+'. Revisá la conexión.')});
+}
 function startCol(c){
   var key='ladob_sync_'+c, last=lsGet(key)||0;
-  var full=function(){last=0;return db.collection(c).get({source:'server'})};
+  var full=function(){last=0;
+    if(c==='pagos'){pagosYrs={};lsSet('ladob_pagos_yrs',pagosYrs);return db.collection(c).where('date','>=',PAGOS_DESDE).get({source:'server'})}
+    return db.collection(c).get({source:'server'})};
   (last?db.collection(c).get({source:'cache'}).then(function(sn){return sn.empty?full():sn}).catch(full):full())
   .then(function(sn){
     var mx=last, list=sn.docs.map(docObj);
     list.forEach(function(x){if(!x.pend&&x.ts>mx)mx=x.ts});
     applyDocs(c,list,true);
     if(!mx)mx=1; lsSet(key,mx);
-    loaded[c]=true; scheduleRender();
+    loaded[c]=true; splashProg(); scheduleRender();
     var q=db.collection(c).where('updatedAt','>',firebase.firestore.Timestamp.fromMillis(mx));
     unsubs.push(q.onSnapshot({includeMetadataChanges:false},function(s2){
       var ch=s2.docChanges().filter(function(x){return x.type!=='removed'}).map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
@@ -752,7 +773,7 @@ auth.onAuthStateChanged(function(u){
     $('#who').textContent=(staff.nombre||email);
     $('#login').hidden=true;$('#splash').hidden=false;
     $('#splashTxt').textContent=lsGet('ladob_sync_pacientes')?'Cargando…':'Primera vez en este dispositivo: estamos descargando la base. Puede tardar unos segundos.';
-    COLS.forEach(function(c){loaded[c]=false});
+    COLS.forEach(function(c){loaded[c]=false});splashProg();
     listen();
   }).catch(function(e){console.error(e);auth.signOut();showLogin('Tu usuario no tiene acceso a la base. Pedile a Fede que lo habilite.')});
 });
@@ -1409,6 +1430,7 @@ function renderPagos(){
     '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
     '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>';
   var pref=y+'-'+pad(mo+1)+'-';
+  var cargando=!loaded.pagos||!pagosYearOk(y); if(loaded.pagos&&!pagosYearOk(y))loadPagosYear(y);
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
   var tot=0,tf=0,cf=0; list.forEach(function(p){tot+=+p.monto;if(p.fact){tf+=+p.monto;cf++}});
   var html='<div class="col"><div class="totals">'+
@@ -1417,14 +1439,15 @@ function renderPagos(){
   html+='<div class="table"><div class="thead"><span>Fecha</span><span>Paciente</span><span class="r">Monto</span><span>Medio</span><span class="fp">Fecha pago</span><span class="c">Fact.</span></div>';
   /* Deudas: turnos confirmados que ya pasaron y no tienen pago (desde el 1/11/2026) */
   var now=new Date(), deudas=data.turnos.filter(function(t){
-    if(t.nutri!==ui.nutri||t.estado!=='c'||t.date<'2026-11-01'||t.date.indexOf(pref)!==0||pagoDe(t.id))return false;
+    if(cargando||t.nutri!==ui.nutri||t.estado!=='c'||t.date<'2026-11-01'||t.date.indexOf(pref)!==0||pagoDe(t.id))return false;
     var d=parse(t.date);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,toMin(t.time))<=now;
   });
   /* la fecha de la izquierda es la de atención (el turno); el mes se arma por fecha de pago */
   var atte=function(p){var t=p.turnoId?findT(p.turnoId):null;return t?t.date:p.date};
   var rows=list.map(function(p){return {k:atte(p),p:p}}).concat(deudas.map(function(t){return {k:t.date+' '+t.time,t:t}}));
   rows.sort(function(a,b){return a.k<b.k?-1:a.k>b.k?1:0});
-  if(!rows.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
+  if(cargando)html+='<div class="empty">Cargando los pagos'+(loaded.pagos?' de '+y:'')+'…</div>';
+  else if(!rows.length)html+='<div class="empty">No hay pagos cargados en '+MESES[mo]+'. Se cargan desde la agenda, tocando el turno del paciente.</div>';
   rows.forEach(function(r){
     if(r.t){var dt=r.t;
       html+='<div class="prow debe"><span class="pdate">'+ddmm(dt.date)+'</span><button type="button" class="pname" data-turno="'+dt.id+'" title="Tocá para registrar el pago"><span>'+esc(dt.name)+'</span>'+(dt.tipo?'<span class="tag">'+esc(dt.tipo)+'</span>':'')+'</button>'+
