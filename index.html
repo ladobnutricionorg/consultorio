@@ -957,7 +957,7 @@ function saveIb(pid){
 }
 function inbodyCard(p){
   var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
-  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p><button type="button" class="btn" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" hidden></div>';
+  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p><button type="button" class="btn" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" multiple hidden></div>';
   if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones. Tocá <b>Cargar InBody</b> y elegí la foto de la hoja principal.</p></section>';
   h+='<div class="ibg">'+IBM.map(function(m){var v=pts[pts.length-1][m[0]];if(v==null)return '';return '<div class="ibm"><div class="ibt">'+m[1]+'</div><div class="ibv">'+String(v).replace('.',',')+' <small>'+m[2]+'</small></div>'+ibChart(pts.filter(function(x){return x[m[0]]!=null}),m[0],m[3])+'</div>'}).join('')+'</div>';
   /* datos extra de la última medición (hoja principal del InBody) */
@@ -1698,9 +1698,14 @@ document.addEventListener('input',function(ev){
 document.addEventListener('change',function(ev){var el=ev.target;if(el.classList&&el.classList.contains('altasel'))setAlta(el.dataset.alta,el.value)});
 document.addEventListener('change',function(ev){
   if(ev.target.id!=='ibFile'||!ev.target.files.length)return;
-  var file=ev.target.files[0],pid=ev.target.dataset.pid,btn=$('[data-act="ibLoad"]'),lbl=btn?btn.innerHTML:'';
+  /* se pueden elegir los 3 archivos juntos: se usa la hoja principal (…_InBody.jpg) y se ignoran los de historial */
+  var fs=[].slice.call(ev.target.files),main=fs.filter(function(f){return /inbody/i.test(f.name)&&!/history/i.test(f.name)})[0]||fs.filter(function(f){return !/history/i.test(f.name)})[0];
+  if(!main){openIbForm(ev.target.dataset.pid,{},'Elegiste solo archivos de historial. Elegí también el que termina en "_InBody".');return}
+  var file=main,pid=ev.target.dataset.pid,btn=$('[data-act="ibLoad"]'),lbl=btn?btn.innerHTML:'';
   if(btn){btn.disabled=true}
+  var fm=file.name.match(/_(\d{4})(\d{2})(\d{2})\d{6}_/);
   ibRead(file,function(t){if(btn)btn.textContent=t}).then(function(v){
+    if(!v.fecha&&fm)v.fecha=fm[1]+'-'+fm[2]+'-'+fm[3];
     var falt=IB_FORM.slice(1).filter(function(f){return v[f[0]]==null}).length;
     openIbForm(pid,v,!v._formato?'La imagen no parece la hoja principal del InBody. Completá los datos a mano.':falt?'Hay '+falt+' dato'+(falt===1?'':'s')+' que no se pudo leer (marcado'+(falt===1?'':'s')+' en amarillo). Completalo'+(falt===1?'':'s')+' o dejalo'+(falt===1?'':'s')+' vacío'+(falt===1?'':'s')+'.':null);
   }).catch(function(err){openIbForm(pid,{},'No se pudo leer la imagen ('+err.message+'). Podés cargar los datos a mano.')})
