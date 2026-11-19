@@ -280,6 +280,7 @@ body{overflow-x:hidden}
 .gmeses button{font:inherit;font-size:13px;font-weight:600;border:1px solid #DDE1DA;background:#fff;color:#3D4741;border-radius:999px;padding:6px 12px;cursor:pointer}
 .gmeses button.vac{color:#A3AAA5}
 .gmeses button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.r2x{display:contents}
 .gcbtn{margin-left:auto}.gcbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .gconf{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
 .gch{margin:0;font-size:13.5px;font-weight:700}.gch small{font-weight:500;color:#7A837D;margin-left:6px}
@@ -581,6 +582,10 @@ details.edit[open] summary{margin-bottom:12px}
   .row2 .desk{display:none}
   .period{min-width:0;flex:1;font-size:13px}
   .row2{flex-wrap:nowrap;gap:4px}
+  .row2.wrapm{flex-wrap:wrap;gap:8px 6px}
+  .row2.wrapm .r2x{display:flex;flex-basis:100%;justify-content:center;gap:6px}
+  .row2.wrapm .gcbtn{margin-left:0}
+  html,body{overflow-x:hidden;max-width:100%}
   .tabs{flex:1;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
   .tab{border:0;background:#E9EBE5;border-radius:7px;height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#3D4741;position:relative;cursor:pointer;padding:0}
   .tab b{font-size:11.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -1577,7 +1582,7 @@ function renderGastos(){
   $('#row2').innerHTML='<select class="msel" id="gMesSel" aria-label="Mes">'+MESES.map(function(n,i){return '<option value="'+(i+1)+'"'+(i+1===m?' selected':'')+'>'+cap(n)+'</option>'}).join('')+'</select>'+
     '<select class="msel" id="gAnioSel" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
     '<button type="button" class="btn" data-act="gHoy"'+(y===ty&&m===tm?' disabled':'')+'>Mes actual</button>'+
-    (admin?'<button type="button" class="btn gcbtn'+(ui.gConf?' on':'')+'" data-act="gconf">'+ICON.edit+'Conceptos</button>':'');
+    (admin?'<span class="r2x"><button type="button" class="btn gcbtn'+(ui.gConf?' on':'')+'" data-act="gconf">'+ICON.edit+'Conceptos</button></span>':'');
   if(!stats){$('#main').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto 10px"></div>Cargando gastos…</div>';loadStats();return}
   var g=gMes(y,m)||{},C=gConf();
   var h='<div class="gwrap">';
@@ -1751,6 +1756,7 @@ function render(){
   $('#switchBtn').innerHTML=ICON.swap+O;
   $('#switchBtn').setAttribute('aria-label','Ver '+V[1]+' de '+O);
   document.title=(pac?V[0]:V[0]+' de '+N)+' · Lado B';
+  $('#row2').classList.toggle('wrapm',ui.view==='pagos'||ui.view==='gastos');
   if(ui.view==='stats'){renderStats();saveUi();return}
   if(ui.view==='gastos'){renderGastos();saveUi();return}
   if(ui.view==='agenda')renderAgenda();else if(ui.view==='pagos')renderPagos();else if(ui.view==='ficha'&&findPac(ui.fichaId))renderFicha();else{ui.view='pacientes';renderPacientes()}
@@ -1913,8 +1919,8 @@ function renderPagos(){
   $('#row2').innerHTML='<select class="msel" id="pMes" aria-label="Mes">'+MESES.map(function(m,i){return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+cap(m)+'</option>'}).join('')+'</select>'+
     '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
     '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>'+
-    '<button type="button" class="btn" data-act="firmar">'+ICON.edit+'Firmar factura</button><input type="file" id="fcFile" accept="application/pdf,.pdf" multiple hidden>'+
-    (staff&&staff.rol==='admin'?'<button type="button" class="btn ghost" data-act="firmas">Firmas</button>':'');
+    '<span class="r2x"><button type="button" class="btn" data-act="firmar">'+ICON.edit+'Firmar factura</button><input type="file" id="fcFile" accept="application/pdf,.pdf" multiple hidden>'+
+    (staff&&staff.rol==='admin'?'<button type="button" class="btn ghost" data-act="firmas">Firmas</button>':'')+'</span>';
   var pref=y+'-'+pad(mo+1)+'-';
   var cargando=!loaded.pagos||!pagosYearOk(y); if(loaded.pagos&&!pagosYearOk(y))loadPagosYear(y);
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
