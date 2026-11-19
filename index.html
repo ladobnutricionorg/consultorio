@@ -407,6 +407,7 @@ body{overflow-x:hidden}
 .fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
 .medbar{display:flex;gap:8px;flex-wrap:wrap}
 .btn.ghost{background:transparent}
+.mdib{margin-left:auto}
 .medrow{display:flex;align-items:flex-end;gap:12px;background:#FAFBF7;border:1px solid #E8EBE4;border-radius:10px;padding:12px 14px}
 .medrow label{display:flex;flex-direction:column;gap:3px;flex:1 1 0;min-width:0}
 .medrow label.mdd{flex:1.35 1 0}
@@ -1240,8 +1241,8 @@ var MED_IN=[['peso','Peso','kg','Peso'],['musc','Músculo esq.','kg','Músc.'],[
 function medCard(p){
   var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1}), L=pts[pts.length-1];
   var h=fsecHead('med','Mediciones'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+dcorta(L.d)+'</small>':''),' class="fsec fdet ib"').replace('class="fsec fdet" ','');
-  h+='<div class="medbar">'+(ui.medNew?'':'<button type="button" class="btn" data-act="medNew">'+ICON.plus+'Nueva medición</button>')+
-    '<button type="button" class="btn ghost" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" multiple hidden></div>';
+  h+='<div class="medbar">'+(ui.medNew?'':'<button type="button" class="btn primary" data-act="medNew">'+ICON.plus+'Nueva medición</button>')+
+    '<button type="button" class="btn ghost mdib" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" multiple hidden></div>';
   if(ui.medNew){
     h+='<div class="medrow"><label class="mdd"><span>Fecha</span><input type="date" id="md_d" value="'+iso(today())+'"></label>'+
       MED_IN.map(function(m){return '<label><span><i class="mdl">'+m[1]+(m[2]?' ('+m[2]+')':'')+'</i><i class="mds">'+m[3]+(m[2]?' kg':'')+'</i></span><input id="md_'+m[0]+'" inputmode="'+(m[0]==='visc'?'numeric':'decimal')+'" autocomplete="off"></label>'}).join('')+
