@@ -398,12 +398,17 @@ body{overflow-x:hidden}
 .frt svg{width:14px;height:14px}
 .frest.on .frt{color:#B4501E}
 .frc{display:flex;flex-wrap:wrap;gap:6px}
-.frchip{cursor:pointer}.frchip input{position:absolute;opacity:0;pointer-events:none}
-.frchip span{display:inline-block;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid #D9DDD5;background:#fff;color:#56605A}
-.frchip input:checked+span{background:#C0532F;border-color:#C0532F;color:#fff}
-.frchip input:focus-visible+span{outline:2px solid var(--ink);outline-offset:1px}
-.frotro{font:inherit;font-size:13px;border:0;border-bottom:1px solid #E0B79A;background:transparent;padding:4px 1px 6px;color:var(--ink)}
+.frchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 6px 4px 10px;border-radius:999px;background:#C0532F;color:#fff;line-height:1.3}
+.frchip button{border:0;background:none;color:#fff;opacity:.8;font-size:11px;cursor:pointer;padding:1px 3px;line-height:1}
+.frchip button:hover{opacity:1}
+.fradd{font:inherit;font-size:12.5px;border:1px solid #E0B79A;border-radius:8px;padding:6px 28px 6px 10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237A837D' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;color:#7A837D;-webkit-appearance:none;appearance:none;cursor:pointer;width:100%}
+.frest:not(.on) .fradd{border-color:#D9DDD5}
+.fradd:focus{outline:0;border-color:#B4501E}
+.frow{display:flex;gap:6px;align-items:center}
+.frotro{flex:1;min-width:0;font:inherit;font-size:13px;border:0;border-bottom:1px solid #E0B79A;background:transparent;padding:4px 1px 6px;color:var(--ink)}
 .frotro:focus{outline:0;border-bottom-color:#B4501E}
+.frok{font:inherit;font-size:11.5px;font-weight:700;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:5px 12px;cursor:pointer}
+.frcan{border:0;background:none;color:#8A938D;cursor:pointer;font-size:13px;padding:4px}
 .frno{font-size:11.5px;color:#9AA29C}
 @media(max-width:760px){
   .fgrid2{grid-template-columns:1fr;gap:14px}
@@ -1265,13 +1270,30 @@ function saveLab(){
   else p.labs.push({id:uid(),d:d,v:v,by:ui.nutri});
   ui.labEdit=null;ui.labPisa=null;save();renderFicha();toast('Laboratorio del '+dcorta(d)+' guardado');
 }
-var RESTR=[['vegano','Vegano/a'],['vegetariano','Vegetariano/a'],['celiaco','Celíaco/a'],['otro','Otro']];
+var RESTR=[['vegano','Vegano/a'],['vegetariano','Vegetariano/a'],['celiaco','Celíaco/a']];
+function restrOf(f){var r=f.restr||{},o={otros:(r.otros||[]).slice()};RESTR.forEach(function(x){if(r[x[0]])o[x[0]]=true});if(r.otro&&r.txt&&!o.otros.length)o.otros=[r.txt];return o}
 function restrBox(f){
-  var r=f.restr||{},on=RESTR.some(function(x){return r[x[0]]});
-  return '<div class="frest'+(on?' on':'')+'" id="fRest"><p class="frt">'+ICON.alert+'Restricciones alimenticias</p><div class="frc">'+
-    RESTR.map(function(x){return '<label class="frchip"><input type="checkbox" id="fr_'+x[0]+'"'+(r[x[0]]?' checked':'')+'><span>'+x[1]+'</span></label>'}).join('')+'</div>'+
-    '<input class="frotro" id="fr_txt" placeholder="¿Cuál? (ej.: intolerancia a la lactosa)" value="'+esc(r.txt||'')+'"'+(r.otro?'':' hidden')+'>'+
-    (on?'':'<span class="frno">Sin restricciones marcadas</span>')+'</div>';
+  var r=restrOf(f),items=[];
+  RESTR.forEach(function(x){if(r[x[0]])items.push('<span class="frchip">'+x[1]+'<button type="button" data-act="rDel" data-k="'+x[0]+'" aria-label="Quitar '+x[1]+'">✕</button></span>')});
+  r.otros.forEach(function(t,i){items.push('<span class="frchip">'+esc(t)+'<button type="button" data-act="rDel" data-k="o'+i+'" aria-label="Quitar '+esc(t)+'">✕</button></span>')});
+  var libres=RESTR.filter(function(x){return !r[x[0]]});
+  return '<div class="frest'+(items.length?' on':'')+'" id="fRest"><p class="frt">'+ICON.alert+'Restricciones alimenticias</p>'+
+    (items.length?'<div class="frc">'+items.join('')+'</div>':'')+
+    (ui.rOtra?'<div class="frow"><input class="frotro" id="fr_txt" placeholder="Escribí cuál (ej.: intolerancia a la lactosa)" autocomplete="off"><button type="button" class="frok" data-act="rOk">OK</button><button type="button" class="frcan" data-act="rCancel" aria-label="Cancelar">✕</button></div>':
+    '<select class="fradd" id="fr_add" aria-label="Agregar restricción"><option value="" selected>Agregar restricción</option>'+libres.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'<option value="__otra">Otra…</option></select>')+'</div>';
+}
+function restrSet(fn){
+  var p=findPac(ui.fichaId);if(!p)return;saveFicha(false);
+  var r=restrOf(p.ficha||{});fn(r);p.ficha=Object.assign({},p.ficha||{},{restr:r});save();
+  var box=$('#fRest');if(box)box.outerHTML=restrBox(p.ficha);
+  if(ui.rOtra){var t=$('#fr_txt');if(t)t.focus()}
+}
+function restrOk(){
+  var t=$('#fr_txt'),v=t?t.value.trim():'';ui.rOtra=false;
+  restrSet(function(r){if(!v)return;var vv=v.charAt(0).toUpperCase()+v.slice(1),n=norm(vv);
+    var fijo=n.indexOf(' ')<0&&n.length>=5?RESTR.filter(function(x){return norm(x[1]).slice(0,5)===n.slice(0,5)})[0]:null;
+    if(fijo){r[fijo[0]]=true;return}
+    if(!r.otros.some(function(o){return norm(o)===n}))r.otros.push(vv)});
 }
 function renderFicha(){
   var p=findPac(ui.fichaId), f=p.ficha||{}, mo=f.motivo||{}, td=iso(today());
@@ -1331,11 +1353,10 @@ function renderFicha(){
 function saveFicha(withToast){
   var p=findPac(ui.fichaId); if(!p||!$('#f_dni'))return;
   var v=function(id){var el=$('#'+id);return el?el.value.trim():''};
-  var r={};RESTR.forEach(function(x){if($('#fr_'+x[0]).checked)r[x[0]]=true});if(r.otro&&v('fr_txt'))r.txt=v('fr_txt');
   p.ficha=Object.assign({},p.ficha||{},{dni:v('f_dni'),nac:$('#f_nac').value,email:v('f_email'),dir:v('f_dir'),ocup:v('f_ocup'),
     cob:v('f_cob'),socio:v('f_socio'),motivo:{aspecto:$('#fm_aspecto').checked,enfermedad:$('#fm_enfermedad').checked,riesgo:$('#fm_riesgo').checked},
     pc:{reg:v('f_pc_reg'),hab:v('f_pc_hab'),ant:v('f_pc_ant'),cir:v('f_pc_cir'),ciclo:v('f_pc_ciclo'),otros:v('f_pc_otros')},
-    act:v('f_act'),medic:v('f_medic'),restr:r});
+    act:v('f_act'),medic:v('f_medic')});
   save(); if(withToast)toast('Ficha guardada');
 }
 function saveHc(){
@@ -1989,10 +2010,10 @@ document.addEventListener('click',function(ev){
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'ptabla': ui.ptabla=!ui.ptabla; ui.plim=null; renderPacientes(); break;
-    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.sec={}; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
+    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.sec={}; ui.rOtra=false; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
-    case 'ficha': ui.sec={}; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
+    case 'ficha': ui.sec={}; ui.rOtra=false; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
     case 'fichaDatos': openPacForm(null,id); break;
@@ -2004,6 +2025,9 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
+    case 'rDel': var rk=a.dataset.k; restrSet(function(r){if(rk.charAt(0)==='o')r.otros.splice(+rk.slice(1),1);else delete r[rk]}); break;
+    case 'rOk': restrOk(); break;
+    case 'rCancel': ui.rOtra=false; restrSet(function(){}); break;
     case 'labDel': if(!sure(a))break; var lp=findPac(ui.fichaId); saveFicha(false); ui.labList=true; lp.labs=(lp.labs||[]).filter(function(x){return x.id!==id}); save(); renderFicha(); break;
     case 'hcNew': saveFicha(false); ui.hcEdit='new'; ui.sec.hc=true; renderFicha(); var ta=$('#hcText'); if(ta)ta.focus(); break;
     case 'hcEdit': saveFicha(false); ui.hcEdit=id; ui.sec.hc=true; renderFicha(); break;
@@ -2148,11 +2172,11 @@ document.addEventListener('change',function(ev){
 document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
 document.addEventListener('toggle',function(ev){var t=ev.target;if(!t.dataset)return;if(t.dataset.sec)ui.sec[t.dataset.sec]=t.open;
   if(t.classList.contains('medlist')){if(t.closest('[data-sec="med"]'))ui.medList=t.open;else ui.labList=t.open}},true);
-document.addEventListener('change',function(ev){var t=ev.target;if(!t.id||t.id.indexOf('fr_')!==0)return;
-  var box=$('#fRest'),any=RESTR.some(function(x){return $('#fr_'+x[0]).checked});
-  $('#fr_txt').hidden=!$('#fr_otro').checked;if(t.id==='fr_otro'&&t.checked)$('#fr_txt').focus();
-  box.classList.toggle('on',any);var no=$('.frno',box);if(no)no.hidden=any;else if(!any)box.insertAdjacentHTML('beforeend','<span class="frno">Sin restricciones marcadas</span>');
-  saveFicha(false);});
+document.addEventListener('change',function(ev){var t=ev.target;if(t.id!=='fr_add')return;var k=t.value;if(!k)return;
+  if(k==='__otra'){ui.rOtra=true;restrSet(function(){});return}
+  restrSet(function(r){r[k]=true});});
+document.addEventListener('keydown',function(ev){if(ev.target.id!=='fr_txt')return;
+  if(ev.key==='Enter'){ev.preventDefault();restrOk()}else if(ev.key==='Escape'){ui.rOtra=false;restrSet(function(){})}});
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
   var col=ev.target.closest&&ev.target.closest('.daycol');
