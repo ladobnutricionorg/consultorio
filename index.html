@@ -521,6 +521,11 @@ body{overflow-x:hidden}
 .ff input,.ff textarea{font:inherit;font-size:14px;color:var(--ink);border:0;border-bottom:1px solid #D9DDD5;padding:4px 0 7px;background:transparent;width:100%;border-radius:0}
 .ff textarea{resize:vertical;line-height:1.45;min-height:46px}
 .ff input:focus,.ff textarea:focus{outline:0;border-bottom-color:var(--ink)}
+.fdw{position:relative;display:block;flex:1;min-width:0}
+.fdw input.fdate{width:100%;padding-right:28px;box-sizing:border-box}
+.fdpick{position:absolute;right:0;top:50%;transform:translateY(-50%);border:0;background:none;color:#8A938D;cursor:pointer;padding:4px;display:flex;align-items:center}.fdpick:hover{color:var(--ink)}
+.fdpick svg{width:15px;height:15px}
+.fdnat{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 .fnac{display:flex;align-items:flex-end;gap:8px}
 .fnac input{flex:1;min-width:0}
 .fnac em{flex:none;font-style:normal;font-size:12px;font-weight:600;color:#3D5212;padding-bottom:8px}
@@ -824,6 +829,47 @@ var ICON={
 
 /* ---------- utilidades ---------- */
 function $(s,r){return (r||document).querySelector(s)}
+/* ---------- Fechas siempre dd/mm/aaaa ----------
+   Los casilleros de fecha del navegador muestran el formato del idioma de la compu (en una PC en inglés sale mm/dd/aaaa).
+   Cada <input type="date"> se convierte solo en un casillero de texto dd/mm/aaaa (con las barras automáticas) y un
+   ícono que abre el calendario del navegador. Para el resto del código sigue funcionando igual: .value es aaaa-mm-dd. */
+var DATE_D=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+function fdIso(t){var m=String(t||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)return '';var d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d);
+  if(y<1900||dt.getMonth()!==mo-1||dt.getDate()!==d)return '';return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function fdDisp(v){return /^\d{4}-\d{2}-\d{2}$/.test(v||'')?v.slice(8)+'/'+v.slice(5,7)+'/'+v.slice(0,4):''}
+function fdate(el){
+  if(el.__fd)return;el.__fd=1;
+  var iso0=el.getAttribute('value')||DATE_D.get.call(el)||'',cur=DATE_D.get.call(el);
+  el.type='text';el.setAttribute('inputmode','numeric');el.setAttribute('placeholder','dd/mm/aaaa');el.setAttribute('maxlength','10');el.setAttribute('autocomplete','off');el.classList.add('fdate');
+  Object.defineProperty(el,'value',{configurable:true,get:function(){return fdIso(DATE_D.get.call(el))},set:function(v){DATE_D.set.call(el,fdDisp(v))}});
+  Object.defineProperty(el,'defaultValue',{configurable:true,get:function(){return iso0},set:function(v){iso0=v}});
+  DATE_D.set.call(el,fdDisp(cur||iso0));
+  el.addEventListener('input',function(ev){if(ev.inputType&&ev.inputType.indexOf('delete')===0)return;
+    var d=DATE_D.get.call(el).replace(/\D/g,'').slice(0,8),t=d.slice(0,2)+(d.length>2?'/'+d.slice(2,4):'')+(d.length>4?'/'+d.slice(4):'');
+    if(t!==DATE_D.get.call(el))DATE_D.set.call(el,t)});
+  var w=document.createElement('span');w.className='fdw';el.parentNode.insertBefore(w,el);w.appendChild(el);
+  var b=document.createElement('button');b.type='button';b.className='fdpick';b.tabIndex=-1;b.setAttribute('aria-label','Elegir en el calendario');b.innerHTML=ICON.cal;
+  var n=document.createElement('input');n.type='date';n.className='fdnat';n.tabIndex=-1;n.setAttribute('aria-hidden','true');
+  b.appendChild(n);w.appendChild(b);
+  b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();DATE_D.set.call(n,el.value||'');try{n.showPicker()}catch(e){n.focus();n.click()}});
+  n.addEventListener('change',function(){el.value=DATE_D.get.call(n);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+}
+/* lo mismo para las horas: siempre hh:mm de 24 h (en una PC en inglés el navegador muestra AM/PM) */
+function ftIso(t){var m=String(t||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||+m[1]>23||+m[2]>59)return '';return String(+m[1]).padStart(2,'0')+':'+m[2]}
+function ftime(el){
+  if(el.__fd)return;el.__fd=1;
+  var v0=el.getAttribute('value')||'',cur=DATE_D.get.call(el);
+  el.type='text';el.setAttribute('inputmode','numeric');el.setAttribute('placeholder','hh:mm');el.setAttribute('maxlength','5');el.setAttribute('autocomplete','off');el.classList.add('ftime');
+  Object.defineProperty(el,'value',{configurable:true,get:function(){return ftIso(DATE_D.get.call(el))},set:function(v){DATE_D.set.call(el,ftIso(v))}});
+  Object.defineProperty(el,'defaultValue',{configurable:true,get:function(){return v0},set:function(v){v0=v}});
+  DATE_D.set.call(el,ftIso(cur||v0));
+  el.addEventListener('input',function(ev){if(ev.inputType&&ev.inputType.indexOf('delete')===0)return;
+    var d=DATE_D.get.call(el).replace(/\D/g,'').slice(0,4),t=d.length>2?d.slice(0,2)+':'+d.slice(2):d;if(t!==DATE_D.get.call(el))DATE_D.set.call(el,t)});
+  el.addEventListener('blur',function(){var r=DATE_D.get.call(el).replace(/\D/g,'');if(/^\d{3}$/.test(r)){DATE_D.set.call(el,ftIso('0'+r[0]+':'+r.slice(1)));el.dispatchEvent(new Event('change',{bubbles:true}))}});
+}
+new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(nd){if(nd.nodeType!==1)return;
+  if(nd.matches&&nd.matches('input[type="date"]:not(.fdnat)'))fdate(nd);nd.querySelectorAll&&nd.querySelectorAll('input[type="date"]:not(.fdnat)').forEach(fdate);
+  if(nd.matches&&nd.matches('input[type="time"]'))ftime(nd);nd.querySelectorAll&&nd.querySelectorAll('input[type="time"]').forEach(ftime)})})}).observe(document.documentElement,{childList:true,subtree:true});
 function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
 function pad(n){return String(n).padStart(2,'0')}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
