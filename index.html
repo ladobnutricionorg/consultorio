@@ -281,6 +281,8 @@ body{overflow-x:hidden}
 .gmeses button.vac{color:#A3AAA5}
 .gmeses button.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .r2x{display:contents}
+.btn.dpill{cursor:default;color:#8A938D;background:transparent;font-weight:700}
+.btn.dpill.on{background:#B3412F;border-color:#B3412F;color:#fff}
 .gcbtn{margin-left:auto}.gcbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .gconf{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
 .gch{margin:0;font-size:13.5px;font-weight:700}.gch small{font-weight:500;color:#7A837D;margin-left:6px}
@@ -1964,7 +1966,7 @@ function renderPagos(){
   $('#row2').innerHTML='<select class="msel" id="pMes" aria-label="Mes">'+MESES.map(function(m,i){return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+cap(m)+'</option>'}).join('')+'</select>'+
     '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
     '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>'+
-    '<span class="r2x"><button type="button" class="btn" data-act="firmar">'+ICON.edit+'Firmar factura</button><input type="file" id="fcFile" accept="application/pdf,.pdf" multiple hidden>'+
+    '<span class="r2x"><span class="btn dpill" id="pDeud" role="status">Deudores: –</span><button type="button" class="btn" data-act="firmar">'+ICON.edit+'Firmar factura</button><input type="file" id="fcFile" accept="application/pdf,.pdf" multiple hidden>'+
     (staff&&staff.rol==='admin'?'<button type="button" class="btn ghost" data-act="firmas">Firmas</button>':'')+'</span>';
   var pref=y+'-'+pad(mo+1)+'-';
   var cargando=!loaded.pagos||!pagosYearOk(y); if(loaded.pagos&&!pagosYearOk(y))loadPagosYear(y);
@@ -1981,6 +1983,8 @@ function renderPagos(){
   });
   /* la fecha de la izquierda es la de atención (el turno); el mes se arma por fecha de pago */
   var atte=function(p){var t=p.turnoId?findT(p.turnoId):null;return t?t.date:p.date};
+  /* cartel "Deudores": consultas del mes sin pagar (cuenta cada turno, aunque sea la misma persona) */
+  var dp=$('#pDeud');if(dp){dp.textContent='Deudores: '+(deudas.length||'–');dp.classList.toggle('on',deudas.length>0)}
   var rows=list.map(function(p){return {k:atte(p),p:p}}).concat(deudas.map(function(t){return {k:t.date+' '+t.time,t:t}}));
   rows.sort(function(a,b){return a.k<b.k?-1:a.k>b.k?1:0});
   if(cargando)html+='<div class="empty">Cargando los pagos'+(loaded.pagos?' de '+y:'')+'…</div>';
