@@ -1557,13 +1557,16 @@ function gNum(t){t=String(t||'').replace(/[$\s]/g,'');if(t==='')return null;if(/
 function gFmt(v){return v==null?'':v.toLocaleString('es-AR',v%1?{minimumFractionDigits:2,maximumFractionDigits:2}:{maximumFractionDigits:0})}
 function gUsado(id){return Object.keys(stats||{}).some(function(y){var g=stats[y].g||{};return Object.keys(g).some(function(m){return typeof g[m][id]==='number'})})}
 function renderGastos(){
-  var ty=today().getFullYear(),years=[];for(var y=2026;y<=ty;y++)years.push(y);
-  ui.gy=ui.gy||ty;if(!ui.gm)ui.gm=ui.gy===ty?today().getMonth()+1:12;
-  $('#row2').innerHTML=years.length>1?'<div class="yrs" role="group" aria-label="Año">'+years.map(function(y){return '<button type="button" data-act="gyear" data-y="'+y+'" class="'+(y===ui.gy?'on':'')+'" aria-pressed="'+(y===ui.gy)+'">'+y+'</button>'}).join('')+'</div>':'';
+  var ty=today().getFullYear(),tm=today().getMonth()+1;
+  if(!ui.gy){ui.gy=ty;ui.gm=tm}
+  var y=ui.gy,m=ui.gm,admin=staff&&staff.rol==='admin',yrs=[];for(var yy=2026;yy<=Math.max(ty+1,y);yy++)yrs.push(yy);
+  $('#row2').innerHTML='<select class="msel" id="gMesSel" aria-label="Mes">'+MESES.map(function(n,i){return '<option value="'+(i+1)+'"'+(i+1===m?' selected':'')+'>'+cap(n)+'</option>'}).join('')+'</select>'+
+    '<select class="msel" id="gAnioSel" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
+    '<button type="button" class="btn" data-act="gHoy"'+(y===ty&&m===tm?' disabled':'')+'>Mes actual</button>'+
+    (admin?'<button type="button" class="btn gcbtn'+(ui.gConf?' on':'')+'" data-act="gconf">'+ICON.edit+'Conceptos</button>':'');
   if(!stats){$('#main').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto 10px"></div>Cargando gastos…</div>';loadStats();return}
-  var y=ui.gy,m=ui.gm,g=gMes(y,m)||{},C=gConf(),admin=staff&&staff.rol==='admin';
-  var h='<div class="gwrap"><div class="gbar"><h2>Gastos <span>'+y+'</span></h2><div class="gmeses">'+MESES.map(function(n,i){var t=gTotal(y,i+1);return '<button type="button" data-act="gmes" data-m="'+(i+1)+'" class="'+(i+1===m?'on':'')+(t==null?' vac':'')+'">'+cap(n.slice(0,3))+'</button>'}).join('')+'</div>'+
-    (admin?'<button type="button" class="btn gcbtn'+(ui.gConf?' on':'')+'" data-act="gconf">'+ICON.edit+'Conceptos</button>':'')+'</div>';
+  var g=gMes(y,m)||{},C=gConf();
+  var h='<div class="gwrap">';
   if(admin&&ui.gConf){
     h+='<div class="gconf"><p class="gch">Conceptos de gastos <small>El nombre y el grupo se cambian en todos los meses.</small></p><div class="gclist">'+C.map(function(c){var u=gUsado(c.id);
       return '<div class="gcrow"><input class="gcname" data-cid="'+c.id+'" value="'+esc(c.n)+'" aria-label="Nombre"><select class="gcgr" data-cid="'+c.id+'" aria-label="Grupo">'+GGR.map(function(x){return '<option value="'+x[0]+'"'+(c.g===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select>'+
@@ -1576,7 +1579,6 @@ function renderGastos(){
       gAddRow(gr[0],it.filter(function(c){return typeof g[c.id]!=='number'}),it.some(function(c){return typeof g[c.id]==='number'}))+'</section>'}).join('')+'</div>';
   h+='<div class="gtot" id="gTot"></div></div>';
   $('#main').innerHTML=h;gTotUpd();
-  var mb=$('.gmeses button.on');if(mb&&mb.parentNode.scrollWidth>mb.parentNode.clientWidth)mb.parentNode.scrollLeft=mb.offsetLeft-mb.parentNode.offsetLeft-40;
 }
 /* fila para cargar un gasto: se elige el concepto del grupo y se escribe el monto */
 function gAddRow(gr,libres,hay){
@@ -1597,7 +1599,6 @@ function gTotUpd(){
   $$('.gsub').forEach(function(b){b.textContent=fm(gSub(y,m,b.dataset.g))});
   var d=t!=null&&pt!=null?t-pt:null;
   el.innerHTML='<span class="gtl">Total '+MESES[m-1].toLowerCase()+' '+y+'</span><span class="gtc">'+(pt!=null?cap(MESES[pm-1])+': '+fm(pt)+(d?' · <em class="'+(d>0?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+fm(Math.abs(d))+'</em>':''):'')+'</span><b>'+(t!=null?fm(t):'—')+'</b>';
-  $$('.gmeses button').forEach(function(b){b.classList.toggle('vac',gTotal(y,+b.dataset.m)==null)});
 }
 function gSave(el){
   var id=el.dataset.id,v=gNum(el.value);
@@ -2124,7 +2125,7 @@ document.addEventListener('click',function(ev){
   var a=el.closest('[data-act]'); if(!a)return;
   var act=a.dataset.act, id=a.dataset.id, t2, pg, b2, r;
   switch(act){
-    case 'view': ui.view=a.dataset.view; ui.plim=null; if(ui.view==='pacientes')ui.ptabla=false; render(); break;
+    case 'view': ui.view=a.dataset.view; ui.plim=null; if(ui.view==='gastos'){ui.gy=null;ui.gConf=false;ui.gAdd={}} if(ui.view==='pacientes')ui.ptabla=false; render(); break;
     case 'year': ui.sy=+a.dataset.y; renderStats(); break;
     case 'qpago': if(a.classList.contains('on'))closeQp(); else openQp(a,id); break;
     case 'qcancel': closeQp(); break;
@@ -2150,8 +2151,7 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
-    case 'gmes': ui.gm=+a.dataset.m; ui.gAdd={}; renderGastos(); break;
-    case 'gyear': ui.gy=+a.dataset.y; ui.gm=null; renderGastos(); break;
+    case 'gHoy': ui.gy=null; ui.gAdd={}; renderGastos(); break;
     case 'gconf': ui.gConf=!ui.gConf; renderGastos(); break;
     case 'gMas': ui.gAdd=ui.gAdd||{}; ui.gAdd[a.dataset.g]=true; renderGastos(); var gs=$('#gaSel_'+a.dataset.g); if(gs)gs.focus(); break;
     case 'gMenos': ui.gAdd[a.dataset.g]=false; renderGastos(); break;
@@ -2252,6 +2252,7 @@ document.addEventListener('change',function(ev){
   if(el.dataset&&el.dataset.pauta){var pp2=findPac(el.dataset.pauta);if(pp2){pp2.pauta=el.checked;save()}return}
   if(el.dataset&&el.dataset.fact){var p=findP(el.dataset.fact);if(p){p.fact=el.checked;save();render()}return}
   if(el.classList&&el.classList.contains('stin')){saveStat(el);return}
+  if(el.id==='gMesSel'||el.id==='gAnioSel'){ui.gy=+$('#gAnioSel').value;ui.gm=+$('#gMesSel').value;ui.gAdd={};renderGastos();return}
   if(el.id==='pMes'||el.id==='pAnio'){ui.month=new Date(+$('#pAnio').value,+$('#pMes').value,1);render();return}
   if(/^n(Date|Time|Other)$/.test(el.id)){var fb=$('#dlg [data-act="saveNuevo"]');if(fb&&fb.dataset.force){delete fb.dataset.force;fb.textContent='Guardar';$('#nErr').hidden=true}}
   if(el.id==='nTime'){$('#nOther').value='';$('#nOtherTo').value=''}
