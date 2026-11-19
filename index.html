@@ -1057,7 +1057,9 @@ async function ibRead(file,onStep){
   return out;
 }
 /* Hoja de historial (…_BodyHistory_0.jpg): viene girada, hasta 15 mediciones por columna */
-var IBH={W:2310,H:1640,C0:464,DX:120.86,DATE:[1360,1425],ROWS:{peso:[412,600],musc:[600,788],grasa:[788,976],pgrasa:[976,1164]}};
+var IBH={W:2310,H:1640,C0:464,DX:120.86,DATE:[1360,1425],ROWS:{peso:[412,600],musc:[600,788],grasa:[788,976]}};
+/* …_BodyHistory_1.jpg: metabolismo basal, cintura-cadera y nivel de grasa visceral (solo se lee este último) */
+var IBH1={W:2310,H:1640,C0:464,DX:120.86,DATE:[980,1045],ROWS:{visc:[788,976]}};
 function ibBin(g,x0,y0,w,h){var d=g.getImageData(x0,y0,w,h).data,b=new Uint8Array(w*h);for(var i=0;i<w*h;i++)b[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114)<150?1:0;return b}
 function ibClean(b,w,h,sc){ /* saca puntos y líneas del gráfico, deja solo los números */
   var lab=new Int32Array(w*h),st=[],i;
@@ -1083,7 +1085,18 @@ function ibDot(b,w,h,R){ /* centro del punto negro (zona totalmente oscura de (2
   return n?[sx/n,sy/n]:null;
 }
 async function ibOcr(cv,psms){var out=[];for(var psm of psms){await ibWorker.setParameters({tessedit_pageseg_mode:psm});var r=await ibWorker.recognize(cv);out.push(r.data.text)}return out}
-async function ibReadHistory(file,onStep){
+/* número entero chico arriba del punto (nivel de grasa visceral): recorte justo, sin las líneas que tocan el borde */
+async function ibDigit(g,cx,cy,s){
+  var w=Math.round(48*s),h=Math.round(34*s),bx=Math.max(0,Math.round(cx-24*s)),by=Math.max(0,Math.round(cy-40*s)),b=ibBin(g,bx,by,w,h),st=[],i;
+  for(var y=0;y<h;y++)for(var x=0;x<w;x++)if((x===0||y===0||x===w-1||y===h-1)&&b[y*w+x]){b[y*w+x]=0;st.push(y*w+x)}
+  while(st.length){var q=st.pop(),qx=q%w,qy=(q-qx)/w;for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++){var nx=qx+dx,ny=qy+dy;if(nx<0||ny<0||nx>=w||ny>=h)continue;var r=ny*w+nx;if(b[r]){b[r]=0;st.push(r)}}}
+  var cv=ibCanvas(b,w,h);if(!cv)return null;
+  var votos={},best=null;
+  for(var psm of ['8','7','10']){var t=(await ibOcr(cv,[psm]))[0],v=parseInt(String(t).replace(/\D/g,''),10);if(ibOk('visc',v)){votos[v]=(votos[v]||0)+1;if(psm==='8'&&best==null)best=v}}
+  if(best!=null)return best;
+  var ks=Object.keys(votos);return ks.length?+ks.sort(function(a2,b2){return votos[b2]-votos[a2]})[0]:null;
+}
+async function ibReadHistory(file,onStep,IBH){
   await ibLoadScript();
   if(!ibWorker){onStep('Preparando el lector…');ibWorker=await Tesseract.createWorker('eng',1)}
   await ibWorker.setParameters({tessedit_char_whitelist:'0123456789.,:'});
@@ -1094,7 +1107,7 @@ async function ibReadHistory(file,onStep){
   URL.revokeObjectURL(url);
   var s=W/IBH.W,res=[];
   for(var i=0;i<15;i++){
-    onStep('Leyendo historial… '+Math.round((i+1)*100/15)+'%');
+    onStep('Leyendo historial'+(IBH.ROWS.visc?' (grasa visceral)':'')+'… '+Math.round((i+1)*100/15)+'%');
     var x0=Math.round((IBH.C0+(i-.5)*IBH.DX+3)*s),cw=Math.round((IBH.DX-6)*s);
     var dy0=Math.round(IBH.DATE[0]*s),dh=Math.round((IBH.DATE[1]-IBH.DATE[0])*s);
     var dcv=ibCanvas(ibBin(g,x0,dy0,cw,dh),cw,dh);if(!dcv)break;
@@ -1103,6 +1116,7 @@ async function ibReadHistory(file,onStep){
     for(var k in IBH.ROWS){
       var ry0=Math.round(IBH.ROWS[k][0]*s),rh=Math.round((IBH.ROWS[k][1]-IBH.ROWS[k][0])*s),band=ibBin(g,x0,ry0,cw,rh),dot=ibDot(band,cw,rh,Math.max(2,Math.round(3*s)));
       if(!dot){o[k]=null;continue}
+      if(k==='visc'){o[k]=await ibDigit(g,x0+dot[0],ry0+dot[1],s);continue}
       var bx=Math.max(0,Math.round(x0+dot[0]-50*s)),by=Math.max(0,Math.round(ry0+dot[1]-50*s)),bw=Math.round(130*s),bh=Math.round(44*s);
       var v=null,cands=[];
       var cl=ibCanvas(ibClean(ibBin(g,bx,by,bw,bh),bw,bh,s),bw,bh);if(cl)cands=cands.concat(await ibOcr(cl,['11']));
@@ -1120,10 +1134,10 @@ var IB_FORM=[['d','Fecha de la medición','date'],['peso','Peso (kg)'],['musc','
 function openIbForm(pid,v,aviso,hist){
   v=v||{};var fx=function(x){return x==null?'':String(x).replace('.',',')};
   hist=(hist||[]).filter(function(x){return x.d!==v.fecha});
-  var HK=[['peso','Peso'],['musc','Músculo'],['grasa','Grasa kg'],['pgrasa','% Grasa']];
+  var HK=[['peso','Peso'],['musc','Músculo'],['grasa','Grasa kg'],['visc','Grasa visc.']];
   var hmiss=hist.some(function(x){return HK.some(function(k){return x[k[0]]==null})});
   var htab=hist.length?'<details class="edit ibh"'+(hmiss?' open':'')+'><summary>Historial: '+hist.length+' mediciones anteriores leídas</summary><table class="ibht"><tr><th>Fecha</th>'+HK.map(function(k){return '<th>'+k[1]+'</th>'}).join('')+'</tr>'+
-    hist.map(function(x,i){return '<tr data-hd="'+x.d+'"><td>'+ddmm(x.d)+'/'+x.d.slice(2,4)+'</td>'+HK.map(function(k){var val=x[k[0]]==null?'':fx(x[k[0]].toFixed(1));return '<td><input class="ibhin'+(val===''?' miss':'')+'" data-k="'+k[0]+'" inputmode="decimal" value="'+esc(val)+'" aria-label="'+k[1]+' '+ddmm(x.d)+'"></td>'}).join('')+'</tr>'}).join('')+'</table></details>':'';
+    hist.map(function(x,i){return '<tr data-hd="'+x.d+'"><td>'+ddmm(x.d)+'/'+x.d.slice(2,4)+'</td>'+HK.map(function(k){var val=x[k[0]]==null?'':fx(k[0]==='visc'?String(x[k[0]]):x[k[0]].toFixed(1));return '<td><input class="ibhin'+(val===''?' miss':'')+'" data-k="'+k[0]+'" inputmode="decimal" value="'+esc(val)+'" aria-label="'+k[1]+' '+ddmm(x.d)+'"></td>'}).join('')+'</tr>'}).join('')+'</table></details>':'';
   $('#dlg2').innerHTML=head('Nueva medición InBody','Revisá los números antes de guardar','close2')+
     '<div class="sec">'+(aviso?'<p class="warn">'+aviso+'</p>':'')+'<div class="fields ibf">'+IB_FORM.map(function(f){var k=f[0],val=k==='d'?(v.fecha||''):fx(v[k]);
       return '<label class="fld'+(k==='d'?' full':'')+(k!=='d'&&val===''?' miss':'')+'"><span>'+f[1]+'</span><input id="ib_'+k+'" '+(f[2]==='date'?'type="date"':'inputmode="decimal"')+' value="'+esc(val)+'"></label>'}).join('')+
@@ -2110,10 +2124,14 @@ document.addEventListener('change',function(ev){
   var file=main,pid=ev.target.dataset.pid,btn=$('[data-act="ibLoad"]'),lbl=btn?btn.innerHTML:'';
   if(btn){btn.disabled=true}
   var fm=file.name.match(/_(\d{4})(\d{2})(\d{2})\d{6}_/);
-  var hf=fs.filter(function(f){return /history_?0/i.test(f.name)})[0],hist=[];
-  ibRead(file,function(t){if(btn)btn.textContent=t}).then(function(v){
+  var hf=fs.filter(function(f){return /history_?0/i.test(f.name)})[0],hf1=fs.filter(function(f){return /history_?1/i.test(f.name)})[0],hist=[];
+  var paso=function(t){if(btn)btn.textContent=t};
+  ibRead(file,paso).then(function(v){
     if(!hf)return v;
-    return ibReadHistory(hf,function(t){if(btn)btn.textContent=t}).then(function(h){hist=h;return v},function(){return v});
+    return ibReadHistory(hf,paso,IBH).then(function(h){hist=h;return v},function(){return v});
+  }).then(function(v){
+    if(!hf1||!hist.length)return v;
+    return ibReadHistory(hf1,paso,IBH1).then(function(h){var by={};h.forEach(function(x){by[x.d]=x});hist.forEach(function(x){x.visc=by[x.d]?by[x.d].visc:null});return v},function(){return v});
   }).then(function(v){
     if(!v.fecha&&fm)v.fecha=fm[1]+'-'+fm[2]+'-'+fm[3];
     var falt=IB_FORM.slice(1).filter(function(f){return v[f[0]]==null}).length;
