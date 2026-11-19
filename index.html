@@ -261,6 +261,45 @@ body{overflow-x:hidden}
 .pcnt b{font-size:13px;font-weight:400;color:#17201B;margin-left:3px;letter-spacing:0}.pcnt .t{border-color:#D4FF3A}
 #row2 .psearch{max-width:420px}
 .ficha.ttl{vertical-align:middle;margin-left:8px;height:26px;font-size:10px}
+.gwrap{display:flex;flex-direction:column;gap:16px}
+.gbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.gbar h2{margin:0;font-size:20px;font-weight:800}.gbar h2 span{font-size:14px;font-weight:700;border-bottom:2px solid var(--ink);margin-left:8px}
+.gmeses{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.gmeses button{font:inherit;font-size:13px;font-weight:600;border:1px solid #DDE1DA;background:#fff;color:#3D4741;border-radius:999px;padding:6px 12px;cursor:pointer}
+.gmeses button.vac{color:#A3AAA5}
+.gmeses button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.gcbtn{margin-left:auto}.gcbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.gconf{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.gch{margin:0;font-size:13.5px;font-weight:700}.gch small{font-weight:500;color:#7A837D;margin-left:6px}
+.gclist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 26px}
+.gcrow{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #F0F2EE}
+.gcrow input{flex:1;min-width:0;font:inherit;font-size:13.5px;border:0;border-bottom:1px dashed transparent;background:transparent;padding:4px 2px}
+.gcrow input:hover{border-bottom-color:#C9CFC8}.gcrow input:focus{outline:0;border-bottom:1px solid var(--ink)}
+.gcrow select{font:inherit;font-size:12.5px;border:1px solid #DDE1DA;border-radius:8px;padding:4px 6px;background:#fff;color:#3D4741}
+.gcdel{border:0;background:none;color:#B3412F;cursor:pointer;font-size:12px;padding:4px}.gcdel:disabled{color:#D2D7CF;cursor:default}.gcdel.sure{font-weight:700;font-size:11px}
+.gcnew{border:0;max-width:520px;margin-top:4px}.gcnew input{border-bottom:1px solid #D2D7CF}
+.ggrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.gcard{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:16px 20px 12px}
+.gh{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid var(--ink)}
+.gh span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.gh b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.gs .gh{border-bottom-color:#2F6DB5}.gs .gh span{color:#2F6DB5}
+.go .gh{border-bottom-color:#E0761C}.go .gh span{color:#E0761C}
+.gi{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #F0F2EE;font-size:14px}
+.gi:last-child{border-bottom:0}
+.gi span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gin{width:140px;flex:none;text-align:right;font:inherit;font-size:14px;font-weight:600;border:0;border-bottom:1px solid #DDE1DA;background:transparent;padding:5px 2px;font-variant-numeric:tabular-nums;color:var(--ink);border-radius:0}
+.gin:focus{outline:0;border-bottom-color:var(--ink)}
+.gvac{margin:8px 0;font-size:12.5px;color:#9AA29C}
+.gtot{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px}
+.gtl{font-weight:800;font-size:15px}.gtc{flex:1;text-align:center;font-size:13px;color:#6B746E}.gtc em{font-style:normal;font-weight:600}.gtc .up{color:#C0532F}.gtc .dn{color:#3E7A1E}
+.gtot b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+@media(max-width:760px){
+  .ggrid{grid-template-columns:1fr}.gclist{grid-template-columns:1fr}
+  .gmeses{flex-wrap:nowrap;overflow-x:auto;flex-basis:100%;order:3;padding-bottom:2px}
+  .gtot{flex-wrap:wrap;gap:4px 12px}.gtc{order:3;flex-basis:100%;text-align:left}.gtot b{margin-left:auto;font-size:22px}
+  .gin{width:120px}
+}
 .yrs{display:inline-flex;background:#E9EBE5;border-radius:10px;padding:3px;gap:2px}
 .yrs button{border:0;background:transparent;font-size:13.5px;font-weight:700;height:34px;padding:0 16px;border-radius:8px;cursor:pointer;color:#3D4741}
 .yrs button.on{background:var(--ink);color:#fff}
@@ -681,6 +720,7 @@ details.edit[open] summary{margin-bottom:12px}
       <button type="button" data-act="view" data-view="agenda">Agenda</button>
       <button type="button" data-act="view" data-view="pagos">Pagos</button>
       <button type="button" data-act="view" data-view="pacientes">Pacientes</button>
+      <button type="button" data-act="view" data-view="gastos">Gastos</button>
       <button type="button" data-act="view" data-view="stats" id="navStats">Estadísticas</button>
     </nav>
     <div class="logo"><img src="logo.png" alt="Lado B Nutrición" width="295" height="137"></div>
@@ -714,6 +754,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
   alert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>',
   up:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -881,7 +922,7 @@ auth.onAuthStateChanged(function(u){
 /* ---------- estado de pantalla ---------- */
 var ui=(function(){
   var u=read(UIKEY)||{};
-  return {view:(u.view==='pagos'||u.view==='pacientes'||u.view==='stats')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1),sec:{}};
+  return {view:(u.view==='pagos'||u.view==='pacientes'||u.view==='stats'||u.view==='gastos')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1),sec:{}};
 })();
 function saveUi(){store(UIKEY,{view:ui.view,nutri:ui.nutri})}
 
@@ -1495,11 +1536,66 @@ function renderPacList(){
 var stats=null, statsLoading=false;
 function loadStats(){
   if(statsLoading)return; statsLoading=true;
-  db.collection('stats').get().then(function(sn){stats={};sn.docs.forEach(function(d){stats[d.id]=d.data()});statsLoading=false;if(ui.view==='stats')renderStats()})
+  db.collection('stats').get().then(function(sn){stats={};sn.docs.forEach(function(d){stats[d.id]=d.data()});statsLoading=false;if(ui.view==='stats')renderStats();if(ui.view==='gastos')renderGastos()})
   .catch(function(e){statsLoading=false;console.error(e);$('#main').innerHTML='<div class="empty">No se pudieron leer las estadísticas.</div>'});
 }
 function fm(n){return n==null||n===''?'':'$ '+Math.round(n).toLocaleString('es-AR')}
 function fn(n){return n==null||n===''?'':Number(n).toLocaleString('es-AR')}
+/* ---------- Gastos: conceptos en stats/gastos_conf; montos en stats/{año}.g[mes][concepto] ---------- */
+var GGR=[['f','Fijos'],['s','Servicios'],['o','Otros']];
+function gConf(){return (stats&&stats.gastos_conf&&stats.gastos_conf.c)||[]}
+function gMes(y,m){var d=stats&&stats[String(y)];return d&&d.g&&d.g[m]||null}
+function gTotal(y,m){var g=gMes(y,m);if(!g)return null;var t=0,any=false;gConf().forEach(function(c){if(typeof g[c.id]==='number'){t+=g[c.id];any=true}});return any?Math.round(t*100)/100:null}
+function gSub(y,m,gr){var g=gMes(y,m)||{},t=0;gConf().forEach(function(c){if(c.g===gr&&typeof g[c.id]==='number')t+=g[c.id]});return t}
+function gNum(t){t=String(t||'').replace(/[$\s]/g,'');if(t==='')return null;if(/,/.test(t))t=t.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');return isNaN(+t)?NaN:+t}
+function gFmt(v){return v==null?'':v.toLocaleString('es-AR',{maximumFractionDigits:2})}
+function gUsado(id){return Object.keys(stats||{}).some(function(y){var g=stats[y].g||{};return Object.keys(g).some(function(m){return typeof g[m][id]==='number'})})}
+function renderGastos(){
+  var ty=today().getFullYear(),years=[];for(var y=2026;y<=ty;y++)years.push(y);
+  ui.gy=ui.gy||ty;if(!ui.gm)ui.gm=ui.gy===ty?today().getMonth()+1:12;
+  $('#row2').innerHTML=years.length>1?'<div class="yrs" role="group" aria-label="Año">'+years.map(function(y){return '<button type="button" data-act="gyear" data-y="'+y+'" class="'+(y===ui.gy?'on':'')+'" aria-pressed="'+(y===ui.gy)+'">'+y+'</button>'}).join('')+'</div>':'';
+  if(!stats){$('#main').innerHTML='<div class="empty"><div class="spin" style="margin:0 auto 10px"></div>Cargando gastos…</div>';loadStats();return}
+  var y=ui.gy,m=ui.gm,g=gMes(y,m)||{},C=gConf(),admin=staff&&staff.rol==='admin';
+  var h='<div class="gwrap"><div class="gbar"><h2>Gastos <span>'+y+'</span></h2><div class="gmeses">'+MESES.map(function(n,i){var t=gTotal(y,i+1);return '<button type="button" data-act="gmes" data-m="'+(i+1)+'" class="'+(i+1===m?'on':'')+(t==null?' vac':'')+'">'+cap(n.slice(0,3))+'</button>'}).join('')+'</div>'+
+    (admin?'<button type="button" class="btn gcbtn'+(ui.gConf?' on':'')+'" data-act="gconf">'+ICON.edit+'Conceptos</button>':'')+'</div>';
+  if(admin&&ui.gConf){
+    h+='<div class="gconf"><p class="gch">Conceptos de gastos <small>El nombre y el grupo se cambian en todos los meses.</small></p><div class="gclist">'+C.map(function(c){var u=gUsado(c.id);
+      return '<div class="gcrow"><input class="gcname" data-cid="'+c.id+'" value="'+esc(c.n)+'" aria-label="Nombre"><select class="gcgr" data-cid="'+c.id+'" aria-label="Grupo">'+GGR.map(function(x){return '<option value="'+x[0]+'"'+(c.g===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select>'+
+        '<button type="button" class="gcdel" data-act="gcDel" data-id="'+c.id+'"'+(u?' disabled title="Tiene montos cargados"':'')+' aria-label="Quitar">✕</button></div>'}).join('')+'</div>'+
+      '<div class="gcrow gcnew"><input id="gcNewN" placeholder="Nuevo concepto (ej.: Seguro)"><select id="gcNewG">'+GGR.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'</select><button type="button" class="btn primary" data-act="gcAdd">Agregar</button></div></div>';
+  }
+  h+='<div class="ggrid">'+GGR.map(function(gr){var it=C.filter(function(c){return c.g===gr[0]});
+    return '<section class="gcard g'+gr[0]+'"><div class="gh"><span>'+gr[1]+'</span><b class="gsub" data-g="'+gr[0]+'">'+fm(gSub(y,m,gr[0]))+'</b></div>'+
+      (it.length?it.map(function(c){return '<label class="gi"><span>'+esc(c.n)+'</span><input class="gin" inputmode="decimal" data-id="'+c.id+'" value="'+gFmt(g[c.id])+'" placeholder="—" autocomplete="off"></label>'}).join(''):'<p class="gvac">Sin conceptos</p>')+'</section>'}).join('')+'</div>';
+  h+='<div class="gtot" id="gTot"></div></div>';
+  $('#main').innerHTML=h;gTotUpd();
+  var mb=$('.gmeses button.on');if(mb&&mb.parentNode.scrollWidth>mb.parentNode.clientWidth)mb.parentNode.scrollLeft=mb.offsetLeft-mb.parentNode.offsetLeft-40;
+}
+function gTotUpd(){
+  var y=ui.gy,m=ui.gm,t=gTotal(y,m),py=m===1?y-1:y,pm=m===1?12:m-1,pt=gTotal(py,pm),el=$('#gTot');if(!el)return;
+  $$('.gsub').forEach(function(b){b.textContent=fm(gSub(y,m,b.dataset.g))});
+  var d=t!=null&&pt!=null?t-pt:null;
+  el.innerHTML='<span class="gtl">Total '+MESES[m-1].toLowerCase()+' '+y+'</span><span class="gtc">'+(pt!=null?cap(MESES[pm-1])+': '+fm(pt)+(d?' · <em class="'+(d>0?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+fm(Math.abs(d))+'</em>':''):'')+'</span><b>'+(t!=null?fm(t):'—')+'</b>';
+  $$('.gmeses button').forEach(function(b){b.classList.toggle('vac',gTotal(y,+b.dataset.m)==null)});
+}
+function gSave(el){
+  var y=String(ui.gy),m=ui.gm,id=el.dataset.id,v=gNum(el.value);
+  if(v!=null&&(isNaN(v)||v<0)){toast('Revisá el monto');el.value=gFmt((gMes(y,m)||{})[id]);return}
+  if(v!=null)v=Math.round(v*100)/100;
+  stats[y]=stats[y]||{m:{},tot:{}};var d=stats[y];d.g=d.g||{};d.g[m]=d.g[m]||{};d.m=d.m||{};var r=d.m[m]=d.m[m]||{};
+  if(v==null)delete d.g[m][id];else d.g[m][id]=v;
+  el.value=gFmt(v);
+  var t=gTotal(y,m),gg={},mm={},upd={};gg[m]={};gg[m][id]=v==null?firebase.firestore.FieldValue.delete():v;
+  /* el costo fijo de Estadísticas es el total del mes */
+  if(t!=null){r.cos=t;upd.cos=t;if(typeof r.ing==='number'){r.ren=r.ing-t;upd.ren=r.ren}}mm[m]=upd;
+  db.collection('stats').doc(y).set({g:gg,m:mm,updatedAt:SVTS()},{merge:true}).catch(function(e){console.error(e);toast('No se pudo guardar')});
+  gTotUpd();
+}
+function gConfSave(C,msg){
+  stats.gastos_conf=Object.assign({},stats.gastos_conf||{},{c:C});
+  db.collection('stats').doc('gastos_conf').set({c:C,updatedAt:SVTS()},{merge:true}).then(function(){if(msg)toast(msg)}).catch(function(e){console.error(e);toast('No se pudo guardar')});
+  renderGastos();
+}
 function renderStats(){
   var ty=today().getFullYear(), years=[];for(var y=2023;y<=ty;y++)years.push(y);
   ui.sy=ui.sy||ty;
@@ -1542,7 +1638,10 @@ function renderStats(){
   html+=table('Pacientes totales atendidos','con pago en el mes',['Fran','Car','Total'],function(m,r){return cell(r.tf)+cell(r.tc)+cell(r.tt)},cell(tv('a','tf'))+cell(tv('a','tc'))+cell(tv('a','tt')),'tt');
   html+=table('Facturación total','ingresos totales',['Fran','Car','Total'],function(m,r){return cell(r.ff,1)+cell(r.fc,1)+cell(r.ft,1)},cell(tv('a','ff'),1)+cell(tv('a','fc'),1)+cell(tv('a','ft'),1),'ft');
   html+=table('Promedio por paciente','ingresos ÷ pacientes atendidos',['Fran','Car','Total'],function(m,r){return cell(r.pf,1)+cell(r.pc,1)+cell(r.pt,1)},null,'pt');
-  html+=table('Rendimiento mensual','ingreso − costo fijo',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+inp(m,'cos',r.cos)+cell(r.ren,1)},cell(sum('ing'),1)+cell(sum('cos'),1)+cell(sum('ren'),1),'ren');
+    /* costo fijo = total de la pestaña Gastos (si el mes tiene gastos cargados); si no, el de la planilla */
+  var cosM=function(m){var g=gTotal(ui.sy,m);return g!=null?g:row(m).cos}, renM=function(m){var g=gTotal(ui.sy,m),r=row(m);return g!=null&&typeof r.ing==='number'?r.ing-g:r.ren};
+  var sumF=function(f){var t=0,any=false;for(var m=1;m<=12;m++){var v=f(m);if(typeof v==='number'){t+=v;any=true}}return any?t:null};
+  html+=table('Rendimiento mensual','ingreso − costo fijo (de Gastos)',['Ingreso','Costo fijo','Rend.'],function(m,r){return cell(r.ing,1)+cell(cosM(m),1)+cell(renM(m),1)},cell(sum('ing'),1)+cell(sumF(cosM),1)+cell(sumF(renM),1),'ren');
   /* cancelaciones: turnos cancelados por nutri, calculados de la agenda (solo meses ya cerrados) */
   var canc={}, hoyK=iso(today()).slice(0,7);
   data.turnos.forEach(function(t){if(t.estado!=='x'||!t.date||t.date.slice(0,4)!==String(ui.sy)||t.date.slice(0,7)>=hoyK)return;var m=+t.date.slice(5,7);var c=canc[m]=canc[m]||{f:0,c:0};c[t.nutri==='car'?'c':'f']++});
@@ -1553,7 +1652,7 @@ function renderStats(){
   html+=table('Rendimiento redes','pacientes nuevos por canal',['Conv. Inst.','Ing. Inst.','Conv. Google','Ing. Google','Gasto Google','Rend. Google'],
     function(m,r){return cell(r.ci)+cell(r.ii,1)+cell(r.cg)+cell(r.ig,1)+inp(m,'gg',r.gg)+cell(r.rg,1)},
     cell(sum('ci'))+cell(sum('ii'),1)+cell(sum('cg'))+cell(sum('ig'),1)+cell(sum('gg'),1)+cell(sum('rg'),1),'rg');
-  html+='</div><p class="stnote">Hasta octubre 2026 los datos son los de la planilla. La fila resaltada con ★ es el mejor mes de todo el historial (desde 2023). Los casilleros punteados (costo fijo, gasto Google y valor consulta) los podés completar o corregir acá.</p>';
+  html+='</div><p class="stnote">Hasta octubre 2026 los datos son los de la planilla. La fila resaltada con ★ es el mejor mes de todo el historial (desde 2023). El costo fijo sale del total de la pestaña Gastos. Los casilleros punteados (gasto Google y valor consulta) los podés completar o corregir acá.</p>';
   $('#main').innerHTML=html;
 }
 function saveStat(el){
@@ -1604,8 +1703,8 @@ function render(){
   var nv=ui.view==='ficha'?'pacientes':ui.view;
   $$('.nav button').forEach(function(b){b.classList.toggle('on',b.dataset.view===nv);b.setAttribute('aria-current',b.dataset.view===nv?'page':'false')});
   var N=NUTRIS[ui.nutri], O=NUTRIS[OTHER[ui.nutri]];
-  var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes'],ficha:['Pacientes','pacientes'],stats:['Estadísticas','estadísticas']}[ui.view];
-  var pac=ui.view==='ficha'||ui.view==='stats';
+  var V={agenda:['Agenda','agenda'],pagos:['Pagos','pagos'],pacientes:['Pacientes','pacientes'],ficha:['Pacientes','pacientes'],stats:['Estadísticas','estadísticas'],gastos:['Gastos','gastos']}[ui.view];
+  var pac=ui.view==='ficha'||ui.view==='stats'||ui.view==='gastos';
   $('#title').textContent=pac?V[0]:N;
   $('#title').className=pac?'plain':'';
   $('#switchBtn').hidden=pac;
@@ -1613,6 +1712,7 @@ function render(){
   $('#switchBtn').setAttribute('aria-label','Ver '+V[1]+' de '+O);
   document.title=(pac?V[0]:V[0]+' de '+N)+' · Lado B';
   if(ui.view==='stats'){renderStats();saveUi();return}
+  if(ui.view==='gastos'){renderGastos();saveUi();return}
   if(ui.view==='agenda')renderAgenda();else if(ui.view==='pagos')renderPagos();else if(ui.view==='ficha'&&findPac(ui.fichaId))renderFicha();else{ui.view='pacientes';renderPacientes()}
   saveUi();
 }
@@ -2025,6 +2125,13 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
+    case 'gmes': ui.gm=+a.dataset.m; renderGastos(); break;
+    case 'gyear': ui.gy=+a.dataset.y; ui.gm=null; renderGastos(); break;
+    case 'gconf': ui.gConf=!ui.gConf; renderGastos(); break;
+    case 'gcDel': if(!sure(a))break; gConfSave(gConf().filter(function(c){return c.id!==id}),'Concepto quitado'); break;
+    case 'gcAdd': var gn=$('#gcNewN').value.trim(); if(!gn){$('#gcNewN').focus();break}
+      if(gConf().some(function(c){return norm(c.n)===norm(gn)})){toast('Ya existe ese concepto');break}
+      gConfSave(gConf().concat([{id:'c'+uid().slice(0,8),n:gn,g:$('#gcNewG').value}]),'Concepto agregado'); break;
     case 'rDel': var rk=a.dataset.k; restrSet(function(r){if(rk.charAt(0)==='o')r.otros.splice(+rk.slice(1),1);else delete r[rk]}); break;
     case 'rOk': restrOk(); break;
     case 'rCancel': ui.rOtra=false; restrSet(function(){}); break;
@@ -2172,6 +2279,12 @@ document.addEventListener('change',function(ev){
 document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
 document.addEventListener('toggle',function(ev){var t=ev.target;if(!t.dataset)return;if(t.dataset.sec)ui.sec[t.dataset.sec]=t.open;
   if(t.classList.contains('medlist')){if(t.closest('[data-sec="med"]'))ui.medList=t.open;else ui.labList=t.open}},true);
+document.addEventListener('change',function(ev){var t=ev.target;if(!t.classList)return;
+  if(t.classList.contains('gin'))gSave(t);
+  else if(t.classList.contains('gcname')||t.classList.contains('gcgr')){var C=gConf().map(function(c){return Object.assign({},c)}),c=C.filter(function(x){return x.id===t.dataset.cid})[0];if(!c)return;
+    if(t.classList.contains('gcname')){var nv=t.value.trim();if(!nv){t.value=c.n;return}c.n=nv}else c.g=t.value;gConfSave(C,'Guardado en todos los meses')}});
+document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target.classList&&ev.target.classList.contains('gin')){ev.preventDefault();var all=$$('.gin'),i=all.indexOf(ev.target);ev.target.blur();if(all[i+1])all[i+1].focus()}
+  if(ev.key==='Enter'&&ev.target.id==='gcNewN'){ev.preventDefault();var b=$('[data-act="gcAdd"]');if(b)b.click()}});
 document.addEventListener('change',function(ev){var t=ev.target;if(t.id!=='fr_add')return;var k=t.value;if(!k)return;
   if(k==='__otra'){ui.rOtra=true;restrSet(function(){});return}
   restrSet(function(r){r[k]=true});});
