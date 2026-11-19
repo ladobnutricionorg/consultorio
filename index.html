@@ -1823,7 +1823,10 @@ function pdfjsLoad(){return new Promise(function(res,rej){if(window.pdfjsLib)ret
   sc.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res()};sc.onerror=function(){rej(new Error('No se pudo cargar el lector de PDF'))};document.head.appendChild(sc)})}
 function imgLoad(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=rej;i.src=src})}
 async function firmarUno(file,f){
-  var pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pg=await pdf.getPage(1);
+  /* tipografía: las facturas de ARCA usan Arial/Helvetica sin incrustar; se dibujan con la Arial del equipo (como el visor de PDF)
+     y, si el equipo no la tiene (Android), con Liberation Sans, que tiene exactamente las mismas medidas */
+  var pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer(),standardFontDataUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+    cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',cMapPacked:true,fontExtraProperties:true}).promise,pg=await pdf.getPage(1);
   /* el texto del PDF viene desordenado: se ordena por renglón (y) y dentro del renglón por x */
   var its=(await pg.getTextContent()).items.filter(function(i){return i.str&&i.str.trim()}).map(function(i){return {s:i.str,x:i.transform[4],y:Math.round(i.transform[5]/2)}});
   its.sort(function(a,b){return b.y-a.y||a.x-b.x});
@@ -1833,7 +1836,7 @@ async function firmarUno(file,f){
   /* control: la factura tiene que ser del CUIT de quien firma */
   if(f.cuit&&cuit&&cuit[1]!==f.cuit)throw new Error('es del CUIT '+cuit[1]+' y la firma de '+NUTRIS[f.nutri]+' corresponde al '+f.cuit+'. No se firmó.');
   var cli=txt.match(/Raz[oó]n Social:\s*(.+?)\s+(?:Condici[oó]n|Domicilio)/gi),cliente=cli&&cli.length>1?cli[1].replace(/^.*Social:\s*/i,'').replace(/\s+(Condici[oó]n|Domicilio).*$/i,'').trim():'';
-  var vp=pg.getViewport({scale:2.5}),c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+  var vp=pg.getViewport({scale:4}),c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
   var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
   await pg.render({canvasContext:g,viewport:vp}).promise;
   /* cada firma tiene su lugar (f.box, en proporción de la hoja); si no, el de la firma de Car */
