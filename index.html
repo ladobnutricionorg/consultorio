@@ -819,6 +819,8 @@ function pacField(id,pid){
 }
 function pacOptions(input){
   var q=norm(input.value), list=$('#'+input.id+'L');
+  /* la lista aparece recién cuando se empieza a escribir */
+  if(!q){if(list)list.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');return}
   var all=data.pacientes.filter(function(p){return !q||norm(p.name).indexOf(q)>-1});
   all.sort(function(a,b){var x=(a.nutri===ui.nutri?0:1)-(b.nutri===ui.nutri?0:1);return x||a.name.localeCompare(b.name)});
   all=all.slice(0,8);
