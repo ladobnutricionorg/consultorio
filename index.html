@@ -725,9 +725,28 @@ function scheduleRender(){if(!staff||!['pacientes','turnos','bloqueos'].every(fu
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function docObj(d){var o=d.data({serverTimestamps:'estimate'})||{},ts=o.updatedAt;delete o.updatedAt;o.id=d.id;return {o:o,ts:ts&&ts.toMillis?ts.toMillis():0,del:!!o.deleted,pend:d.metadata&&d.metadata.hasPendingWrites}}
+/* Agendas 2023-2025 importadas (importado:'agenda2325'): al cargarlas se duplicaron una vez y las copias
+   se borraron del servidor. Si un dispositivo llegó a bajar copias, acá se detectan y se descartan. */
+var GHOST=null;
+function ghostIds(){if(!GHOST)GHOST=lsGet('ladob_ghost2325')||{};return GHOST}
+function fixAgenda2325(c){
+  if(c!=='turnos'&&c!=='bloqueos')return;
+  var flag='ladob_fix2325_'+c;if(lsGet(flag))return;
+  var seen={},dup=false;data[c].forEach(function(o){if(o.importado!=='agenda2325')return;
+    var k=[o.nutri,o.date,o.time||o.from,o.name||o.nota,o.to||''].join('|');if(seen[k])dup=true;seen[k]=1});
+  if(!dup){lsSet(flag,1);return}
+  db.collection(c).where('importado','==','agenda2325').get({source:'server'}).then(function(sn){
+    var ok={};sn.docs.forEach(function(d){ok[d.id]=1});var g=ghostIds();
+    data[c].forEach(function(o){if(o.importado==='agenda2325'&&!ok[o.id])g[o.id]=1});
+    lsSet('ladob_ghost2325',g);lsSet(flag,1);
+    data[c]=data[c].filter(function(o){return !g[o.id]});delete synced[c];synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
+    scheduleRender();
+  }).catch(function(e){console.error(e)});
+}
 function applyDocs(c,list,replace){
   var map={};if(!replace)data[c].forEach(function(o){map[o.id]=o});
-  list.forEach(function(x){if(x.del)delete map[x.o.id];else map[x.o.id]=x.o});
+  var g=ghostIds();
+  list.forEach(function(x){if(x.del||g[x.o.id])delete map[x.o.id];else map[x.o.id]=x.o});
   data[c]=Object.keys(map).map(function(k){return map[k]});
   synced[c]={};data[c].forEach(function(o){synced[c][o.id]=JSON.stringify(o)});
 }
@@ -755,12 +774,12 @@ function startCol(c){
   .then(function(sn){
     var mx=last, list=sn.docs.map(docObj);
     list.forEach(function(x){if(!x.pend&&x.ts>mx)mx=x.ts});
-    applyDocs(c,list,true);
+    applyDocs(c,list,true);fixAgenda2325(c);
     if(!mx)mx=1; lsSet(key,mx);
     loaded[c]=true; splashProg(); scheduleRender();
     var q=db.collection(c).where('updatedAt','>',firebase.firestore.Timestamp.fromMillis(mx));
     unsubs.push(q.onSnapshot({includeMetadataChanges:false},function(s2){
-      var ch=s2.docChanges().filter(function(x){return x.type!=='removed'}).map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
+      var ch=s2.docChanges().map(function(x){var r=docObj(x.doc);if(x.type==='removed'&&!(x.doc.metadata&&x.doc.metadata.fromCache))r.del=true;return r}), m2=lsGet(key)||mx;
       ch.forEach(function(x){if(!x.pend&&x.ts>m2)m2=x.ts});
       lsSet(key,m2);
       if(ch.length){applyDocs(c,ch,false);scheduleRender()}
