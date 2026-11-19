@@ -1836,8 +1836,9 @@ async function firmarUno(file,f){
   var vp=pg.getViewport({scale:2.5}),c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
   var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
   await pg.render({canvasContext:g,viewport:vp}).promise;
-  var im=await imgLoad(f.png),bw=FIRMA_BOX.w*c.width,bh=FIRMA_BOX.h*c.height,k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k;
-  g.drawImage(im,FIRMA_BOX.x*c.width+(bw-w)/2,FIRMA_BOX.y*c.height+(bh-h)/2,w,h);
+  /* cada firma tiene su lugar (f.box, en proporción de la hoja); si no, el de la firma de Car */
+  var B=f.box||FIRMA_BOX,im=await imgLoad(f.png),bw=B.w*c.width,bh=B.h*c.height,k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k;
+  g.drawImage(im,B.x*c.width+(bw-w)/2,B.y*c.height+(bh-h)/2,w,h);
   var blob=await new Promise(function(r){c.toBlob(r,'image/png')});
   return {name:'FC '+(+pv[1])+'-'+(+nro[1])+'.png',blob:blob,url:URL.createObjectURL(blob),cliente:cliente,tel:fcTel(cliente)};
 }
