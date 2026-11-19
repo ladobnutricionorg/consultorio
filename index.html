@@ -443,11 +443,19 @@ body{overflow-x:hidden}
 .labgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 18px}
 .labgrid em{font-style:normal;color:#A3AAA5}
 .labprog{display:flex;flex-direction:column}
-.labrow{display:grid;grid-template-columns:190px minmax(0,1fr) 110px;align-items:center;gap:14px;padding:8px 0;border-top:1px solid #F0F2EE}
-.labrow:first-child{border-top:0}
-.labn{font-size:13px;font-weight:600;display:flex;flex-direction:column}.labn small{font-size:11px;font-weight:500;color:#8A938D}
-.lsp{width:100%;max-width:320px;height:34px;display:block}
-.labv{text-align:right;display:flex;flex-direction:column}.labv b{font-size:16px;font-weight:800}.labv small{font-size:11px;color:#8A938D;white-space:nowrap}
+.labrow{display:grid;grid-template-columns:190px minmax(0,1fr);align-items:stretch;gap:14px;padding:10px 0 8px;border-top:1px solid #F0F2EE}
+.labhd+.labrow{border-top:0}
+.labn{font-size:13px;font-weight:600;display:flex;flex-direction:column;justify-content:flex-end;line-height:1.3}.labn small{font-size:11px;font-weight:500;color:#8A938D}
+.lcol{position:relative;display:flex;flex-direction:column;min-height:44px}
+.lplot{position:relative;flex:1;min-height:22px}
+.lsp{position:absolute;inset:0;width:100%;height:100%}
+.lplot i{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#fff;border:1.6px solid #2F6DB5;box-sizing:border-box}
+.lplot i.on{background:#2F6DB5}
+.lvals{position:relative;height:14.3px;line-height:1.3}
+.lvals span,.labhd .lcol span{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:500;color:#8A938D;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lcol em{font-style:normal}.lshort{display:none}
+.labhd{padding:0 0 4px;border-top:0}.labhd .lcol{min-height:14px}.labhd .lcol span{font-weight:700;color:#56605A}
+.labv{text-align:right;display:flex;flex-direction:column;justify-content:flex-end;line-height:1.3}.labv b{font-size:16px;font-weight:800}.labv small{font-size:11px;color:#8A938D;white-space:nowrap}
 .labhist{display:flex;flex-direction:column;margin-top:6px}
 .labh{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid #F0F2EE;font-size:12.5px}
 .labh b{flex:none}.labh span{flex:1;color:#56605A}
@@ -477,7 +485,8 @@ body{overflow-x:hidden}
   .mdl{display:none}.mds{display:inline}
   .medrow label:not(.mdd){order:2;flex:1 1 calc(25% - 6px)}
   .labgrid{grid-template-columns:1fr 1fr}
-  .labrow{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 78px;gap:8px}
+  .labrow{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+  .lfull{display:none}.lshort{display:inline}
   .medt th:nth-child(6),.medt td:nth-child(6){display:none}
   .labh{flex-wrap:wrap}.labh span{flex-basis:100%;order:3}
 }
@@ -1310,11 +1319,17 @@ function labCard(p){
       '</div><p class="err" id="lbErr" hidden></p><div class="hcbtns"><button type="button" class="btn" data-act="labCancel">Cancelar</button><button type="button" class="btn primary" data-act="labSave">Guardar</button></div></div>';
   }else h+='<div class="medbar"><button type="button" class="btn" data-act="labNew">'+ICON.plus+'Nuevo laboratorio</button></div>';
   if(!labs.length)return h+(ui.labEdit?'':'<p class="ibempty">Todavía no hay laboratorios. Tocá <b>Nuevo laboratorio</b> y completá los valores que tenga el análisis.</p>')+'</details>';
-  h+='<div class="labprog">'+LABS.map(function(l){
-    var vs=labs.filter(function(x){return x.v[l[0]]!=null}).map(function(x){return {d:x.d,v:x.v[l[0]]}});if(!vs.length)return '';
-    var last=vs[vs.length-1],prev=vs[vs.length-2],dif=prev?Math.round((last.v-prev.v)*100)/100:null;
-    return '<div class="labrow"><div class="labn">'+l[1]+'<small>'+l[2]+'</small></div>'+spark(vs,'#2F6DB5')+
-      '<div class="labv"><b>'+fx1(last.v)+'</b><small>'+dcorta(last.d)+(dif?' · '+(dif>0?'▲ ':'▼ ')+fx1(Math.abs(dif)):'')+'</small></div></div>'}).join('')+'</div>';
+  /* una columna por fecha de laboratorio (las últimas 8): fecha arriba, punto y valor de cada ítem en su columna */
+  var cols=labs.slice(-8),nC=cols.length,PX=function(i){return nC===1?50:8+82*i/(nC-1)};
+  h+='<div class="labprog"><div class="labrow labhd"><div></div><div class="lcol">'+cols.map(function(x,i){return '<span style="left:'+PX(i)+'%"><em class="lfull">'+dcorta(x.d)+'</em><em class="lshort">'+ddmm(x.d)+'</em></span>'}).join('')+'</div></div>'+LABS.map(function(l){
+    var pts=[];cols.forEach(function(x,i){if(x.v[l[0]]!=null)pts.push({i:i,v:x.v[l[0]],d:x.d})});
+    var all=labs.filter(function(x){return x.v[l[0]]!=null});if(!all.length)return '';
+    var mn=Math.min.apply(0,pts.map(function(p){return p.v})),mx=Math.max.apply(0,pts.map(function(p){return p.v}));if(mx===mn){mx+=1;mn-=1}
+    var Y=function(v){return 15+70*(1-(v-mn)/(mx-mn))};
+    var line=pts.length>1?'<svg class="lsp" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+pts.map(function(p){return PX(p.i)+','+Y(p.v)}).join(' ')+'" fill="none" stroke="#2F6DB5" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>':'';
+    return '<div class="labrow"><div class="labn">'+l[1]+'<small>'+l[2]+'</small></div><div class="lcol"><div class="lplot">'+line+
+      pts.map(function(p,k){return '<i class="'+(k===pts.length-1?'on':'')+'" style="left:'+PX(p.i)+'%;top:'+Y(p.v)+'%" title="'+dcorta(p.d)+': '+fx1(p.v)+'"></i>'}).join('')+'</div>'+
+      '<div class="lvals">'+pts.map(function(p){return '<span style="left:'+PX(p.i)+'%">'+fx1(p.v)+'</span>'}).join('')+'</div></div></div>'}).join('')+'</div>';
   h+='<details class="medlist"'+(ui.labList?' open':'')+'><summary>Ver laboratorios cargados ('+labs.length+')</summary><div class="labhist">'+labs.slice().reverse().map(function(x){
     var ks=LABS.filter(function(l){return x.v[l[0]]!=null});
     return '<div class="labh"><b>'+dcorta(x.d)+'</b><span>'+ks.map(function(l){return l[1]+' '+fx1(x.v[l[0]])}).join(' · ')+'</span>'+
