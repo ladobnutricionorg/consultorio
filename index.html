@@ -840,7 +840,7 @@ function startCol(c){
     loaded[c]=true; splashProg(); scheduleRender();
     var q=db.collection(c).where('updatedAt','>',firebase.firestore.Timestamp.fromMillis(mx));
     unsubs.push(q.onSnapshot({includeMetadataChanges:false},function(s2){
-      var ch=s2.docChanges().map(function(x){var r=docObj(x.doc);if(x.type==='removed'&&!(x.doc.metadata&&x.doc.metadata.fromCache))r.del=true;return r}), m2=lsGet(key)||mx;
+      var ch=s2.docChanges().filter(function(x){return x.type!=='removed'}).map(function(x){return docObj(x.doc)}), m2=lsGet(key)||mx;
       ch.forEach(function(x){if(!x.pend&&x.ts>m2)m2=x.ts});
       lsSet(key,m2);
       if(ch.length){applyDocs(c,ch,false);scheduleRender()}
