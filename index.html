@@ -1850,7 +1850,7 @@ async function firmarUno(file,f){
   var B=f.box||FIRMA_BOX,im=await imgLoad(f.png),bw=B.w*c.width,bh=B.h*c.height,k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k;
   g.drawImage(im,B.x*c.width+(bw-w)/2,B.y*c.height+(bh-h)/2,w,h);
   var blob=await new Promise(function(r){c.toBlob(r,'image/png')});
-  return {name:'FC '+(+pv[1])+'-'+(+nro[1])+'.png',blob:blob,url:URL.createObjectURL(blob),cliente:cliente,tel:fcTel(cliente)};
+  return {name:'FC '+pv[1]+'-'+nro[1]+'.png',blob:blob,url:URL.createObjectURL(blob),cliente:cliente,tel:fcTel(cliente)};
 }
 /* teléfono del paciente de la factura (se busca por nombre y apellido) */
 function fcTel(cli){
