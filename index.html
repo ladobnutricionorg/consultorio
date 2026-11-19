@@ -42,6 +42,23 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .btn{font-size:13px;font-weight:600;height:36px;padding:0 14px;border-radius:8px;border:1px solid #C9CFC8;background:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:#9AA39C}
 .btn.icon{width:36px;padding:0}
+.hoysplit{display:inline-flex}.hoysplit .btn:first-child{border-top-right-radius:0;border-bottom-right-radius:0;border-right-width:0;padding-right:12px}
+.hoysplit .btn.icon{border-top-left-radius:0;border-bottom-left-radius:0;position:relative}
+.hoysplit .btn.icon::before{content:"";position:absolute;left:0;top:7px;bottom:7px;border-left:1px solid #E3E6E0}
+.hoysplit .btn.icon.on{background:var(--ink);color:#fff;border-color:var(--ink)}.hoysplit .btn.icon.on::before{display:none}
+.calpop{position:fixed;z-index:70;background:#fff;border:1px solid #E3E6E0;border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.16);padding:12px 12px 8px;width:272px;max-width:calc(100vw - 16px);box-sizing:border-box}
+.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.calh b{font-size:14px;font-weight:800}
+.calh button{border:0;background:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#3D4741}.calh button:hover{background:#F2F4EF}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);row-gap:3px;text-align:center}
+.calg i{font-style:normal;font-size:10.5px;font-weight:700;color:#8A938D;padding:2px 0 4px}
+.calg span,.calg button{height:32px;display:flex;align-items:center;justify-content:center;font:inherit;font-size:13px;font-variant-numeric:tabular-nums;border:0;background:none;color:var(--ink);position:relative;padding:0}
+.calg button{cursor:pointer;border-radius:999px}.calg button:hover{background:#F2F4EF}
+.calg .cfin{color:#C4C9C3}
+.calg button.cwk{background:#EEF8C9;font-weight:700;border-radius:0}.calg button.cws{border-radius:999px 0 0 999px}.calg button.cwe{border-radius:0 999px 999px 0}.calg button.cws.cwe{border-radius:999px}
+.calg button.csel::before{content:"";position:absolute;width:28px;height:28px;left:50%;top:50%;margin:-14px 0 0 -14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.calg button.ctd::after{content:"";position:absolute;bottom:3px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:#6E9F1E}
+.calf{display:flex;justify-content:center;border-top:1px solid #F0F2EE;margin-top:6px;padding-top:4px}
+.calf button{border:0;background:none;font:inherit;font-size:12.5px;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px 10px;color:var(--ink)}
 .btn.pill{border-radius:999px}
 .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 .btn.primary:hover{background:#2A352F}
@@ -791,6 +808,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  cal:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
   down:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
   edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
   alert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>',
@@ -1787,7 +1805,7 @@ document.addEventListener('input',function(ev){var d=ev.target.closest&&ev.targe
 function dlgCloseOk(id){if(!dlgDirty[id])return true;if(confirm('Tenés datos escritos sin guardar. ¿Cerrar igual y perderlos?')){dlgDirty[id]=false;return true}return false}
 window.addEventListener('beforeunload',function(ev){fFlush();if(fichaPendiente()||(!$('#overlay').hidden&&dlgDirty.dlg)||(!$('#overlay2').hidden&&dlgDirty.dlg2)){ev.preventDefault();ev.returnValue=''}});
 function render(){
-  fFlush();var __k=typedInMain();try{renderInner()}finally{restoreTyped(__k)}
+  fFlush();var __k=typedInMain();try{renderInner()}finally{restoreTyped(__k);try{calShow()}catch(e){}}
 }
 function renderInner(){
   ensureRanges();
@@ -1816,6 +1834,32 @@ function weekLabel(ws){
   return ws.getDate()+' '+MESES[ws.getMonth()].slice(0,3)+' – '+we.getDate()+' '+MESES[we.getMonth()].slice(0,3)+' '+we.getFullYear();
 }
 
+/* ---------- Calendario para ir a una fecha (botón partido "Hoy | 📅") ----------
+   Va en <body> (no se borra cuando la agenda se redibuja) y se ubica debajo del botón, sin salirse de la pantalla. */
+function calHtml(){
+  var m=ui.calMonth,y=m.getFullYear(),mo=m.getMonth(),off=(new Date(y,mo,1).getDay()+6)%7,n=new Date(y,mo+1,0).getDate();
+  var ws=iso(monday(ui.date)),we=iso(addDays(monday(ui.date),4)),td=iso(today()),sel=iso(ui.date),mob=isMobile(),h='';
+  for(var i=0;i<off;i++)h+='<span></span>';
+  for(var d=1;d<=n;d++){var dt=new Date(y,mo,d),di=iso(dt),wd=(off+d-1)%7,fin=wd>4,wk=!fin&&di>=ws&&di<=we;
+    h+=fin?'<span class="cfin">'+d+'</span>':'<button type="button" data-act="calDia" data-date="'+di+'" class="'+(wk?'cwk':'')+(wk&&di===ws?' cws':'')+(wk&&di===we?' cwe':'')+(di===td?' ctd':'')+(mob&&di===sel?' csel':'')+'">'+d+'</button>'}
+  return '<div class="calh"><button type="button" data-act="calMes" data-d="-1" aria-label="Mes anterior">'+ICON.prev+'</button><b>'+cap(MESES[mo])+' '+y+'</b><button type="button" data-act="calMes" data-d="1" aria-label="Mes siguiente">'+ICON.next+'</button></div>'+
+    '<div class="calg">'+['L','M','M','J','V','S','D'].map(function(x,i){return '<i'+(i>4?' class="cfin"':'')+'>'+x+'</i>'}).join('')+h+'</div>'+
+    '<div class="calf"><button type="button" data-act="calHoy">Hoy</button></div>';
+}
+function calShow(){
+  var pop=$('#calPop'),b=$('#calBtn');
+  if(!ui.calOpen||ui.view!=='agenda'||!b){if(pop)pop.remove();if(ui.view!=='agenda')ui.calOpen=false;return}
+  if(!pop){pop=document.createElement('div');pop.id='calPop';pop.className='calpop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Ir a una fecha');document.body.appendChild(pop)}
+  pop.innerHTML=calHtml();
+  var r=b.getBoundingClientRect(),W=pop.offsetWidth,H=pop.offsetHeight,vw=document.documentElement.clientWidth,vh=window.innerHeight;
+  var left=Math.min(Math.max(8,r.left+r.width/2-W/2),vw-W-8),top=r.bottom+8;
+  if(top+H>vh-8&&r.top-H-8>8)top=r.top-H-8; /* si no entra abajo, se abre arriba */
+  pop.style.left=Math.max(8,left)+'px';pop.style.top=Math.max(8,top)+'px';
+}
+function calClose(){if(!ui.calOpen)return;ui.calOpen=false;var p=$('#calPop');if(p)p.remove();var b=$('#calBtn');if(b){b.classList.remove('on');b.setAttribute('aria-expanded','false')}}
+document.addEventListener('pointerdown',function(ev){if(ui.calOpen&&!ev.target.closest('#calPop')&&!ev.target.closest('#calBtn'))calClose()},true);
+window.addEventListener('resize',function(){if(ui.calOpen)calShow()});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&ui.calOpen){calClose();ev.stopPropagation()}},true);
 function renderAgenda(){
   var mob=isMobile(), ws=monday(ui.date);
   var days=mob?[ui.date]:[0,1,2,3,4].map(function(i){return addDays(ws,i)});
@@ -1826,7 +1870,7 @@ function renderAgenda(){
       mid+='<button type="button" role="tab" class="tab'+(di===iso(ui.date)?' on':'')+'" data-act="day" data-date="'+di+'" aria-selected="'+(di===iso(ui.date))+'"><span>'+DCORTO[d.getDay()]+'</span><b>'+d.getDate()+'/'+(d.getMonth()+1)+'</b>'+(di===td?'<i aria-label="hoy"></i>':'')+'</button>';}
     mid+='</div>';
   }
-  $('#row2').innerHTML='<button type="button" class="btn" data-act="hoy">Hoy</button>'+
+  $('#row2').innerHTML='<span class="hoysplit"><button type="button" class="btn" data-act="hoy">Hoy</button><button type="button" class="btn icon'+(ui.calOpen?' on':'')+'" data-act="cal" id="calBtn" aria-label="Ir a una fecha" aria-expanded="'+!!ui.calOpen+'">'+ICON.cal+'</button></span>'+
     '<button type="button" class="btn icon" data-act="prev" aria-label="Semana anterior">'+ICON.prev+'</button>'+mid+
     '<button type="button" class="btn icon" data-act="next" aria-label="Semana siguiente">'+ICON.next+'</button>'+
     '<button type="button" class="btn primary desk" data-act="nuevo">'+ICON.plus+'Nuevo turno</button>';
@@ -2293,7 +2337,11 @@ document.addEventListener('click',function(ev){
     case 'qcancel': closeQp(); break;
     case 'qsave': saveQp(id); break;
     case 'switch': ui.nutri=OTHER[ui.nutri]; render(); break;
-    case 'hoy': ui.date=weekday(today()); render(); break;
+    case 'hoy': calClose(); ui.date=weekday(today()); render(); break;
+    case 'cal': if(ui.calOpen){calClose();break} ui.calOpen=true; ui.calMonth=new Date(ui.date.getFullYear(),ui.date.getMonth(),1); a.classList.add('on'); a.setAttribute('aria-expanded','true'); calShow(); break;
+    case 'calMes': ui.calMonth=new Date(ui.calMonth.getFullYear(),ui.calMonth.getMonth()+(+a.dataset.d),1); calShow(); break;
+    case 'calDia': ui.date=parse(a.dataset.date); calClose(); render(); break;
+    case 'calHoy': ui.date=weekday(today()); calClose(); render(); break;
     case 'prev': ui.date=addDays(ui.date,-7); render(); break;
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
