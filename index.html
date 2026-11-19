@@ -287,10 +287,16 @@ body{overflow-x:hidden}
 .go .gh{border-bottom-color:#E0761C}.go .gh span{color:#E0761C}
 .gi{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #F0F2EE;font-size:14px}
 .gi:last-child{border-bottom:0}
-.gi span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gi span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gin{width:140px;flex:none;text-align:right;font:inherit;font-size:14px;font-weight:600;border:0;border-bottom:1px solid #DDE1DA;background:transparent;padding:5px 2px;font-variant-numeric:tabular-nums;color:var(--ink);border-radius:0}
 .gin:focus{outline:0;border-bottom-color:var(--ink)}
 .gvac{margin:8px 0;font-size:12.5px;color:#9AA29C}
+.gdel{border:0;background:none;color:#A3AAA5;cursor:pointer;font-size:12px;padding:4px 2px 4px 6px;flex:none}.gdel:hover{color:#B3412F}.gdel.sure{color:#B3412F;font-weight:700;font-size:11px}
+.gmas{display:inline-flex;align-items:center;gap:6px;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:#56605A;cursor:pointer;padding:10px 0 4px}.gmas svg{width:14px;height:14px}.gmas:hover{color:var(--ink)}
+.gadd{display:flex;align-items:center;gap:8px;padding:10px 0 4px}
+.gadd select{flex:1;min-width:0;font:inherit;font-size:13px;border:1px solid #DDE1DA;border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink)}
+.gaamt{width:110px;flex:none;text-align:right;font:inherit;font-size:13.5px;border:0;border-bottom:1px solid #C9CFC8;background:transparent;padding:5px 2px}.gaamt:focus{outline:0;border-bottom-color:var(--ink)}
+.gadd .btn{flex:none;height:32px;padding:0 12px;font-size:12.5px}
 .gtot{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px}
 .gtl{font-weight:800;font-size:15px}.gtc{flex:1;text-align:center;font-size:13px;color:#6B746E}.gtc em{font-style:normal;font-weight:600}.gtc .up{color:#C0532F}.gtc .dn{color:#3E7A1E}
 .gtot b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -1548,7 +1554,7 @@ function gMes(y,m){var d=stats&&stats[String(y)];return d&&d.g&&d.g[m]||null}
 function gTotal(y,m){var g=gMes(y,m);if(!g)return null;var t=0,any=false;gConf().forEach(function(c){if(typeof g[c.id]==='number'){t+=g[c.id];any=true}});return any?Math.round(t*100)/100:null}
 function gSub(y,m,gr){var g=gMes(y,m)||{},t=0;gConf().forEach(function(c){if(c.g===gr&&typeof g[c.id]==='number')t+=g[c.id]});return t}
 function gNum(t){t=String(t||'').replace(/[$\s]/g,'');if(t==='')return null;if(/,/.test(t))t=t.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');return isNaN(+t)?NaN:+t}
-function gFmt(v){return v==null?'':v.toLocaleString('es-AR',{maximumFractionDigits:2})}
+function gFmt(v){return v==null?'':v.toLocaleString('es-AR',v%1?{minimumFractionDigits:2,maximumFractionDigits:2}:{maximumFractionDigits:0})}
 function gUsado(id){return Object.keys(stats||{}).some(function(y){var g=stats[y].g||{};return Object.keys(g).some(function(m){return typeof g[m][id]==='number'})})}
 function renderGastos(){
   var ty=today().getFullYear(),years=[];for(var y=2026;y<=ty;y++)years.push(y);
@@ -1566,10 +1572,25 @@ function renderGastos(){
   }
   h+='<div class="ggrid">'+GGR.map(function(gr){var it=C.filter(function(c){return c.g===gr[0]});
     return '<section class="gcard g'+gr[0]+'"><div class="gh"><span>'+gr[1]+'</span><b class="gsub" data-g="'+gr[0]+'">'+fm(gSub(y,m,gr[0]))+'</b></div>'+
-      (it.length?it.map(function(c){return '<label class="gi"><span>'+esc(c.n)+'</span><input class="gin" inputmode="decimal" data-id="'+c.id+'" value="'+gFmt(g[c.id])+'" placeholder="—" autocomplete="off"></label>'}).join(''):'<p class="gvac">Sin conceptos</p>')+'</section>'}).join('')+'</div>';
+      it.filter(function(c){return typeof g[c.id]==='number'}).map(function(c){return '<div class="gi"><span>'+esc(c.n)+'</span><input class="gin" inputmode="decimal" data-id="'+c.id+'" value="'+gFmt(g[c.id])+'" autocomplete="off" aria-label="'+esc(c.n)+'"><button type="button" class="gdel" data-act="gDel" data-id="'+c.id+'" aria-label="Quitar '+esc(c.n)+'" title="Quitar">✕</button></div>'}).join('')+
+      gAddRow(gr[0],it.filter(function(c){return typeof g[c.id]!=='number'}),it.some(function(c){return typeof g[c.id]==='number'}))+'</section>'}).join('')+'</div>';
   h+='<div class="gtot" id="gTot"></div></div>';
   $('#main').innerHTML=h;gTotUpd();
   var mb=$('.gmeses button.on');if(mb&&mb.parentNode.scrollWidth>mb.parentNode.clientWidth)mb.parentNode.scrollLeft=mb.offsetLeft-mb.parentNode.offsetLeft-40;
+}
+/* fila para cargar un gasto: se elige el concepto del grupo y se escribe el monto */
+function gAddRow(gr,libres,hay){
+  if(!libres.length)return hay?'':'<p class="gvac">No hay conceptos en este grupo.</p>';
+  if(hay&&!(ui.gAdd&&ui.gAdd[gr]))return '<button type="button" class="gmas" data-act="gMas" data-g="'+gr+'">'+ICON.plus+'Gasto</button>';
+  return '<div class="gadd"><select id="gaSel_'+gr+'" aria-label="Concepto"><option value="">Concepto</option>'+libres.map(function(c){return '<option value="'+c.id+'">'+esc(c.n)+'</option>'}).join('')+'</select>'+
+    '<input id="gaAmt_'+gr+'" class="gaamt" data-g="'+gr+'" inputmode="decimal" placeholder="Monto" autocomplete="off"><button type="button" class="btn primary" data-act="gAdd" data-g="'+gr+'">Agregar</button>'+
+    (hay?'<button type="button" class="gdel" data-act="gMenos" data-g="'+gr+'" aria-label="Cancelar">✕</button>':'')+'</div>';
+}
+function gAgregar(gr){
+  var sel=$('#gaSel_'+gr),amt=$('#gaAmt_'+gr),id=sel.value,v=gNum(amt.value);
+  if(!id){sel.focus();toast('Elegí el concepto');return}
+  if(v==null||isNaN(v)||v<0){amt.focus();toast('Escribí el monto');return}
+  gSet(id,Math.round(v*100)/100);ui.gAdd=ui.gAdd||{};ui.gAdd[gr]=false;renderGastos();
 }
 function gTotUpd(){
   var y=ui.gy,m=ui.gm,t=gTotal(y,m),py=m===1?y-1:y,pm=m===1?12:m-1,pt=gTotal(py,pm),el=$('#gTot');if(!el)return;
@@ -1579,15 +1600,19 @@ function gTotUpd(){
   $$('.gmeses button').forEach(function(b){b.classList.toggle('vac',gTotal(y,+b.dataset.m)==null)});
 }
 function gSave(el){
-  var y=String(ui.gy),m=ui.gm,id=el.dataset.id,v=gNum(el.value);
-  if(v!=null&&(isNaN(v)||v<0)){toast('Revisá el monto');el.value=gFmt((gMes(y,m)||{})[id]);return}
-  if(v!=null)v=Math.round(v*100)/100;
+  var id=el.dataset.id,v=gNum(el.value);
+  if(v!=null&&(isNaN(v)||v<0)){toast('Revisá el monto');el.value=gFmt((gMes(ui.gy,ui.gm)||{})[id]);return}
+  if(v==null){gSet(id,null);renderGastos();return}
+  v=Math.round(v*100)/100;el.value=gFmt(v);gSet(id,v);
+}
+function gSet(id,v){
+  var y=String(ui.gy),m=ui.gm;
   stats[y]=stats[y]||{m:{},tot:{}};var d=stats[y];d.g=d.g||{};d.g[m]=d.g[m]||{};d.m=d.m||{};var r=d.m[m]=d.m[m]||{};
   if(v==null)delete d.g[m][id];else d.g[m][id]=v;
-  el.value=gFmt(v);
   var t=gTotal(y,m),gg={},mm={},upd={};gg[m]={};gg[m][id]=v==null?firebase.firestore.FieldValue.delete():v;
   /* el costo fijo de Estadísticas es el total del mes */
-  if(t!=null){r.cos=t;upd.cos=t;if(typeof r.ing==='number'){r.ren=r.ing-t;upd.ren=r.ren}}mm[m]=upd;
+  var DEL=firebase.firestore.FieldValue.delete();
+  if(t!=null){r.cos=t;upd.cos=t;if(typeof r.ing==='number'){r.ren=r.ing-t;upd.ren=r.ren}}else{delete r.cos;upd.cos=DEL;if(typeof r.ing==='number'){delete r.ren;upd.ren=DEL}}mm[m]=upd;
   db.collection('stats').doc(y).set({g:gg,m:mm,updatedAt:SVTS()},{merge:true}).catch(function(e){console.error(e);toast('No se pudo guardar')});
   gTotUpd();
 }
@@ -2125,9 +2150,13 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
-    case 'gmes': ui.gm=+a.dataset.m; renderGastos(); break;
+    case 'gmes': ui.gm=+a.dataset.m; ui.gAdd={}; renderGastos(); break;
     case 'gyear': ui.gy=+a.dataset.y; ui.gm=null; renderGastos(); break;
     case 'gconf': ui.gConf=!ui.gConf; renderGastos(); break;
+    case 'gMas': ui.gAdd=ui.gAdd||{}; ui.gAdd[a.dataset.g]=true; renderGastos(); var gs=$('#gaSel_'+a.dataset.g); if(gs)gs.focus(); break;
+    case 'gMenos': ui.gAdd[a.dataset.g]=false; renderGastos(); break;
+    case 'gAdd': gAgregar(a.dataset.g); break;
+    case 'gDel': if(!sure(a))break; gSet(id,null); renderGastos(); break;
     case 'gcDel': if(!sure(a))break; gConfSave(gConf().filter(function(c){return c.id!==id}),'Concepto quitado'); break;
     case 'gcAdd': var gn=$('#gcNewN').value.trim(); if(!gn){$('#gcNewN').focus();break}
       if(gConf().some(function(c){return norm(c.n)===norm(gn)})){toast('Ya existe ese concepto');break}
@@ -2283,7 +2312,8 @@ document.addEventListener('change',function(ev){var t=ev.target;if(!t.classList)
   if(t.classList.contains('gin'))gSave(t);
   else if(t.classList.contains('gcname')||t.classList.contains('gcgr')){var C=gConf().map(function(c){return Object.assign({},c)}),c=C.filter(function(x){return x.id===t.dataset.cid})[0];if(!c)return;
     if(t.classList.contains('gcname')){var nv=t.value.trim();if(!nv){t.value=c.n;return}c.n=nv}else c.g=t.value;gConfSave(C,'Guardado en todos los meses')}});
-document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target.classList&&ev.target.classList.contains('gin')){ev.preventDefault();var all=$$('.gin'),i=all.indexOf(ev.target);ev.target.blur();if(all[i+1])all[i+1].focus()}
+document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target.classList&&ev.target.classList.contains('gaamt')){ev.preventDefault();gAgregar(ev.target.dataset.g);return}
+  if(ev.key==='Enter'&&ev.target.classList&&ev.target.classList.contains('gin')){ev.preventDefault();var all=$$('.gin'),i=all.indexOf(ev.target);ev.target.blur();if(all[i+1])all[i+1].focus()}
   if(ev.key==='Enter'&&ev.target.id==='gcNewN'){ev.preventDefault();var b=$('[data-act="gcAdd"]');if(b)b.click()}});
 document.addEventListener('change',function(ev){var t=ev.target;if(t.id!=='fr_add')return;var k=t.value;if(!k)return;
   if(k==='__otra'){ui.rOtra=true;restrSet(function(){});return}
