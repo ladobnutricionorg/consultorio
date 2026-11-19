@@ -335,6 +335,7 @@ body{overflow-x:hidden}
 .fdet>summary::before{content:"›";display:inline-block;font-size:20px;line-height:1;transition:transform .15s}
 .fdet[open]>summary::before{transform:rotate(90deg)}
 .fdet:not([open]){padding-top:18px;padding-bottom:18px;gap:0}
+.fdet[open]{gap:0}.fdet[open]>:not(summary){margin-top:18px}.fdet[open]>summary+*{margin-top:22px}
 .ib .fh small{font-size:12px;font-weight:500;color:#8A938D;letter-spacing:0;margin-left:4px}
 .ib .fh{font-size:13.5px;font-weight:700;letter-spacing:0}
 .ibg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -357,6 +358,65 @@ body{overflow-x:hidden}
 .ibhin{font:inherit;width:100%;min-width:0;border:0;border-bottom:1px solid #E1E4DE;background:transparent;padding:4px 2px}.ibhin.miss{background:#FFF7DA}
 .ibf .fld.miss input{background:#FFF7DA}
 .ibempty{margin:0;font-size:13px;color:#8A938D}
+.fdet>summary small{font-size:12px;font-weight:500;color:#8A938D;letter-spacing:0;margin-left:4px}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+.medbar{display:flex;gap:8px;flex-wrap:wrap}
+.btn.ghost{background:transparent}
+.medrow{display:flex;align-items:flex-end;gap:12px;background:#FAFBF7;border:1px solid #E8EBE4;border-radius:10px;padding:12px 14px}
+.medrow label{display:flex;flex-direction:column;gap:3px;flex:1 1 0;min-width:0}
+.medrow label.mdd{flex:1.35 1 0}
+.medrow label span{font-size:10.5px;font-weight:600;color:#7A837D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.medrow input{font:inherit;font-size:14px;width:100%;min-width:0;border:0;border-bottom:1px solid #D2D7CF;background:transparent;padding:4px 1px 6px;border-radius:0;color:var(--ink)}
+.medrow input:focus{outline:0;border-bottom-color:var(--ink)}
+.mdb{display:flex;align-items:center;gap:6px;flex:none}
+.medrow i{font-style:normal}.mds{display:none}
+.mdx{border:0;background:none;color:#8A938D;font-size:14px;cursor:pointer;padding:6px}
+.medlist>summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#56605A}
+.medt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+.medt th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#8A938D;text-align:left;padding:5px 6px;font-weight:600}
+.medt td{padding:6px;border-top:1px solid #F0F2EE}.medt td:first-child{font-weight:600;white-space:nowrap}
+.medt .mdo{color:#8A938D}
+.mdel{border:0;background:none;color:#B3412F;font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:underline}
+.mdel.sure{font-weight:700}
+.ibpisa{line-height:1.5}
+.labform{display:flex;flex-direction:column;gap:14px;background:#FAFBF7;border:1px solid #E8EBE4;border-radius:10px;padding:16px 18px}
+.labd{max-width:220px}
+.labgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 18px}
+.labgrid em{font-style:normal;color:#A3AAA5}
+.labprog{display:flex;flex-direction:column}
+.labrow{display:grid;grid-template-columns:190px minmax(0,1fr) 110px;align-items:center;gap:14px;padding:8px 0;border-top:1px solid #F0F2EE}
+.labrow:first-child{border-top:0}
+.labn{font-size:13px;font-weight:600;display:flex;flex-direction:column}.labn small{font-size:11px;font-weight:500;color:#8A938D}
+.lsp{width:100%;max-width:320px;height:34px;display:block}
+.labv{text-align:right;display:flex;flex-direction:column}.labv b{font-size:16px;font-weight:800}.labv small{font-size:11px;color:#8A938D;white-space:nowrap}
+.labhist{display:flex;flex-direction:column;margin-top:6px}
+.labh{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid #F0F2EE;font-size:12.5px}
+.labh b{flex:none}.labh span{flex:1;color:#56605A}
+.frest{border:1.5px dashed #D9DDD5;border-radius:12px;padding:12px 12px 12px;display:flex;flex-direction:column;gap:9px}
+.frest.on{border:2px solid #E07A3F;background:#FFF2E8}
+.frt{margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A837D;display:flex;align-items:center;gap:6px}
+.frt svg{width:14px;height:14px}
+.frest.on .frt{color:#B4501E}
+.frc{display:flex;flex-wrap:wrap;gap:6px}
+.frchip{cursor:pointer}.frchip input{position:absolute;opacity:0;pointer-events:none}
+.frchip span{display:inline-block;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid #D9DDD5;background:#fff;color:#56605A}
+.frchip input:checked+span{background:#C0532F;border-color:#C0532F;color:#fff}
+.frchip input:focus-visible+span{outline:2px solid var(--ink);outline-offset:1px}
+.frotro{font:inherit;font-size:13px;border:0;border-bottom:1px solid #E0B79A;background:transparent;padding:4px 1px 6px;color:var(--ink)}
+.frotro:focus{outline:0;border-bottom-color:#B4501E}
+.frno{font-size:11.5px;color:#9AA29C}
+@media(max-width:760px){
+  .fgrid2{grid-template-columns:1fr;gap:14px}
+  .medrow{flex-wrap:wrap;gap:10px 8px;padding:10px 12px}
+  .medrow label.mdd{flex:1 1 calc(100% - 110px)}
+  .mdb{order:1}
+  .mdl{display:none}.mds{display:inline}
+  .medrow label:not(.mdd){order:2;flex:1 1 calc(25% - 6px)}
+  .labgrid{grid-template-columns:1fr 1fr}
+  .labrow{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 78px;gap:8px}
+  .medt th:nth-child(6),.medt td:nth-child(6){display:none}
+  .labh{flex-wrap:wrap}.labh span{flex-basis:100%;order:3}
+}
 @media(max-width:760px){.ibg{grid-template-columns:1fr}}
 .fsec{background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:26px 30px;display:flex;flex-direction:column;gap:20px}
 .fh{margin:0;font-size:12px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:10px;flex:1}
@@ -649,6 +709,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  alert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>',
   up:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
   next:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
@@ -815,7 +876,7 @@ auth.onAuthStateChanged(function(u){
 /* ---------- estado de pantalla ---------- */
 var ui=(function(){
   var u=read(UIKEY)||{};
-  return {view:(u.view==='pagos'||u.view==='pacientes'||u.view==='stats')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1)};
+  return {view:(u.view==='pagos'||u.view==='pacientes'||u.view==='stats')?u.view:'agenda',q:'',nutri:u.nutri==='car'?'car':'fran',date:weekday(today()),month:new Date(today().getFullYear(),today().getMonth(),1),sec:{}};
 })();
 function saveUi(){store(UIKEY,{view:ui.view,nutri:ui.nutri})}
 
@@ -920,10 +981,11 @@ function savePac(forId,pid){
 function edad(nac){if(!nac)return null;var b=parse(nac),t=today(),e=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))e--;return e>=0&&e<130?e:null}
 function initials(p){return ((p.nombre||'')[0]||'')+((p.apellido||'')[0]||'')}
 /* ---------- Seguimiento InBody (solo se guardan los números de cada medición) ---------- */
-var IBM=[['peso','Peso','kg','#17201B'],['musc','Músculo esquelético','kg','#2F6DB5'],['grasa','Masa grasa','kg','#E0761C'],['pgrasa','% Grasa corporal','%','#F3AE62']];
+var IBM=[['peso','Peso','kg','#17201B'],['musc','Músculo esquelético','kg','#2F6DB5'],['grasa','Masa grasa','kg','#E0761C'],['visc','Nivel grasa visceral','','#F3AE62']];
 function ibChart(pts,k,color){
   var w=400,h=130,pl=30,pr=12,pt=12,pb=24,n=pts.length,vals=pts.map(function(x){return x[k]});
   var mn=Math.floor(Math.min.apply(0,vals)-1),mx=Math.ceil(Math.max.apply(0,vals)+1);
+  mx=mn+3*Math.max(1,Math.ceil((mx-mn)/3));
   var X=function(i){return n===1?(pl+w-pr)/2:pl+(w-pl-pr)*i/(n-1)},Y=function(v){return pt+(h-pt-pb)*(1-(v-mn)/(mx-mn))};
   var s='<svg viewBox="0 0 '+w+' '+h+'" class="ibsvg" role="img" aria-label="Evolución">';
   for(var g=0;g<=3;g++){var gv=mn+(mx-mn)*g/3,y=Y(gv);s+='<line x1="'+pl+'" x2="'+(w-pr)+'" y1="'+y+'" y2="'+y+'" stroke="#EEF0EB"/><text x="'+(pl-6)+'" y="'+(y+3.5)+'" font-size="9.5" fill="#9AA29C" text-anchor="end">'+gv.toFixed(0)+'</text>'}
@@ -1065,45 +1127,137 @@ function openIbForm(pid,v,aviso,hist){
   $('#dlg2').innerHTML=head('Nueva medición InBody','Revisá los números antes de guardar','close2')+
     '<div class="sec">'+(aviso?'<p class="warn">'+aviso+'</p>':'')+'<div class="fields ibf">'+IB_FORM.map(function(f){var k=f[0],val=k==='d'?(v.fecha||''):fx(v[k]);
       return '<label class="fld'+(k==='d'?' full':'')+(k!=='d'&&val===''?' miss':'')+'"><span>'+f[1]+'</span><input id="ib_'+k+'" '+(f[2]==='date'?'type="date"':'inputmode="decimal"')+' value="'+esc(val)+'"></label>'}).join('')+
-    '</div>'+htab+'<p class="err" id="ibErr" hidden></p></div>'+
-    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'">'+(hist.length?'Guardar '+(hist.length+1)+' mediciones':'Guardar medición')+'</button></div></div>';
+    '</div>'+htab+'<p class="err" id="ibErr" hidden></p><p class="warn ibpisa" id="ibPisa" hidden></p></div>'+
+    '<div class="df"><div class="r" id="ibBtns"><button type="button" class="btn big" data-act="close2">Cancelar</button><button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'">'+(hist.length?'Guardar '+(hist.length+1)+' mediciones':'Guardar medición')+'</button></div></div>';
   $('#dlg2')._ib={ragua:v.ragua,rtmb:v.rtmb,ricc:v.ricc,rvisc:v.rvisc};
   $('#overlay2').hidden=false;
 }
-function saveIb(pid){
-  var p=findPac(pid),e=$('#ibErr'),d=$('#ib_d').value,o={d:d},num=function(k){var t=$('#ib_'+k).value.trim().replace(/\./g,'').replace(',','.');return t===''?null:+t};
+function saveIb(pid,mode){
+  var p=findPac(pid),e=$('#ibErr'),d=$('#ib_d').value,o={d:d,src:'ib'},num=function(k){var t=$('#ib_'+k).value.trim().replace(/\./g,'').replace(',','.');return t===''?null:+t};
   if(!p)return;
   if(!d){e.textContent='Falta la fecha de la medición.';e.hidden=false;return}
   for(var i=1;i<IB_FORM.length;i++){var k=IB_FORM[i][0],x=num(k);if(x!=null&&isNaN(x)){e.textContent='Revisá el número de "'+IB_FORM[i][1]+'".';e.hidden=false;return}if(x!=null)o[k]=x}
   if(o.peso==null){e.textContent='Falta el peso.';e.hidden=false;return}
   var rg=$('#dlg2')._ib||{};['ragua','rtmb','ricc','rvisc'].forEach(function(k){if(rg[k])o[k]=rg[k]});
-  p.inbody=(p.inbody||[]).filter(function(x){return x.d!==d});p.inbody.push(o);
-  /* mediciones anteriores del historial: completan sin pisar lo que ya estaba cargado */
-  var nh=0;$$('#dlg2 tr[data-hd]').forEach(function(tr){var hd=tr.dataset.hd,ex=p.inbody.filter(function(x){return x.d===hd})[0],nw=ex||{d:hd},any=false;
-    $$('.ibhin',tr).forEach(function(inp){var t=inp.value.trim().replace(/\./g,'').replace(',','.');if(t!==''&&!isNaN(+t)){if(nw[inp.dataset.k]==null)nw[inp.dataset.k]=+t;any=true}});
-    if(any&&nw.peso!=null&&!ex){p.inbody.push(nw);nh++}});
-  $('#overlay2').hidden=true;$('#dlg2').innerHTML='';save();render();toast(nh?(nh+1)+' mediciones guardadas':'Medición del '+ddmm(d)+' guardada');
-}
-function inbodyCard(p){
-  var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
-  var h='<section class="fsec ib"><div class="hch"><p class="fh">Seguimiento InBody'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+ddmm(pts[pts.length-1].d)+'/'+pts[pts.length-1].d.slice(2,4)+'</small>':'')+'</p><button type="button" class="btn" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" multiple hidden></div>';
-  if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones. Tocá <b>Cargar InBody</b> y elegí la foto de la hoja principal.</p></section>';
-  h+='<div class="ibg">'+IBM.map(function(m){var v=pts[pts.length-1][m[0]];if(v==null)return '';return '<div class="ibm"><div class="ibt">'+m[1]+'</div><div class="ibv">'+String(v).replace('.',',')+' <small>'+m[2]+'</small></div>'+ibChart(pts.filter(function(x){return x[m[0]]!=null}),m[0],m[3])+'</div>'}).join('')+'</div>';
-  /* datos extra de la última medición (hoja principal del InBody) */
-  var L=pts[pts.length-1], fx=function(v){return String(v).replace('.',',')};
-  var X=[['score','Puntuación InBody',function(v){return fx(v)+'<small>/100</small>'},null],
-         ['visc','Grasa visceral',fx,'rvisc'],
-         ['tmb','Metabolismo basal',function(v){return fx(v)+'<small> kcal</small>'},'rtmb'],
-         ['icc','Cintura-cadera',function(v){return fx(v.toFixed(2))},'ricc'],
-         ['imc','IMC',fx,null],
-         ['agua','Agua corporal',function(v){return fx(v)+'<small> L</small>'},'ragua']].filter(function(x){return L[x[0]]!=null});
-  if(X.length){
-    h+='<div class="ibx"><p class="ibxh">Última medición · '+ddmm(L.d)+'/'+L.d.slice(2,4)+'</p><div class="ibxg">'+X.map(function(x){
-      var r=x[3]&&L[x[3]], v=L[x[0]], st='';
-      if(r&&r.length===2)st=v<r[0]?'lo':v>r[1]?'hi':'ok';
-      return '<div class="ibk"><span class="ibkt">'+x[1]+'</span><b>'+x[2](v)+'</b>'+(r?'<span class="ibkr '+st+'">'+(st==='ok'?'Normal':st==='hi'?'Alto':'Bajo')+' · '+(x[0]==='icc'?fx(r[0].toFixed(2))+'–'+fx(r[1].toFixed(2)):fx(r[0])+'–'+fx(r[1]))+'</span>':'')+'</div>'}).join('')+'</div></div>';
+  /* mediciones anteriores leídas del historial */
+  var nuevas=[o];
+  $$('#dlg2 tr[data-hd]').forEach(function(tr){var nw={d:tr.dataset.hd,src:'ib'},any=false;
+    $$('.ibhin',tr).forEach(function(inp){var t=inp.value.trim().replace(/\./g,'').replace(',','.');if(t!==''&&!isNaN(+t)){nw[inp.dataset.k]=+t;any=true}});
+    if(any&&nuevas.every(function(x){return x.d!==nw.d}))nuevas.push(nw)});
+  /* no se pisan mediciones sin avisar */
+  var ya={};(p.inbody||[]).forEach(function(x){ya[x.d]=x});
+  var choca=nuevas.filter(function(x){return ya[x.d]}).map(function(x){return x.d}).sort();
+  if(choca.length&&!mode){
+    var w=$('#ibPisa');
+    w.innerHTML='<b>Atención: '+(choca.length===1?'ya hay una medición cargada':'ya hay '+choca.length+' mediciones cargadas')+' en '+(choca.length===1?'esta fecha':'estas fechas')+':</b> '+
+      (choca.length<=6?choca.map(function(d2){return dcorta(d2)+(ya[d2].src==='man'?' (cargada a mano)':'')}).join(', '):
+        'entre el '+dcorta(choca[0])+' y el '+dcorta(choca[choca.length-1])+(function(){var m=choca.filter(function(d2){return ya[d2].src==='man'});return m.length?'; cargadas a mano: '+m.map(dcorta).join(', '):''})())+'.<br>Si elegís <b>Reemplazar</b>, se pisan con los datos del InBody. Con <b>Solo fechas nuevas</b> se guardan únicamente las que no estaban.';
+    w.hidden=false;
+    $('#ibBtns').innerHTML='<button type="button" class="btn big" data-act="close2">Cancelar</button>'+
+      (nuevas.length>choca.length?'<button type="button" class="btn big" data-act="ibSave" data-id="'+pid+'" data-mode="nuevas">Solo fechas nuevas ('+(nuevas.length-choca.length)+')</button>':'')+
+      '<button type="button" class="btn big primary" data-act="ibSave" data-id="'+pid+'" data-mode="todo">Reemplazar</button>';
+    w.scrollIntoView({block:'nearest'});return;
   }
-  return h+'</section>';
+  if(mode==='nuevas')nuevas=nuevas.filter(function(x){return !ya[x.d]});
+  var fechas={};nuevas.forEach(function(x){fechas[x.d]=1});
+  p.inbody=(p.inbody||[]).filter(function(x){return !fechas[x.d]}).concat(nuevas);
+  saveFicha(false);
+  $('#overlay2').hidden=true;$('#dlg2').innerHTML='';save();render();toast(nuevas.length===1?'Medición del '+ddmm(nuevas[0].d)+' guardada':nuevas.length+' mediciones guardadas');
+}
+/* Secciones de la ficha: abiertas o cerradas (al entrar, solo Mediciones abierta) */
+function secOpen(k){return k in ui.sec?ui.sec[k]:k==='med'}
+function fsecHead(k,title,extra){return '<details class="fsec fdet" data-sec="'+k+'"'+(secOpen(k)?' open':'')+(extra||'')+'><summary class="fh">'+title+'</summary>'}
+function fnum(t){t=String(t||'').trim().replace(/\s/g,'');if(t==='')return null;if(/,/.test(t))t=t.replace(/\./g,'').replace(',','.');return isNaN(+t)?NaN:+t}
+function fx1(v){return v==null?'—':String(v).replace('.',',')}
+function dcorta(d){return ddmm(d)+'/'+d.slice(2,4)}
+var MED_IN=[['peso','Peso','kg','Peso'],['musc','Músculo esq.','kg','Músc.'],['grasa','Masa grasa','kg','Grasa'],['visc','Grasa visc.','','Visc.']];
+function medCard(p){
+  var pts=(p.inbody||[]).slice().sort(function(a,b){return a.d<b.d?-1:1}), L=pts[pts.length-1];
+  var h=fsecHead('med','Mediciones'+(pts.length?'<small>'+pts.length+' medici'+(pts.length===1?'ón':'ones')+' · última '+dcorta(L.d)+'</small>':''),' class="fsec fdet ib"').replace('class="fsec fdet" ','');
+  h+='<div class="medbar">'+(ui.medNew?'':'<button type="button" class="btn" data-act="medNew">'+ICON.plus+'Nueva medición</button>')+
+    '<button type="button" class="btn ghost" data-act="ibLoad" data-id="'+p.id+'">'+ICON.up+'Cargar InBody</button><input type="file" id="ibFile" accept="image/*" multiple hidden></div>';
+  if(ui.medNew){
+    h+='<div class="medrow"><label class="mdd"><span>Fecha</span><input type="date" id="md_d" value="'+iso(today())+'"></label>'+
+      MED_IN.map(function(m){return '<label><span><i class="mdl">'+m[1]+(m[2]?' ('+m[2]+')':'')+'</i><i class="mds">'+m[3]+(m[2]?' kg':'')+'</i></span><input id="md_'+m[0]+'" inputmode="'+(m[0]==='visc'?'numeric':'decimal')+'" autocomplete="off"></label>'}).join('')+
+      '<div class="mdb"><button type="button" class="btn primary" data-act="medSave">Guardar</button><button type="button" class="mdx" data-act="medCancel" aria-label="Cancelar" title="Cancelar">✕</button></div></div>'+
+      '<p class="err" id="mdErr" hidden></p>';
+  }
+  if(!pts.length)return h+'<p class="ibempty">Todavía no hay mediciones. Tocá <b>Nueva medición</b> para cargar fecha, peso, músculo, masa grasa y grasa visceral.</p></details>';
+  h+='<div class="ibg">'+IBM.map(function(m){var ok=pts.filter(function(x){return x[m[0]]!=null});if(!ok.length)return '';var v=ok[ok.length-1][m[0]];
+    return '<div class="ibm"><div class="ibt">'+m[1]+'</div><div class="ibv">'+fx1(v)+(m[2]?' <small>'+m[2]+'</small>':'')+'</div>'+ibChart(ok,m[0],m[3])+'</div>'}).join('')+'</div>';
+  h+='<details class="medlist"'+(ui.medList?' open':'')+'><summary>Ver mediciones cargadas ('+pts.length+')</summary><table class="medt"><tr><th>Fecha</th><th>Peso</th><th>Músc.</th><th>Grasa</th><th>Visc.</th><th>Origen</th><th></th></tr>'+
+    pts.slice().reverse().map(function(x){return '<tr><td>'+dcorta(x.d)+'</td><td>'+fx1(x.peso)+'</td><td>'+fx1(x.musc)+'</td><td>'+fx1(x.grasa)+'</td><td>'+fx1(x.visc)+'</td><td class="mdo">'+(x.src==='man'?'Manual':'InBody')+'</td>'+
+      '<td><button type="button" class="mdel" data-act="medDel" data-id="'+x.d+'">Borrar</button></td></tr>'}).join('')+'</table></details>';
+  return h+'</details>';
+}
+function saveMed(){
+  var p=findPac(ui.fichaId),e=$('#mdErr'),d=$('#md_d').value,o={d:d,src:'man'},any=false,bad=null;
+  var err=function(t){e.textContent=t;e.hidden=false};
+  if(!d)return err('Falta la fecha.');
+  MED_IN.forEach(function(m){var v=fnum($('#md_'+m[0]).value);if(v==null)return;if(isNaN(v)||v<=0){bad=bad||m[1];return}o[m[0]]=v;any=true});
+  if(bad)return err('Revisá el número de "'+bad+'".');
+  if(!any)return err('Completá al menos un dato.');
+  var ex=(p.inbody||[]).filter(function(x){return x.d===d})[0];
+  if(ex&&ui.medPisa!==d){ui.medPisa=d;return err('Ya hay una medición del '+dcorta(d)+' ('+(ex.src==='man'?'manual':'InBody')+'). Si tocás Guardar de nuevo, se reemplaza.')}
+  saveFicha(false);
+  p.inbody=(p.inbody||[]).filter(function(x){return x.d!==d});p.inbody.push(o);
+  ui.medNew=false;ui.medPisa=null;save();renderFicha();toast('Medición del '+dcorta(d)+' guardada');
+}
+/* Laboratorios: provisorios hasta que las nutris definan los 10 ítems (alcanza con cambiar esta lista) */
+var LABS=[['col','Colesterol total','mg/dL'],['ldl','Colesterol LDL','mg/dL'],['hdl','Colesterol HDL','mg/dL'],['tg','Triglicéridos','mg/dL'],['glu','Glucemia','mg/dL'],
+  ['ins','Insulinemia','µUI/mL'],['hb','Hemoglobina','g/dL'],['ferr','Ferritina','ng/mL'],['b12','Vitamina B12','pg/mL'],['tsh','TSH','µUI/mL']];
+function spark(vals,color){
+  var w=320,h=34,n=vals.length,mn=Math.min.apply(0,vals.map(function(x){return x.v})),mx=Math.max.apply(0,vals.map(function(x){return x.v}));if(mx===mn){mx+=1;mn-=1}
+  var X=function(i){return n===1?w/2:5+(w-10)*i/(n-1)},Y=function(v){return 5+(h-10)*(1-(v-mn)/(mx-mn))};
+  var s='<svg viewBox="0 0 '+w+' '+h+'" class="lsp" aria-hidden="true">';
+  if(n>1)s+='<polyline points="'+vals.map(function(x,i){return X(i)+','+Y(x.v)}).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linejoin="round"/>';
+  vals.forEach(function(x,i){var l=i===n-1;s+='<circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="'+(l?3.4:2.3)+'" fill="'+(l?color:'#fff')+'" stroke="'+color+'" stroke-width="1.5"><title>'+dcorta(x.d)+': '+fx1(x.v)+'</title></circle>'});
+  return s+'</svg>';
+}
+function labCard(p){
+  var labs=(p.labs||[]).slice().sort(function(a,b){return a.d<b.d?-1:1});
+  var h=fsecHead('lab','Laboratorios'+(labs.length?'<small>'+labs.length+' cargado'+(labs.length===1?'':'s')+' · último '+dcorta(labs[labs.length-1].d)+'</small>':''));
+  if(ui.labEdit){
+    var L=ui.labEdit==='new'?{d:iso(today()),v:{}}:labs.filter(function(x){return x.id===ui.labEdit})[0]||{d:iso(today()),v:{}};
+    h+='<div class="labform"><label class="ff labd"><span>Fecha del laboratorio</span><input type="date" id="lb_d" value="'+L.d+'"></label><div class="labgrid">'+
+      LABS.map(function(l){var v=L.v[l[0]];return '<label class="ff"><span>'+l[1]+' <em>'+l[2]+'</em></span><input id="lb_'+l[0]+'" inputmode="decimal" autocomplete="off" value="'+(v==null?'':fx1(v))+'"></label>'}).join('')+
+      '</div><p class="err" id="lbErr" hidden></p><div class="hcbtns"><button type="button" class="btn" data-act="labCancel">Cancelar</button><button type="button" class="btn primary" data-act="labSave">Guardar</button></div></div>';
+  }else h+='<div class="medbar"><button type="button" class="btn" data-act="labNew">'+ICON.plus+'Nuevo laboratorio</button></div>';
+  if(!labs.length)return h+(ui.labEdit?'':'<p class="ibempty">Todavía no hay laboratorios. Tocá <b>Nuevo laboratorio</b> y completá los valores que tenga el análisis.</p>')+'</details>';
+  h+='<div class="labprog">'+LABS.map(function(l){
+    var vs=labs.filter(function(x){return x.v[l[0]]!=null}).map(function(x){return {d:x.d,v:x.v[l[0]]}});if(!vs.length)return '';
+    var last=vs[vs.length-1],prev=vs[vs.length-2],dif=prev?Math.round((last.v-prev.v)*100)/100:null;
+    return '<div class="labrow"><div class="labn">'+l[1]+'<small>'+l[2]+'</small></div>'+spark(vs,'#2F6DB5')+
+      '<div class="labv"><b>'+fx1(last.v)+'</b><small>'+dcorta(last.d)+(dif?' · '+(dif>0?'▲ ':'▼ ')+fx1(Math.abs(dif)):'')+'</small></div></div>'}).join('')+'</div>';
+  h+='<details class="medlist"'+(ui.labList?' open':'')+'><summary>Ver laboratorios cargados ('+labs.length+')</summary><div class="labhist">'+labs.slice().reverse().map(function(x){
+    var ks=LABS.filter(function(l){return x.v[l[0]]!=null});
+    return '<div class="labh"><b>'+dcorta(x.d)+'</b><span>'+ks.map(function(l){return l[1]+' '+fx1(x.v[l[0]])}).join(' · ')+'</span>'+
+      '<div class="hcact"><button type="button" data-act="labEdit" data-id="'+x.id+'">Editar</button><button type="button" class="danger" data-act="labDel" data-id="'+x.id+'">Borrar</button></div></div>'}).join('')+'</div></details>';
+  return h+'</details>';
+}
+function saveLab(){
+  var p=findPac(ui.fichaId),e=$('#lbErr'),d=$('#lb_d').value,v={},any=false,bad=null;
+  var err=function(t){e.textContent=t;e.hidden=false};
+  if(!d)return err('Falta la fecha del laboratorio.');
+  LABS.forEach(function(l){var x=fnum($('#lb_'+l[0]).value);if(x==null)return;if(isNaN(x)||x<0){bad=bad||l[1];return}v[l[0]]=x;any=true});
+  if(bad)return err('Revisá el número de "'+bad+'".');
+  if(!any)return err('Completá al menos un valor.');
+  p.labs=p.labs||[];
+  var editId=ui.labEdit==='new'?null:ui.labEdit, otro=p.labs.filter(function(x){return x.d===d&&x.id!==editId})[0];
+  if(otro&&ui.labPisa!==d){ui.labPisa=d;return err('Ya hay un laboratorio del '+dcorta(d)+'. Si tocás Guardar de nuevo, estos valores se suman a ese (y reemplazan los que se repitan).')}
+  saveFicha(false);
+  if(otro){for(var k in v)otro.v[k]=v[k];if(editId)p.labs=p.labs.filter(function(x){return x.id!==editId})}
+  else if(editId){var L=p.labs.filter(function(x){return x.id===editId})[0];L.d=d;L.v=v}
+  else p.labs.push({id:uid(),d:d,v:v,by:ui.nutri});
+  ui.labEdit=null;ui.labPisa=null;save();renderFicha();toast('Laboratorio del '+dcorta(d)+' guardado');
+}
+var RESTR=[['vegano','Vegano/a'],['vegetariano','Vegetariano/a'],['celiaco','Celíaco/a'],['otro','Otro']];
+function restrBox(f){
+  var r=f.restr||{},on=RESTR.some(function(x){return r[x[0]]});
+  return '<div class="frest'+(on?' on':'')+'" id="fRest"><p class="frt">'+ICON.alert+'Restricciones alimenticias</p><div class="frc">'+
+    RESTR.map(function(x){return '<label class="frchip"><input type="checkbox" id="fr_'+x[0]+'"'+(r[x[0]]?' checked':'')+'><span>'+x[1]+'</span></label>'}).join('')+'</div>'+
+    '<input class="frotro" id="fr_txt" placeholder="¿Cuál? (ej.: intolerancia a la lactosa)" value="'+esc(r.txt||'')+'"'+(r.otro?'':' hidden')+'>'+
+    (on?'':'<span class="frno">Sin restricciones marcadas</span>')+'</div>';
 }
 function renderFicha(){
   var p=findPac(ui.fichaId), f=p.ficha||{}, mo=f.motivo||{}, td=iso(today());
@@ -1125,8 +1279,11 @@ function renderFicha(){
     '<div class="kv"><span>Próximo turno</span><span>'+(next?DCORTO[parse(next.date).getDay()]+' '+ddmm(next.date)+' · '+show(toMin(next.time)):'—')+'</span></div>'+
     '<div class="kv"><span>Turnos</span><span>'+ts.length+'</span></div></div>'+
     (wa?'<a class="fwa" href="'+wa+'" target="_blank" rel="noopener">'+ICON.wa+'Escribir por WhatsApp</a>':'')+
+    restrBox(f)+
     '<button type="button" class="flink" data-act="fichaDatos" data-id="'+p.id+'">Editar nombre, teléfono o llegada</button></aside>';
-  html+='<div class="fmain"><details class="fsec fdet" id="fDet"'+(ui.fdOpen?' open':'')+'><summary class="fh">Datos personales</summary><div class="fgrid">'+
+  var pc=f.pc||{};
+  var tx=function(id,l,v,rows){return '<label class="ff"><span>'+l+'</span><textarea id="'+id+'" rows="'+(rows||2)+'">'+esc(v||'')+'</textarea></label>'};
+  html+='<div class="fmain">'+fsecHead('dp','Datos personales')+'<div class="fgrid">'+
     fld('f_dni','DNI',f.dni)+
     '<label class="ff"><span>Fecha de nacimiento</span><div class="fnac"><input id="f_nac" type="date" value="'+esc(f.nac||'')+'"><em id="fEdad">'+(ed!=null?ed+' años':'')+'</em></div></label>'+
     fld('f_email','Email',f.email)+
@@ -1134,13 +1291,16 @@ function renderFicha(){
     fld('f_ocup','Ocupación',f.ocup)+
     fld('f_cob','Cobertura médica',f.cob)+
     fld('f_socio','Socio N°',f.socio)+
-    '</div><p class="fh">Consulta</p>'+
+    '</div></details>';
+  html+=fsecHead('pc','Primera consulta')+
     '<div class="fmot"><span>Motivo de consulta</span>'+cb('aspecto','Aspecto')+cb('enfermedad','Enfermedad')+cb('riesgo','Riesgo')+'</div>'+
-    '<label class="ff"><span>Medicación actual</span><textarea id="f_medic" rows="2">'+esc(f.medic||'')+'</textarea></label>'+
-    '<label class="ff"><span>Observaciones</span><textarea id="f_obs" rows="2">'+esc(f.obs||'')+'</textarea></label>'+
-    '</details>'+inbodyCard(p);
+    '<div class="fgrid2">'+tx('f_pc_reg','Registro alimenticio',pc.reg,3)+tx('f_pc_hab','Hábitos',pc.hab,3)+tx('f_pc_ant','Antecedentes',pc.ant)+tx('f_pc_cir','Cirugías',pc.cir)+
+    tx('f_pc_ciclo','Ciclo (en caso de que corresponda)',pc.ciclo)+tx('f_pc_otros','Otros',pc.otros)+'</div></details>';
+  html+=fsecHead('am','Actividad física / Medicación')+'<div class="fgrid2">'+tx('f_act','Actividad física',f.act,3)+tx('f_medic','Medicación',f.medic,3)+'</div></details>';
+  html+=medCard(p)+labCard(p);
   var hc=(p.historia||[]).slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.created||0)-(a.created||0)});
-  html+='<section class="fsec hc"><div class="hch"><p class="fh">Historia clínica</p>'+(ui.hcEdit?'':'<button type="button" class="btn" data-act="hcNew">'+ICON.plus+'Agregar consulta</button>')+'</div>';
+  html+=fsecHead('hc','Consultas / Comentarios'+(hc.length?'<small>'+hc.length+'</small>':''),' class="fsec fdet hc"').replace('class="fsec fdet" ','')+
+    (ui.hcEdit?'':'<div class="medbar"><button type="button" class="btn" data-act="hcNew">'+ICON.plus+'Agregar consulta</button></div>');
   var form=function(h){return '<div class="hcform"><label class="ff hcdate"><span>Fecha de la consulta</span><input id="hcDate" type="date" value="'+(h?h.date:td)+'"></label>'+
     '<label class="ff"><span>Qué se habló en la consulta</span><textarea id="hcText" rows="6">'+esc(h?h.text:'')+'</textarea></label><p class="err" id="hcErr" hidden></p>'+
     '<div class="hcbtns"><button type="button" class="btn" data-act="hcCancel">Cancelar</button><button type="button" class="btn primary" data-act="hcSave" data-id="'+(h?h.id:'')+'">Guardar</button></div></div>'};
@@ -1151,14 +1311,17 @@ function renderFicha(){
     html+='<article class="hcitem"><header><b>'+cap(largo(parse(h.date)))+' de '+h.date.slice(0,4)+'</b><span>'+(h.by?NUTRIS[h.by]:'')+'</span>'+
       '<div class="hcact"><button type="button" data-act="hcEdit" data-id="'+h.id+'">Editar</button><button type="button" class="danger" data-act="hcDel" data-id="'+h.id+'">Borrar</button></div></header><p>'+esc(h.text)+'</p></article>';
   });
-  html+='</section></div></div></div>';
+  html+='</details></div></div></div>';
   $('#main').innerHTML=html;
 }
 function saveFicha(withToast){
   var p=findPac(ui.fichaId); if(!p||!$('#f_dni'))return;
-  p.ficha={dni:$('#f_dni').value.trim(),nac:$('#f_nac').value,email:$('#f_email').value.trim(),dir:$('#f_dir').value.trim(),ocup:$('#f_ocup').value.trim(),
-    cob:$('#f_cob').value.trim(),socio:$('#f_socio').value.trim(),motivo:{aspecto:$('#fm_aspecto').checked,enfermedad:$('#fm_enfermedad').checked,riesgo:$('#fm_riesgo').checked},
-    medic:$('#f_medic').value.trim(),obs:$('#f_obs').value.trim()};
+  var v=function(id){var el=$('#'+id);return el?el.value.trim():''};
+  var r={};RESTR.forEach(function(x){if($('#fr_'+x[0]).checked)r[x[0]]=true});if(r.otro&&v('fr_txt'))r.txt=v('fr_txt');
+  p.ficha=Object.assign({},p.ficha||{},{dni:v('f_dni'),nac:$('#f_nac').value,email:v('f_email'),dir:v('f_dir'),ocup:v('f_ocup'),
+    cob:v('f_cob'),socio:v('f_socio'),motivo:{aspecto:$('#fm_aspecto').checked,enfermedad:$('#fm_enfermedad').checked,riesgo:$('#fm_riesgo').checked},
+    pc:{reg:v('f_pc_reg'),hab:v('f_pc_hab'),ant:v('f_pc_ant'),cir:v('f_pc_cir'),ciclo:v('f_pc_ciclo'),otros:v('f_pc_otros')},
+    act:v('f_act'),medic:v('f_medic'),restr:r});
   save(); if(withToast)toast('Ficha guardada');
 }
 function saveHc(){
@@ -1812,15 +1975,24 @@ document.addEventListener('click',function(ev){
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'ptabla': ui.ptabla=!ui.ptabla; ui.plim=null; renderPacientes(); break;
-    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.fdOpen=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
+    case 'fichaDe': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.sec={}; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
-    case 'ficha': ui.fdOpen=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
+    case 'ficha': ui.sec={}; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
     case 'fichaVolver': ui.view='pacientes'; render(); break;
     case 'fichaSave': saveFicha(true); break;
     case 'fichaDatos': openPacForm(null,id); break;
-    case 'hcNew': saveFicha(false); ui.hcEdit='new'; renderFicha(); var ta=$('#hcText'); if(ta)ta.focus(); break;
-    case 'hcEdit': saveFicha(false); ui.hcEdit=id; renderFicha(); break;
+    case 'medNew': saveFicha(false); ui.medNew=true; ui.medPisa=null; ui.sec.med=true; renderFicha(); var mi=$('#md_peso'); if(mi)mi.focus(); break;
+    case 'medCancel': ui.medNew=false; ui.medPisa=null; renderFicha(); break;
+    case 'medSave': saveMed(); break;
+    case 'medDel': if(!sure(a))break; var mp=findPac(ui.fichaId); saveFicha(false); ui.medList=true; mp.inbody=(mp.inbody||[]).filter(function(x){return x.d!==id}); save(); renderFicha(); toast('Medición del '+dcorta(id)+' borrada'); break;
+    case 'labNew': saveFicha(false); ui.labEdit='new'; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
+    case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
+    case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
+    case 'labSave': saveLab(); break;
+    case 'labDel': if(!sure(a))break; var lp=findPac(ui.fichaId); saveFicha(false); ui.labList=true; lp.labs=(lp.labs||[]).filter(function(x){return x.id!==id}); save(); renderFicha(); break;
+    case 'hcNew': saveFicha(false); ui.hcEdit='new'; ui.sec.hc=true; renderFicha(); var ta=$('#hcText'); if(ta)ta.focus(); break;
+    case 'hcEdit': saveFicha(false); ui.hcEdit=id; ui.sec.hc=true; renderFicha(); break;
     case 'hcCancel': ui.hcEdit=null; renderFicha(); break;
     case 'hcSave': saveHc(); break;
     case 'hcDel': if(!sure(a))break; var hp=findPac(ui.fichaId); hp.historia=(hp.historia||[]).filter(function(h){return h.id!==id}); save(); renderFicha(); break;
@@ -1834,8 +2006,8 @@ document.addEventListener('click',function(ev){
     case 'newPac': openPacForm(a.dataset.for); break;
     case 'savePac': savePac(a.dataset.for,a.dataset.id); break;
     case 'close2': $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; break;
-    case 'ibLoad': var fi=$('#ibFile'); fi.value=''; fi.dataset.pid=id; fi.click(); break;
-    case 'ibSave': saveIb(id); break;
+    case 'ibLoad': saveFicha(false); var fi=$('#ibFile'); fi.value=''; fi.dataset.pid=id; fi.click(); break;
+    case 'ibSave': saveIb(id,a.dataset.mode); break;
     case 'editPago': openTurno(id,true); break;
     case 'savePagoT':
       t2=findT(id); r=readPago(); if(!t2||!r)break;
@@ -1956,7 +2128,13 @@ document.addEventListener('change',function(ev){
   if(t.id==='bNoEnd'){var u2=$('#bUntil');u2.disabled=t.checked;u2.closest('.fld').classList.toggle('off',t.checked)}
 });
 document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
-document.addEventListener('toggle',function(ev){if(ev.target.id==='fDet')ui.fdOpen=ev.target.open},true);
+document.addEventListener('toggle',function(ev){var t=ev.target;if(!t.dataset)return;if(t.dataset.sec)ui.sec[t.dataset.sec]=t.open;
+  if(t.classList.contains('medlist')){if(t.closest('[data-sec="med"]'))ui.medList=t.open;else ui.labList=t.open}},true);
+document.addEventListener('change',function(ev){var t=ev.target;if(!t.id||t.id.indexOf('fr_')!==0)return;
+  var box=$('#fRest'),any=RESTR.some(function(x){return $('#fr_'+x[0]).checked});
+  $('#fr_txt').hidden=!$('#fr_otro').checked;if(t.id==='fr_otro'&&t.checked)$('#fr_txt').focus();
+  box.classList.toggle('on',any);var no=$('.frno',box);if(no)no.hidden=any;else if(!any)box.insertAdjacentHTML('beforeend','<span class="frno">Sin restricciones marcadas</span>');
+  saveFicha(false);});
 document.addEventListener('mousemove',function(ev){
   if(ui.view!=='agenda'||isMobile())return;
   var col=ev.target.closest&&ev.target.closest('.daycol');
