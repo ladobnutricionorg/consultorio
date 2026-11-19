@@ -1375,7 +1375,7 @@ function waLink(t){
   var p=pacDe(t); if(!p||!p.phone)return null;
   var num=waNum(p.phone); if(!num)return null;
   var d=parse(t.date);
-  var msg='¡Hola '+t.name.split(' ')[0]+'! Te recordamos tu turno en Lado B Nutrición el '+DIAS[d.getDay()].toLowerCase()+' '+d.getDate()+' de '+MESES[d.getMonth()]+' a las '+show(toMin(t.time))+' hs con '+NUTRIS[t.nutri]+'. Charcas 3331. ¡Te esperamos!';
+  var msg='¡Hola! 👋🏻\nEste es un mensaje recordatorio de tu cita:\n🗓️ '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'\n🕓 '+show(toMin(t.time))+' hs\n📍 Charcas 3331 2D\n\n¿Confirmamos tu asistencia? 😊';
   return 'https://wa.me/'+num+'?text='+encodeURIComponent(msg);
 }
 
