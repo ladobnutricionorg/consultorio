@@ -97,7 +97,8 @@ h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 .bcol .sw.on{box-shadow:0 0 0 2px #17201B}
 .brep{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;margin:14px 0 4px;cursor:pointer}.brep input{width:18px;height:18px;accent-color:#17201B}
 #bRepBox{display:flex;flex-direction:column;gap:10px;margin-top:6px}#bRepBox .seg{flex-wrap:wrap}.bhasta{max-width:220px}
-.bdel{display:flex;gap:14px;flex-wrap:wrap}
+.bdel{display:flex;gap:18px;flex-wrap:wrap}.bdel .danger{white-space:nowrap}
+.df.ser{flex-wrap:wrap;row-gap:10px}.df.ser .r{order:1;width:100%;justify-content:flex-end;flex-wrap:wrap}.df.ser .bdel{order:2;width:100%;justify-content:flex-end;border-top:1px solid #EEF0EB;padding-top:10px}
 .bhrow{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}.brep.sm{font-size:13px;font-weight:500;margin:0 0 10px}.fld.off{opacity:.4}
 .sprog{display:flex;gap:12px;justify-content:center;font-size:12px;color:#9AA29C;margin:4px 0 0;min-height:16px}.sprog .ok{color:#3E7A1E;font-weight:600}
 /* iPhone: evita el zoom automático al tocar un campo (pasa con letra menor a 16px) y que la página quede corrida */
@@ -1704,7 +1705,7 @@ function openBloq(id){
   var b=findB(id); if(!b)return;
   openModal(head('Bloqueado',esc(cap(largo(parse(b.date))))+' · '+show(toMin(b.from))+' – '+show(toMin(b.to)))+
     '<div class="sec">'+bloqFields(b)+'<p class="err" id="bErr" hidden></p></div>'+
-    '<div class="df">'+(b.serie?'<div class="bdel"><button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar solo este</button><button type="button" class="danger" data-act="delBloqSig" data-id="'+b.id+'">Quitar este y los siguientes</button></div>':'<button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar bloqueo</button>')+'<div class="r"><button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveBloq" data-id="'+b.id+'">Guardar</button></div></div>');
+    '<div class="df'+(b.serie?' ser':'')+'">'+(b.serie?'<div class="bdel"><button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar solo este</button><button type="button" class="danger" data-act="delBloqSig" data-id="'+b.id+'">Quitar este y los siguientes</button></div>':'<button type="button" class="danger" data-act="delBloq" data-id="'+b.id+'">Quitar bloqueo</button>')+'<div class="r">'+(b.serie?'<button type="button" class="btn big" data-act="saveBloq" data-id="'+b.id+'">Guardar solo este</button><button type="button" class="btn big primary" data-act="saveBloqSig" data-id="'+b.id+'">Guardar este y los siguientes</button>':'<button type="button" class="btn big" data-act="close">Cancelar</button><button type="button" class="btn big primary" data-act="saveBloq" data-id="'+b.id+'">Guardar</button>')+'</div></div>');
 }
 
 /* confirmación en dos toques (sin ventanas del navegador) */
@@ -1845,6 +1846,23 @@ document.addEventListener('click',function(ev){
       var pd=parse(r.date); ui.month=new Date(pd.getFullYear(),pd.getMonth(),1);
       save(); closeModal(); render(); break;
     case 'delPago': if(!sure(a))break; data.pagos=data.pagos.filter(function(x){return x.id!==id}); save(); closeModal(); render(); break;
+    case 'saveBloqSig':
+      /* cambia este y todos los siguientes de la serie: se rearma la serie desde la nueva fecha/hora */
+      b2=findB(id); if(!b2)break;
+      var rs=readBloq(); if(!rs)break;
+      var sr=b2.serie, mode2=b2.rep||'sem', old=b2.date, rg2=reglaDe(sr);
+      var sig=data.bloqueos.filter(function(x){return !x.regla&&x.serie===sr&&x.date>=old}), last=sig.reduce(function(m,x){return x.date>m?x.date:m},old);
+      data.bloqueos=data.bloqueos.filter(function(x){return sig.indexOf(x)<0});
+      var ncount=0;
+      if(rg2&&!rg2.fin){
+        rg2.start=rs.date;rg2.from=rs.from;rg2.to=rs.to;rg2.nota=rs.nota;rg2.color=rs.color;rg2.gen='';
+        rg2.skip=(rg2.skip||[]).filter(function(d){return d<old});
+        ncount=extendRule(rg2);
+      }else{
+        if(last<rs.date)last=rs.date;
+        bRepDates(rs.date,mode2,last).forEach(function(dd){data.bloqueos.push({id:uid(),nutri:b2.nutri,date:dd,from:rs.from,to:rs.to,nota:rs.nota,color:rs.color,serie:sr,rep:mode2});ncount++});
+      }
+      save(); closeModal(); goTo(rs.date); toast(ncount+' bloqueo'+(ncount===1?'':'s')+' actualizado'+(ncount===1?'':'s')); break;
     case 'saveBloq':
       b2=findB(id); if(!b2)break;
       var rb=readBloq(); if(!rb)break;
