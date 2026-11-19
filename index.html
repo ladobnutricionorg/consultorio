@@ -266,7 +266,13 @@ body{overflow-x:hidden}
 .fsimg{height:64px;border:1px dashed #D9DDD5;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}.fsimg img{max-height:58px;max-width:160px}.fsimg span{font-size:12px;color:#9AA29C}
 @media(max-width:760px){.fsrow{grid-template-columns:1fr 1fr}}
 .fcl{display:flex;flex-direction:column;gap:14px;max-height:62vh;overflow:auto}
-.fcf{margin:0;display:flex;flex-direction:column;gap:6px}.fcf img{width:100%;border:1px solid #E3E6E0;border-radius:8px}.fcf figcaption{font-size:13px;font-weight:700}
+.fcf{margin:0;display:flex;flex-direction:column;gap:8px}.fcf img{width:100%;border:1px solid #E3E6E0;border-radius:8px}
+.fcf figcaption{font-size:13px;display:flex;gap:10px;align-items:baseline}.fcf figcaption span{color:#6B746E;font-size:12px}
+.fcact{display:flex;gap:8px;flex-wrap:wrap}.fcact .btn{display:inline-flex;align-items:center;gap:6px}.fcact svg{width:15px;height:15px}
+.fcwa{border-color:#CFE5C8;background:#F1F9EE;color:#1D4D17}
+.fcwab{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;background:#FAFBF7;border:1px solid #E8EBE4;border-radius:10px;padding:12px}.fcwab .fld{flex:1;min-width:200px}
+.fcnote{flex-basis:100%;margin:0;font-size:12px;color:#6B746E}
+.fcpick{display:flex;gap:10px;flex-wrap:wrap}.fcpick .btn{flex:1}
 .gwrap{display:flex;flex-direction:column;gap:16px}
 .gbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .gbar h2{margin:0;font-size:20px;font-weight:800}.gbar h2 span{font-size:14px;font-weight:700;border-bottom:2px solid var(--ink);margin-left:8px}
@@ -767,6 +773,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  down:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
   edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
   alert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>',
   up:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
@@ -1815,7 +1822,7 @@ var FIRMA_BOX={x:.675,y:.5176,w:.15,h:.0647};
 function pdfjsLoad(){return new Promise(function(res,rej){if(window.pdfjsLib)return res();var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
   sc.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res()};sc.onerror=function(){rej(new Error('No se pudo cargar el lector de PDF'))};document.head.appendChild(sc)})}
 function imgLoad(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=rej;i.src=src})}
-async function firmarUno(file,firmas){
+async function firmarUno(file,f){
   var pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pg=await pdf.getPage(1);
   /* el texto del PDF viene desordenado: se ordena por renglón (y) y dentro del renglón por x */
   var its=(await pg.getTextContent()).items.filter(function(i){return i.str&&i.str.trim()}).map(function(i){return {s:i.str,x:i.transform[4],y:Math.round(i.transform[5]/2)}});
@@ -1823,32 +1830,57 @@ async function firmarUno(file,firmas){
   var txt=its.map(function(i){return i.s}).join(' ').replace(/\s+/g,' ');
   var pv=txt.match(/Punto de Venta:?\s*(\d+)/i),nro=txt.match(/Comp\.?\s*Nro:?\s*(\d+)/i),cuit=txt.match(/CUIT:?\s*(\d{11})/i);
   if(!pv||!nro)throw new Error('no parece una factura de ARCA (no se encontró el número)');
-  var f=firmas.filter(function(x){return cuit&&x.cuit===cuit[1]})[0];
-  if(!f)throw new Error('no hay firma cargada para el CUIT '+(cuit?cuit[1]:'de la factura'));
+  /* control: la factura tiene que ser del CUIT de quien firma */
+  if(f.cuit&&cuit&&cuit[1]!==f.cuit)throw new Error('es del CUIT '+cuit[1]+' y la firma de '+NUTRIS[f.nutri]+' corresponde al '+f.cuit+'. No se firmó.');
+  var cli=txt.match(/Raz[oó]n Social:\s*(.+?)\s+(?:Condici[oó]n|Domicilio)/gi),cliente=cli&&cli.length>1?cli[1].replace(/^.*Social:\s*/i,'').replace(/\s+(Condici[oó]n|Domicilio).*$/i,'').trim():'';
   var vp=pg.getViewport({scale:2.5}),c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
   var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
   await pg.render({canvasContext:g,viewport:vp}).promise;
   var im=await imgLoad(f.png),bw=FIRMA_BOX.w*c.width,bh=FIRMA_BOX.h*c.height,k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k;
   g.drawImage(im,FIRMA_BOX.x*c.width+(bw-w)/2,FIRMA_BOX.y*c.height+(bh-h)/2,w,h);
   var blob=await new Promise(function(r){c.toBlob(r,'image/png')});
-  return {name:'FC '+(+pv[1])+'-'+(+nro[1])+'.png',blob:blob,url:URL.createObjectURL(blob)};
+  return {name:'FC '+(+pv[1])+'-'+(+nro[1])+'.png',blob:blob,url:URL.createObjectURL(blob),cliente:cliente,tel:fcTel(cliente)};
+}
+/* teléfono del paciente de la factura (se busca por nombre y apellido) */
+function fcTel(cli){
+  var t=norm(cli).split(/\s+/).filter(function(w){return w.length>1});if(t.length<2)return '';
+  var c=data.pacientes.filter(function(p){if(p.deleted||p.mergedInto||!p.phone)return false;var q=norm(p.name).split(/\s+/);return t.filter(function(w){return q.indexOf(w)>=0}).length>=2});
+  return c.length===1?(waNum(c[0].phone)||''):'';
 }
 async function firmarFacturas(files){
-  var btn=$('[data-act="firmar"]'),lbl=btn?btn.innerHTML:'',out=[],errs=[];
+  var n=ui.fcFirma,btn=$('[data-act="firmar"]'),lbl=btn?btn.innerHTML:'',out=[],errs=[];
   if(btn){btn.disabled=true;btn.textContent='Firmando…'}
   try{
     await pdfjsLoad();
-    var sn=await db.collection('stats').where('tipo','==','firma').get(),firmas=sn.docs.map(function(d){return d.data()});
-    for(var i=0;i<files.length;i++){try{out.push(await firmarUno(files[i],firmas))}catch(e){errs.push(files[i].name+': '+e.message)}}
+    var d=await db.collection('stats').doc('firma_'+n).get(),f=d.exists?d.data():null;
+    if(!f||!f.png)throw new Error('Todavía no está cargada la firma de '+NUTRIS[n]+'. Pedile a Fede que la cargue.');
+    f.nutri=n;
+    for(var i=0;i<files.length;i++){try{out.push(await firmarUno(files[i],f))}catch(e){errs.push(files[i].name+': '+e.message)}}
   }catch(e){errs.push(e.message)}
   if(btn){btn.disabled=false;btn.innerHTML=lbl}
   window.__fcOut=out;
-  var share=out.length&&navigator.canShare&&navigator.canShare({files:out.map(function(o){return new File([o.blob],o.name,{type:'image/png'})})});
-  $('#dlg2').innerHTML=head(out.length===1?'Factura firmada':out.length?out.length+' facturas firmadas':'No se pudo firmar',out.length?'Revisá que la firma quede bien y descargala':'','close2')+
-    '<div class="sec">'+(errs.length?'<p class="warn">'+errs.map(esc).join('<br>')+'</p>':'')+'<div class="fcl">'+out.map(function(o,i){return '<figure class="fcf"><img src="'+o.url+'" alt="'+esc(o.name)+'"><figcaption>'+esc(o.name)+'</figcaption></figure>'}).join('')+'</div></div>'+
-    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cerrar</button>'+(share?'<button type="button" class="btn big" data-act="fcShare">Compartir</button>':'')+
-    (out.length?'<button type="button" class="btn big primary" data-act="fcBajar">'+(out.length===1?'Descargar':'Descargar todas')+'</button>':'')+'</div></div>';
+  $('#dlg2').innerHTML=head(out.length===1?'Factura firmada':out.length?out.length+' facturas firmadas':'No se pudo firmar',out.length?'Firma de '+NUTRIS[n]+' · revisá que quede bien':'','close2')+
+    '<div class="sec">'+(errs.length?'<p class="warn">'+errs.map(esc).join('<br>')+'</p>':'')+'<div class="fcl">'+out.map(function(o,i){return '<figure class="fcf"><img src="'+o.url+'" alt="'+esc(o.name)+'"><figcaption><b>'+esc(o.name)+'</b>'+(o.cliente?'<span>'+esc(o.cliente)+'</span>':'')+'</figcaption>'+
+      '<div class="fcact"><button type="button" class="btn" data-act="fcBajar" data-id="'+i+'">'+ICON.down+'Descargar</button><button type="button" class="btn fcwa" data-act="fcWa" data-id="'+i+'">'+ICON.wa+'Enviar por WhatsApp</button></div><div class="fcwab" id="fcWa_'+i+'" hidden></div></figure>'}).join('')+'</div></div>'+
+    (out.length>1?'<div class="df"><div class="r"><button type="button" class="btn big primary" data-act="fcBajar">Descargar todas</button></div></div>':'');
   $('#overlay2').hidden=false;
+}
+function fcFile(o){return new File([o.blob],o.name,{type:'image/png'})}
+function fcWa(i){
+  var o=(window.__fcOut||[])[i];if(!o)return;
+  /* celular: se abre el menú de compartir del teléfono (WhatsApp → elegir el contacto) */
+  if(window.matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[fcFile(o)]})){navigator.share({files:[fcFile(o)]}).catch(function(){});return}
+  /* compu: se copia la imagen y se abre el chat con el número para pegarla */
+  var b=$('#fcWa_'+i);b.hidden=false;
+  b.innerHTML='<label class="fld"><span>Número de WhatsApp'+(o.tel?' (de la ficha de '+esc(o.cliente.toLowerCase().replace(/\b\w/g,function(c){return c.toUpperCase()}))+')':'')+'</span><input id="fcTel_'+i+'" inputmode="tel" value="'+esc(o.tel)+'" placeholder="11 1234-5678"></label>'+
+    '<button type="button" class="btn primary" data-act="fcWaGo" data-id="'+i+'">Abrir chat</button><p class="fcnote">La imagen se copia sola: en el chat apretá <b>Ctrl+V</b> (o ⌘+V) y enviá.</p>';
+  var t=$('#fcTel_'+i);t.focus();t.select();
+}
+function fcWaGo(i){
+  var o=window.__fcOut[i],num=waNum($('#fcTel_'+i).value);
+  if(!num){toast('Revisá el número');return}
+  var w=window.open('https://api.whatsapp.com/send?phone='+num,'_blank');
+  try{navigator.clipboard.write([new ClipboardItem({'image/png':o.blob})]).then(function(){toast('Imagen copiada: pegala en el chat')},function(){toast('No se pudo copiar: descargala y adjuntala')})}catch(e){toast('No se pudo copiar: descargala y adjuntala')}
 }
 /* solo Fede: cargar la firma (PNG sin fondo) y el CUIT de cada profesional */
 async function openFirmas(){
@@ -1869,8 +1901,7 @@ async function firmaPng(file){ /* recorta lo transparente y la deja de 420 px de
   var W=Math.min(420,x1-x0+1),H=Math.round((y1-y0+1)*W/(x1-x0+1)),o=document.createElement('canvas');o.width=W;o.height=H;
   o.getContext('2d').drawImage(c,x0,y0,x1-x0+1,y1-y0+1,0,0,W,H);return o.toDataURL('image/png');
 }
-function fcBajar(){(window.__fcOut||[]).forEach(function(o,i){setTimeout(function(){var a=document.createElement('a');a.href=o.url;a.download=o.name;document.body.appendChild(a);a.click();a.remove()},i*400)})}
-function fcShare(){var fs=(window.__fcOut||[]).map(function(o){return new File([o.blob],o.name,{type:'image/png'})});navigator.share({files:fs}).catch(function(){})}
+function fcBajar(only){(window.__fcOut||[]).forEach(function(o,i){if(only!=null&&i!==only)return;setTimeout(function(){var a=document.createElement('a');a.href=o.url;a.download=o.name;document.body.appendChild(a);a.click();a.remove()},i*400)})}
 function renderPagos(){
   var y=ui.month.getFullYear(), mo=ui.month.getMonth();
   var ty=today().getFullYear(), yrs=[];for(var yy=2023;yy<=Math.max(ty+1,y);yy++)yrs.push(yy);
@@ -2223,9 +2254,13 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
-    case 'firmar': var ff=$('#fcFile'); ff.value=''; ff.click(); break;
-    case 'fcBajar': fcBajar(); break;
-    case 'fcShare': fcShare(); break;
+    case 'firmar': if(staff&&staff.nutri){ui.fcFirma=staff.nutri;var ff=$('#fcFile');ff.value='';ff.click()}
+      else{$('#dlg2').innerHTML=head('¿Con qué firma?','Elegí de quién es la firma que se va a poner','close2')+'<div class="sec"><div class="fcpick">'+['fran','car'].map(function(n){return '<button type="button" class="btn big" data-act="fcCon" data-id="'+n+'">Firma de '+NUTRIS[n]+'</button>'}).join('')+'</div></div>';$('#overlay2').hidden=false}
+      break;
+    case 'fcCon': ui.fcFirma=id; $('#overlay2').hidden=true; var ff2=$('#fcFile'); ff2.value=''; ff2.click(); break;
+    case 'fcBajar': fcBajar(id!=null?+id:null); break;
+    case 'fcWa': fcWa(+id); break;
+    case 'fcWaGo': fcWaGo(+id); break;
     case 'firmas': openFirmas(); break;
     case 'fsPng': $('#fsFile_'+id).click(); break;
     case 'fsSave': ['fran','car'].forEach(function(n){var v=$('#fsCuit_'+n).value.replace(/\D/g,'');if(v)db.collection('stats').doc('firma_'+n).set({tipo:'firma',nutri:n,cuit:v,updatedAt:SVTS()},{merge:true})}); toast('CUIT guardado'); break;
