@@ -261,6 +261,8 @@ body{overflow-x:hidden}
 .pcnt b{font-size:13px;font-weight:400;color:#17201B;margin-left:3px;letter-spacing:0}.pcnt .t{border-color:#D4FF3A}
 #row2 .psearch{max-width:420px}
 .ficha.ttl{vertical-align:middle;margin-left:8px;height:26px;font-size:10px}
+.fcl{display:flex;flex-direction:column;gap:14px;max-height:62vh;overflow:auto}
+.fcf{margin:0;display:flex;flex-direction:column;gap:6px}.fcf img{width:100%;border:1px solid #E3E6E0;border-radius:8px}.fcf figcaption{font-size:13px;font-weight:700}
 .gwrap{display:flex;flex-direction:column;gap:16px}
 .gbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .gbar h2{margin:0;font-size:20px;font-weight:800}.gbar h2 span{font-size:14px;font-weight:700;border-bottom:2px solid var(--ink);margin-left:8px}
@@ -1802,13 +1804,58 @@ function dayCol(d){
   return '<div class="daycol'+(isT?' today':'')+'" data-date="'+di+'" style="height:'+H+'px" title="Tocá un horario libre para dar un turno">'+inner+'</div>';
 }
 
+/* ---------- Firmar facturas: se toma la 1.ª hoja del PDF de ARCA, se le pone la firma de la profesional
+   (según el CUIT de la factura) siempre en el mismo lugar y se devuelve un PNG "FC <pto vta>-<número>.png".
+   Las firmas están en stats/firma_<nutri> (tipo:'firma', cuit, png) y no en el repo, que es público. ---------- */
+var FIRMA_BOX={x:.675,y:.5176,w:.15,h:.0647};
+function pdfjsLoad(){return new Promise(function(res,rej){if(window.pdfjsLib)return res();var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  sc.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res()};sc.onerror=function(){rej(new Error('No se pudo cargar el lector de PDF'))};document.head.appendChild(sc)})}
+function imgLoad(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=rej;i.src=src})}
+async function firmarUno(file,firmas){
+  var pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pg=await pdf.getPage(1);
+  /* el texto del PDF viene desordenado: se ordena por renglón (y) y dentro del renglón por x */
+  var its=(await pg.getTextContent()).items.filter(function(i){return i.str&&i.str.trim()}).map(function(i){return {s:i.str,x:i.transform[4],y:Math.round(i.transform[5]/2)}});
+  its.sort(function(a,b){return b.y-a.y||a.x-b.x});
+  var txt=its.map(function(i){return i.s}).join(' ').replace(/\s+/g,' ');
+  var pv=txt.match(/Punto de Venta:?\s*(\d+)/i),nro=txt.match(/Comp\.?\s*Nro:?\s*(\d+)/i),cuit=txt.match(/CUIT:?\s*(\d{11})/i);
+  if(!pv||!nro)throw new Error('no parece una factura de ARCA (no se encontró el número)');
+  var f=firmas.filter(function(x){return cuit&&x.cuit===cuit[1]})[0];
+  if(!f)throw new Error('no hay firma cargada para el CUIT '+(cuit?cuit[1]:'de la factura'));
+  var vp=pg.getViewport({scale:2.5}),c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+  var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:g,viewport:vp}).promise;
+  var im=await imgLoad(f.png),bw=FIRMA_BOX.w*c.width,bh=FIRMA_BOX.h*c.height,k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k;
+  g.drawImage(im,FIRMA_BOX.x*c.width+(bw-w)/2,FIRMA_BOX.y*c.height+(bh-h)/2,w,h);
+  var blob=await new Promise(function(r){c.toBlob(r,'image/png')});
+  return {name:'FC '+(+pv[1])+'-'+(+nro[1])+'.png',blob:blob,url:URL.createObjectURL(blob)};
+}
+async function firmarFacturas(files){
+  var btn=$('[data-act="firmar"]'),lbl=btn?btn.innerHTML:'',out=[],errs=[];
+  if(btn){btn.disabled=true;btn.textContent='Firmando…'}
+  try{
+    await pdfjsLoad();
+    var sn=await db.collection('stats').where('tipo','==','firma').get(),firmas=sn.docs.map(function(d){return d.data()});
+    for(var i=0;i<files.length;i++){try{out.push(await firmarUno(files[i],firmas))}catch(e){errs.push(files[i].name+': '+e.message)}}
+  }catch(e){errs.push(e.message)}
+  if(btn){btn.disabled=false;btn.innerHTML=lbl}
+  window.__fcOut=out;
+  var share=out.length&&navigator.canShare&&navigator.canShare({files:out.map(function(o){return new File([o.blob],o.name,{type:'image/png'})})});
+  $('#dlg2').innerHTML=head(out.length===1?'Factura firmada':out.length?out.length+' facturas firmadas':'No se pudo firmar',out.length?'Revisá que la firma quede bien y descargala':'','close2')+
+    '<div class="sec">'+(errs.length?'<p class="warn">'+errs.map(esc).join('<br>')+'</p>':'')+'<div class="fcl">'+out.map(function(o,i){return '<figure class="fcf"><img src="'+o.url+'" alt="'+esc(o.name)+'"><figcaption>'+esc(o.name)+'</figcaption></figure>'}).join('')+'</div></div>'+
+    '<div class="df"><div class="r"><button type="button" class="btn big" data-act="close2">Cerrar</button>'+(share?'<button type="button" class="btn big" data-act="fcShare">Compartir</button>':'')+
+    (out.length?'<button type="button" class="btn big primary" data-act="fcBajar">'+(out.length===1?'Descargar':'Descargar todas')+'</button>':'')+'</div></div>';
+  $('#overlay2').hidden=false;
+}
+function fcBajar(){(window.__fcOut||[]).forEach(function(o,i){setTimeout(function(){var a=document.createElement('a');a.href=o.url;a.download=o.name;document.body.appendChild(a);a.click();a.remove()},i*400)})}
+function fcShare(){var fs=(window.__fcOut||[]).map(function(o){return new File([o.blob],o.name,{type:'image/png'})});navigator.share({files:fs}).catch(function(){})}
 function renderPagos(){
   var y=ui.month.getFullYear(), mo=ui.month.getMonth();
   var ty=today().getFullYear(), yrs=[];for(var yy=2023;yy<=Math.max(ty+1,y);yy++)yrs.push(yy);
   var isCur=y===ty&&mo===today().getMonth();
   $('#row2').innerHTML='<select class="msel" id="pMes" aria-label="Mes">'+MESES.map(function(m,i){return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+cap(m)+'</option>'}).join('')+'</select>'+
     '<select class="msel" id="pAnio" aria-label="Año">'+yrs.map(function(v){return '<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>'}).join('')+'</select>'+
-    '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>';
+    '<button type="button" class="btn" data-act="mhoy"'+(isCur?' disabled':'')+'>Mes actual</button>'+
+    '<button type="button" class="btn" data-act="firmar">'+ICON.edit+'Firmar factura</button><input type="file" id="fcFile" accept="application/pdf,.pdf" multiple hidden>';
   var pref=y+'-'+pad(mo+1)+'-';
   var cargando=!loaded.pagos||!pagosYearOk(y); if(loaded.pagos&&!pagosYearOk(y))loadPagosYear(y);
   var list=data.pagos.filter(function(p){return p.nutri===ui.nutri&&p.date.indexOf(pref)===0}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
@@ -2152,6 +2199,9 @@ document.addEventListener('click',function(ev){
     case 'labEdit': saveFicha(false); ui.labEdit=id; ui.labPisa=null; ui.sec.lab=true; renderFicha(); break;
     case 'labCancel': ui.labEdit=null; ui.labPisa=null; renderFicha(); break;
     case 'labSave': saveLab(); break;
+    case 'firmar': var ff=$('#fcFile'); ff.value=''; ff.click(); break;
+    case 'fcBajar': fcBajar(); break;
+    case 'fcShare': fcShare(); break;
     case 'gHoy': ui.gy=null; ui.gAdd={}; renderGastos(); break;
     case 'gconf': ui.gConf=!ui.gConf; renderGastos(); break;
     case 'gMas': ui.gAdd=ui.gAdd||{}; ui.gAdd[a.dataset.g]=true; renderGastos(); var gs=$('#gaSel_'+a.dataset.g); if(gs)gs.focus(); break;
@@ -2310,6 +2360,7 @@ document.addEventListener('change',function(ev){
 document.addEventListener('input',function(ev){if(ev.target.id==='qTel'){var h=$('#qTelHint');if(h)h.innerHTML=telHint(ev.target.value)}});
 document.addEventListener('toggle',function(ev){var t=ev.target;if(!t.dataset)return;if(t.dataset.sec)ui.sec[t.dataset.sec]=t.open;
   if(t.classList.contains('medlist')){if(t.closest('[data-sec="med"]'))ui.medList=t.open;else ui.labList=t.open}},true);
+document.addEventListener('change',function(ev){if(ev.target.id==='fcFile'&&ev.target.files.length){firmarFacturas([].slice.call(ev.target.files));return}});
 document.addEventListener('change',function(ev){var t=ev.target;if(!t.classList)return;
   if(t.classList.contains('gin'))gSave(t);
   else if(t.classList.contains('gcname')||t.classList.contains('gcgr')){var C=gConf().map(function(c){return Object.assign({},c)}),c=C.filter(function(x){return x.id===t.dataset.cid})[0];if(!c)return;
