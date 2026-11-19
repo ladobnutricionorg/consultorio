@@ -1091,7 +1091,7 @@ function renderFicha(){
   var seenT={}, srcT=(ui.fichaTs||[]).concat(data.turnos).filter(function(t){if(seenT[t.id])return false;seenT[t.id]=1;return true});
   var ts=srcT.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
   var first=ts[0], next=ts.filter(function(t){return t.date>=td})[0], ed=edad(f.nac);
-  var wa=waNum(p.phone)?'https://wa.me/'+waNum(p.phone):null;
+  var wa=waNum(p.phone)?'https://api.whatsapp.com/send?phone='+waNum(p.phone):null;
   $('#row2').innerHTML='';
   var cb=function(k,l){return '<label class="fcb"><input type="checkbox" id="fm_'+k+'"'+(mo[k]?' checked':'')+'><span>'+l+'</span></label>'};
   var fld=function(id,l,v,extra){return '<label class="ff'+(extra||'')+'"><span>'+l+'</span><input id="'+id+'" value="'+esc(v||'')+'"></label>'};
@@ -1376,7 +1376,8 @@ function waLink(t){
   var num=waNum(p.phone); if(!num)return null;
   var d=parse(t.date);
   var msg='¡Hola! 👋🏻\nEste es un mensaje recordatorio de tu cita:\n🗓️ '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'\n🕓 '+show(toMin(t.time))+' hs\n📍 Charcas 3331 2D\n\n¿Confirmamos tu asistencia? 😊';
-  return 'https://wa.me/'+num+'?text='+encodeURIComponent(msg);
+  /* api.whatsapp.com directo: el atajo wa.me redirige y en el camino rompe los emojis (salen como ?) */
+  return 'https://api.whatsapp.com/send?phone='+num+'&text='+encodeURIComponent(msg);
 }
 
 /* ---------- render ---------- */
