@@ -837,8 +837,10 @@ details.edit[open] summary{margin-bottom:12px}
 .pedwa .fld{min-width:220px}.pedwa .fcnote{margin:0;flex:1;min-width:220px;font-size:12.5px}
 .pedscroll{flex:1;overflow:auto;padding:18px 16px 80px}
 .pedhint{max-width:794px;margin:0 auto 10px;font-size:12px;color:#6B746E;text-align:center}
-.pedpage{max-width:794px;margin:0 auto;background:#fff url(planes/fondo.jpg) top center/100% auto no-repeat;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:110px 76px 70px;
-  font-family:'Montserrat','Archivo',sans-serif;font-size:14px;line-height:1.45;color:#1f1f1f}
+.pedpage{max-width:794px;margin:0 auto;font-family:'Montserrat','Archivo',sans-serif;font-size:14px;line-height:1.45;color:#1f1f1f}
+/* hoja A4: márgenes en % del ancho, iguales a los del PDF (72 pt a los costados, 128 pt arriba) */
+.psheet{background:#fff url(planes/fondo.jpg) top center/100% auto repeat-y;box-shadow:0 6px 24px rgba(0,0,0,.12);aspect-ratio:210/297;padding:21.5% 12.1% 10.8%}
+.psheet+.pblk,.pblk+.psheet{margin-top:0}
 .pedpage [contenteditable]{outline:0;border-radius:4px;transition:background .15s}
 .pedpage [contenteditable]:hover{background:rgba(212,255,58,.12)}
 .pedpage [contenteditable]:focus{background:rgba(212,255,58,.22);box-shadow:0 0 0 2px rgba(134,162,101,.45)}
@@ -880,11 +882,12 @@ details.edit[open] summary{margin-bottom:12px}
 .ptabb{display:flex;gap:10px;justify-content:center;margin:0 0 14px;font-family:'Archivo',sans-serif;opacity:0;transition:opacity .1s}
 .pblk:hover .ptabb,.pblk:focus-within .ptabb{opacity:1}
 .ptabb button{border:0;background:none;font-size:12px;font-weight:600;text-decoration:underline;cursor:pointer;color:#56605A}
-.ppb{border-top:2px dashed #C9D7B6;margin:18px 0;text-align:center;line-height:0}
-.ppb span{background:#E9ECE6;font:700 10.5px 'Archivo',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7A8F64;padding:3px 10px;border-radius:999px;position:relative;top:-1px}
+.pblk.t_pb{margin:14px 0}.pblk.t_pb .pbc{right:-40px;top:-10px}
+.ppb{text-align:center;line-height:1}
+.ppb span{background:#fff;border:1px dashed #B9C7A6;font:700 10.5px 'Archivo',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7A8F64;padding:3px 10px;border-radius:999px;position:relative;top:-1px}
 @media (max-width:900px){
   .pbc{right:-4px;top:-26px;flex-direction:row}
-  .pedpage{padding:70px 22px 40px;font-size:13px;background-size:100% auto}
+  .pedpage{font-size:13px}
   .pins>button{opacity:.55}
   .pedtop{padding:8px 10px;gap:8px}.pedbtns .btn{height:34px;padding:0 10px}
 }
@@ -2956,10 +2959,14 @@ function plDraw(keepScroll){
   if(keepScroll){var s2=$('#planEd .pedscroll');if(s2)s2.scrollTop=top}
 }
 function plBlocksHtml(){
-  var B=PL.ed.bloques,h='<div class="pins first"><button type="button" data-pe="add" data-i="-1" aria-label="Agregar bloque al principio">+</button></div>';
-  B.forEach(function(b,i){h+='<div class="pblk t_'+b.t+'" data-i="'+i+'"><div class="pbc"><button type="button" data-pe="up" title="Subir">↑</button><button type="button" data-pe="down" title="Bajar">↓</button><button type="button" data-pe="del" title="Quitar">✕</button></div>'+plBlockHtml(b,i)+'</div>'+
-    '<div class="pins"><button type="button" data-pe="add" data-i="'+i+'" aria-label="Agregar bloque">+</button></div>'});
-  return h;
+  /* cada salto de página arranca una hoja nueva, con el fondo completo, como en el PDF */
+  var B=PL.ed.bloques,h='<div class="psheet"><div class="pins first"><button type="button" data-pe="add" data-i="-1" aria-label="Agregar bloque al principio">+</button></div>';
+  B.forEach(function(b,i){
+    var blk='<div class="pblk t_'+b.t+'" data-i="'+i+'"><div class="pbc"><button type="button" data-pe="up" title="Subir">↑</button><button type="button" data-pe="down" title="Bajar">↓</button><button type="button" data-pe="del" title="Quitar">✕</button></div>'+plBlockHtml(b,i)+'</div>',
+      pins='<div class="pins"><button type="button" data-pe="add" data-i="'+i+'" aria-label="Agregar bloque">+</button></div>';
+    h+=b.t==='pb'?'</div>'+blk+'<div class="psheet">'+pins:blk+pins;
+  });
+  return h+'</div>';
 }
 function plCE(cls,html,extra){return '<div class="'+cls+'" contenteditable="true" spellcheck="true"'+(extra||'')+'>'+(html||'')+'</div>'}
 function plBlockHtml(b,i){
@@ -3127,15 +3134,15 @@ function plRuns(html,extra){
 function plTxt(html){var d=document.createElement('div');d.innerHTML=html||'';return d.textContent}
 async function plDocDef(bloques,nombre){
   await plPdfLoad();
-  var imgs={fondo:(await plImgData('planes/fondo.jpg')).url},content=[],brk=false,W=595.28-2*58;
+  var imgs={fondo:(await plImgData('planes/fondo.jpg')).url},content=[],brk=false,W=595.28-2*72;
   for(var i=0;i<bloques.length;i++){
     var b=bloques[i],n=null;
     switch(b.t){
       case 'h1':n={text:plTxt(b.html),fontSize:16,bold:true,color:PL_G,alignment:'center',margin:[0,2,0,12],headlineLevel:1};break;
       case 'nombre':n={text:plTxt(b.html)||nombre||' ',fontSize:13,alignment:'center',margin:[0,-6,0,24]};break;
-      case 'h2':n=b.c?plRuns(b.html,{color:PL_G,alignment:'center',margin:[0,-6,0,12]}):plRuns(b.html,{bold:true,color:PL_G,margin:[0,8,0,7],headlineLevel:1});break;
-      case 'p':if(!plTxt(b.html).trim()&&!/<br>/.test(b.html||''))break;n=plRuns(b.html,{margin:[0,0,0,8],alignment:b.c?'center':'left',fontSize:b.s?9:undefined});break;
-      case 'ul':var its=b.items.filter(function(x){return plTxt(x).trim()});if(!its.length)break;n={ul:its.map(function(x){return plRuns(x,{margin:[0,0,0,3]})}),margin:[8,0,0,10]};break;
+      case 'h2':n=b.c?plRuns(b.html,{color:PL_G,alignment:'center',margin:[0,-6,0,12]}):plRuns(b.html,{bold:true,color:PL_G,margin:[0,6,0,5],headlineLevel:1});break;
+      case 'p':if(!plTxt(b.html).trim()&&!/<br>/.test(b.html||''))break;n=plRuns(b.html,{margin:[0,0,0,6],alignment:b.c?'center':'left',fontSize:b.s?9:undefined});break;
+      case 'ul':var its=b.items.filter(function(x){return plTxt(x).trim()});if(!its.length)break;n={ul:its.map(function(x){return plRuns(x,{margin:[0,0,0,2]})}),margin:[8,0,0,8]};break;
       case 'platos':
         if(!b.items.length)break;
         var ks=[];for(var j=0;j<b.items.length;j++){var k='p'+i+'_'+j;imgs[k]=(await plImgData(b.items[j])).url;ks.push(k)}
@@ -3151,7 +3158,9 @@ async function plDocDef(bloques,nombre){
     }
     if(n){if(brk&&content.length)n.pageBreak='before';brk=false;content.push(n)}
   }
-  return {pageSize:'A4',pageMargins:[58,92,58,58],images:imgs,content:content,
+  /* sin margen abajo en lo último: si no, pdfmake a veces agrega una hoja en blanco */
+  var last=content[content.length-1];if(last&&last.margin)last.margin=[last.margin[0],last.margin[1],last.margin[2],0];
+  return {pageSize:'A4',pageMargins:[72,128,72,64],images:imgs,content:content,
     background:function(){return {image:'fondo',width:595.28,height:841.89}},
     defaultStyle:{font:'Montserrat',fontSize:11,lineHeight:1.18,color:'#1f1f1f'},
     pageBreakBefore:function(cur,next){return cur.headlineLevel===1&&next.length===0},
