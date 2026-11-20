@@ -396,7 +396,13 @@ body{overflow-x:hidden}
 .crumb button{border:0;background:none;padding:0;font-size:13px;color:#7A837D;cursor:pointer}
 .crumb button:hover{color:var(--ink);text-decoration:underline}
 .crumb b{color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fbtns{display:flex;gap:8px}
+.fbtns{display:flex;gap:8px;margin-left:auto}
+.fsave{position:fixed;right:24px;bottom:24px;z-index:40;display:flex;align-items:center;gap:10px;pointer-events:none}
+.fsave .btn{pointer-events:auto;height:48px;padding:0 22px;font-size:14px;box-shadow:0 8px 24px rgba(23,32,27,.28);display:inline-flex;align-items:center;gap:8px}
+.fsave .btn svg{width:16px;height:16px}
+.fsave .fest{background:#fff;border:1px solid #E3E6E0;border-radius:999px;padding:5px 10px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.fwrap{padding-bottom:84px}
+@media(max-width:760px){.fsave{right:16px;bottom:calc(16px + env(safe-area-inset-bottom))}.fsave .btn{height:46px;padding:0 18px}}
 .fbody{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
 .fcard{flex:0 0 270px;background:#fff;border:1px solid #E3E6E0;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}
 .fav{width:64px;height:64px;border-radius:50%;background:#E9F9B5;color:#2F3D0A;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600}
@@ -833,6 +839,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   doc:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
   chev:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   cal:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
@@ -1492,7 +1499,9 @@ function renderFichaInner(){
   var cb=function(k,l){return '<label class="fcb"><input type="checkbox" id="fm_'+k+'"'+(mo[k]?' checked':'')+'><span>'+l+'</span></label>'};
   var fld=function(id,l,v,extra){return '<label class="ff'+(extra||'')+'"><span>'+l+'</span><input id="'+id+'" value="'+esc(v||'')+'"></label>'};
   var html='<div class="fwrap"><div class="ftop"><nav class="crumb" aria-label="Ruta"><button type="button" data-act="fichaVolver">Pacientes</button><span>/</span><b>'+esc(p.name)+'</b></nav>'+
-    '<div class="fbtns"><span class="fest" id="fEst" aria-live="polite"></span><button type="button" class="btn" data-act="fichaVolver">Volver</button><button type="button" class="btn primary" data-act="fichaSave">Guardar cambios</button></div></div>';
+    '<div class="fbtns"><button type="button" class="btn" data-act="fichaVolver">Volver</button></div></div>'+
+    /* botón flotante abajo a la derecha: siempre a mano mientras se baja por la ficha */
+    '<div class="fsave"><span class="fest" id="fEst" aria-live="polite"></span><button type="button" class="btn primary" data-act="fichaSave">'+ICON.check+'Guardar cambios</button></div>';
   html+='<div class="fbody"><aside class="fcard"><div class="fav">'+esc(initials(p).toUpperCase())+'</div>'+
     '<div><h2>'+esc(p.name)+'</h2><span class="fsub" id="fSub">'+(ed!=null?ed+' años · ':'')+'Paciente de '+NUTRIS[p.nutri]+'</span></div>'+
     '<div class="kvs"><div class="kv"><span>Teléfono</span><span>'+esc(p.phone)+'</span></div>'+
