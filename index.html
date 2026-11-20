@@ -37,6 +37,7 @@ button{font:inherit;color:inherit}
 .logo img{height:58px;width:auto;display:block}
 .who{grid-area:who;display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 h1{margin:0;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#title:not(.plain){background:var(--lima);border-radius:6px;padding:2px 8px}
 h1.plain{text-transform:none;letter-spacing:0;font-size:16px}
 #switchBtn{height:32px;font-size:12.5px;font-weight:600;padding:0 12px}
 .btn{font-size:13px;font-weight:600;height:36px;padding:0 14px;border-radius:8px;border:1px solid #C9CFC8;background:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
@@ -2244,9 +2245,12 @@ function readBloq(){
   var cb=$('.bcol .sw.on');
   return {date:$('#bDate').value,from:a,to:z,nota:$('#bNota').value.trim().toLocaleUpperCase('es-AR'),color:cb?cb.dataset.bcol:''};
 }
+/* aviso cuando una nutri carga algo en la agenda o en los pagos de la otra (Fede no tiene nutri, no se le avisa) */
+function otraOk(n,que){if(!(staff&&staff.nutri&&NUTRIS[staff.nutri])||!n||staff.nutri===n)return true;return confirm('Estás cargando '+que+' de '+NUTRIS[n]+'. ¿Querés continuar?')}
 function saveNuevo(){
   if(segVal('kind')==='bloqueo'){
     var b=readBloq(); if(!b)return;
+    if(!otraOk(ui.nutri,'un bloqueo en la agenda'))return;
     if($('#bRep')&&$('#bRep').checked){
       var un=$('#bUntil').value,be=$('#bErr'),noEnd=$('#bNoEnd').checked;
       if(noEnd){
@@ -2385,6 +2389,7 @@ function openQp(btn,tid){
 function saveQp(tid){
   var t=findT(tid), e=$('#qErr2'), q=$('#qpop'), sel=$('[data-qm].on',q), raw=String($('#qOtro').value).replace(/[^\d]/g,''), monto=raw?parseInt(raw,10):(sel?+sel.dataset.qm:0), mb=$('[data-qmed].on',q), medio=mb?mb.dataset.qmed:'';
   if(!t)return closeQp();
+  if(!otraOk(t.nutri,'un pago en los pagos'))return;
   var gratis=raw!==''&&monto===0; if(gratis)medio='';
   if(!gratis&&(!monto||!medio)){e.textContent=!monto&&!medio?'Elegí monto y medio.':!monto?'Elegí el monto.':'Elegí el medio de pago.';e.hidden=false;return}
   if(!pagoDe(t.id))data.pagos.push({id:uid(),nutri:t.nutri,turnoId:t.id,pid:t.pid||null,name:t.name,date:iso(today()),monto:monto,medio:medio,fact:false});
@@ -2494,6 +2499,7 @@ document.addEventListener('click',function(ev){
     case 'editPago': openTurno(id,true); break;
     case 'savePagoT':
       t2=findT(id); r=readPago(); if(!t2||!r)break;
+      if(!otraOk(t2.nutri,'un pago en los pagos'))break;
       pg=pagoDe(t2.id);
       if(pg){pg.monto=r.monto;pg.medio=r.medio;pg.date=r.date}
       else data.pagos.push({id:uid(),nutri:t2.nutri,turnoId:t2.id,name:t2.name,date:r.date,monto:r.monto,medio:r.medio,fact:false});
@@ -2514,6 +2520,7 @@ document.addEventListener('click',function(ev){
       var ppid=pidOf('pName');
       if(!ppid){$('#pErr').textContent='Elegí un paciente de la lista, o cargalo con el botón +.';$('#pErr').hidden=false;break}
       r=readPago(); if(!r)break;
+      if(!otraOk(ui.nutri,'un pago en los pagos'))break;
       var p3=findPac(ppid);
       pg=id?findP(id):null;
       if(pg){pg.name=p3.name;pg.pid=p3.id;pg.monto=r.monto;pg.medio=r.medio;pg.date=r.date;pg.fact=$('#pFact').checked}
