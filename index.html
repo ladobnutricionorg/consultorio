@@ -299,6 +299,9 @@ body{overflow-x:hidden}
 .gmeses button.vac{color:#A3AAA5}
 .gmeses button.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .r2x{display:contents}
+.dh:has(.dhficha){align-items:center}.dhficha{margin-left:14px;flex:none}.dh:has(.dhficha) .xbtn{margin-left:auto}
+.subshort{display:none}
+@media(max-width:760px){.sublong{display:none}.subshort{display:inline}}
 .btn.dpill{cursor:default;color:#8A938D;background:transparent;font-weight:700}
 .btn.dpill.on{background:#B3412F;border-color:#B3412F;color:#fff}
 .gcbtn{margin-left:auto}.gcbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -830,6 +833,7 @@ var UIKEY='ladob_ui_v1';
 try{localStorage.removeItem('ladob_data_v1');localStorage.removeItem('ladob_data_v2')}catch(e){}
 var LLEGADAS=['Google','Instagram','Referido','Otro'];
 var ICON={
+  doc:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
   chev:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   cal:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
   down:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
@@ -2293,8 +2297,11 @@ function goTo(di){var d=parse(di);if(d.getDay()!==0&&d.getDay()!==6)ui.date=d;re
 function openTurno(id,editPago){
   var t=findT(id); if(!t)return;
   var d=parse(t.date), a=toMin(t.time), pg=pagoDe(t.id), p=pacDe(t), link=waLink(t);
-  var sub=largo(d)+' · '+show(a)+' – '+show(a+t.dur)+(t.tipo?' · '+t.tipo:'');
-  var html=head(esc(t.name),esc(cap(sub)));
+  var hrs=' · '+show(a)+' – '+show(a+t.dur)+(t.tipo?' · '+t.tipo:'');
+  /* en el celular la fecha va corta para que entre al lado del botón FICHA */
+  var sub='<span class="sublong">'+esc(cap(largo(d))+hrs)+'</span><span class="subshort">'+esc(DCORTO[d.getDay()]+' '+ddmm(t.date)+hrs)+'</span>';
+  var html=head(esc(t.name),sub);
+  if(p)html=html.replace('<button type="button" class="xbtn"','<button type="button" class="ficha dhficha" data-act="fichaDe" data-id="'+p.id+'" aria-label="Ficha de '+esc(p.name)+'">'+ICON.doc+'FICHA</button><button type="button" class="xbtn"');
   html+='<div class="sec"><span class="lbl">Estado del turno</span>'+seg('estadoT',[['p','A confirmar'],['c','Confirmado'],['x','Cancelado']],t.estado,'estado');
   if(link)html+='<a class="wa" href="'+link+'" target="_blank" rel="noopener">'+ICON.wa+'Enviar recordatorio por WhatsApp</a>';
   else html+='<span class="wa off" aria-disabled="true" title="El paciente no tiene teléfono cargado">'+ICON.wa+'Enviar recordatorio por WhatsApp</span>';
@@ -2439,7 +2446,7 @@ document.addEventListener('click',function(ev){
     case 'next': ui.date=addDays(ui.date,7); render(); break;
     case 'editPac': openPacForm(null,a.dataset.id); break;
     case 'ptabla': ui.ptabla=!ui.ptabla; ui.plim=null; renderPacientes(); break;
-    case 'fichaDe': if(ui.view==='ficha'&&ui.fichaId!==id&&!salirOk())break; $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.sec={}; ui.tHist=false; ui.rOtra=false; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
+    case 'fichaDe': if(ui.view==='ficha'&&ui.fichaId!==id&&!salirOk())break; if(!$('#overlay').hidden){if(!dlgCloseOk('dlg'))break;closeModal()} $('#overlay2').hidden=true; $('#dlg2').innerHTML=''; ui.sec={}; ui.tHist=false; ui.rOtra=false; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=a.dataset.id; ui.hcEdit=null; render(); window.scrollTo(0,0); break;
     case 'psort': var ck=a.dataset.col; ui.ps=ui.ps&&ui.ps.k===ck?{k:ck,d:-ui.ps.d}:{k:ck,d:1}; ui.plim=200; renderPacientes(); break;
     case 'pmore': ui.plim=(ui.plim||(isAdmin()?200:100))+300; if(isAdmin())renderPacList();else renderPacSimpleList(); break;
     case 'ficha': ui.sec={}; ui.tHist=false; ui.rOtra=false; ui.medNew=false; ui.labEdit=null; ui.medList=false; ui.labList=false; ui.view='ficha'; ui.fichaId=id; ui.hcEdit=null; ui.fichaTs=null; render(); window.scrollTo(0,0); break;
