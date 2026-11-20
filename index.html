@@ -136,7 +136,7 @@ body{overflow-x:hidden}
 .totals{display:flex;justify-content:center;gap:10px}
 .tot{flex:0 1 287px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;gap:2px}
 .tot span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.tot span em{font-style:normal;text-transform:none;letter-spacing:0;margin-left:4px}
+.tot span em{font-style:normal;text-transform:none;letter-spacing:0;margin-right:6px}
 .tot b{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .tot small{font-size:12px;color:var(--muted)}
 .tot.hi{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -404,6 +404,8 @@ body{overflow-x:hidden}
 .altasel{font:inherit;font-size:12.5px;font-weight:500;border:0;border-bottom:1px dashed #C9CFC8;background:transparent;padding:0 2px 1px;color:var(--ink);cursor:pointer;text-align:right}.altasel:focus{outline:0;border-bottom:1px solid var(--ink)}
 .kv em{font-style:normal}
 .kvth{justify-content:flex-start}
+.kvnext>span:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.nxt{white-space:nowrap}.nxt .thp{font-style:normal;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FFF4D6;color:#8A6A10;margin-right:6px}
 .thbtn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12px;font-weight:600;color:#3D4741;background:#fff;border:1px solid #D9DDD5;border-radius:999px;padding:4px 10px 4px 12px;cursor:pointer}
 .thbtn b{font-weight:800;color:var(--ink)}.thbtn svg{width:12px;height:12px;transition:transform .15s}.thbtn.on svg{transform:rotate(180deg)}
 .thbtn:hover,.thbtn.on{border-color:var(--ink)}
@@ -940,7 +942,7 @@ function busy(){
 var COL_TXT={pacientes:'pacientes',turnos:'agenda',bloqueos:'bloqueos',pagos:'pagos'};
 function splashProg(){var t=$('#splashProg');if(!t)return;t.innerHTML=COLS.map(function(c){return '<span class="'+(loaded[c]?'ok':'')+'">'+(loaded[c]?'✓ ':'')+cap(COL_TXT[c])+'</span>'}).join('')}
 function scheduleRender(){if(!staff||!['pacientes','turnos','bloqueos'].every(function(c){return loaded[c]}))return;
-  if(!window.__rulesDone){window.__rulesDone=1;try{extendAllRules()}catch(e){console.error(e)}}
+  if(!window.__rulesDone){window.__rulesDone=1;try{extendAllRules()}catch(e){console.error(e)}try{migrPrevios()}catch(e){console.error(e)}}
   if($('.app').hidden){$('.app').hidden=false;$('#splash').hidden=true;$('#login').hidden=true;pendingRender=false;render();return}if(busy()){pendingRender=true;return}pendingRender=false;render()}
 /* Sincronización con lecturas mínimas:
    - la primera vez en cada dispositivo se lee todo y queda guardado en el navegador;
@@ -1477,7 +1479,9 @@ function renderFichaInner(){
   var p=findPac(ui.fichaId), f=p.ficha||{}, mo=f.motivo||{}, td=iso(today());
   var seenT={}, srcT=(ui.fichaTs||[]).concat(data.turnos).filter(function(t){if(seenT[t.id])return false;seenT[t.id]=1;return true});
   var ts=srcT.filter(function(t){return t.pid===p.id&&t.estado!=='x'}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
-  var first=ts[0], next=ts.filter(function(t){return t.date>=td})[0], ed=edad(f.nac);
+  /* próximos turnos (confirmados y a confirmar), sin los de hoy que ya pasaron */
+  var ahora=new Date(),hm=pad(ahora.getHours())+':'+pad(ahora.getMinutes());
+  var first=ts[0], prox=ts.filter(function(t){return t.date>td||(t.date===td&&t.time>=hm)}), ed=edad(f.nac);
   var wa=waNum(p.phone)?'https://api.whatsapp.com/send?phone='+waNum(p.phone):null;
   $('#row2').innerHTML='';
   var cb=function(k,l){return '<label class="fcb"><input type="checkbox" id="fm_'+k+'"'+(mo[k]?' checked':'')+'><span>'+l+'</span></label>'};
@@ -1490,7 +1494,7 @@ function renderFichaInner(){
     '<div class="kv"><span>Llegó por</span><span><em class="lleg '+esc(p.llegada||'')+'">'+esc(p.llegada||'—')+'</em></span></div>'+
     '<div class="kv"><span>Ingreso</span><span>'+altaSelect(p)+'</span></div>'+
     '<div class="kv"><span>Primera consulta</span><span>'+(first?ddmm(first.date)+'/'+first.date.slice(0,4):'—')+'</span></div>'+
-    '<div class="kv"><span>Próximo turno</span><span>'+(next?DCORTO[parse(next.date).getDay()]+' '+ddmm(next.date)+' · '+show(toMin(next.time)):'—')+'</span></div>'+
+    '<div class="kv kvnext"><span>Próximo'+(prox.length>1?'s turnos':' turno')+'</span><span>'+(prox.length?prox.map(function(t){return '<span class="nxt">'+(t.estado==='p'?'<em class="thp">A confirmar</em>':'')+DCORTO[parse(t.date).getDay()]+' '+ddmm(t.date)+' · '+show(toMin(t.time))+'</span>'}).join(''):'—')+'</span></div>'+
     '<div class="kv kvth"><button type="button" class="thbtn'+(ui.tHist?' on':'')+'" data-act="tHist" aria-expanded="'+!!ui.tHist+'" aria-controls="tHistBox">Historial de turnos <b>'+ts.length+'</b>'+ICON.chev+'</button></div>'+
     tHistHtml(srcT.filter(function(t){return t.pid===p.id&&!t.deleted}),td,p)+'</div>'+
     (wa?'<a class="fwa" href="'+wa+'" target="_blank" rel="noopener">'+ICON.wa+'Escribir por WhatsApp</a>':'')+
@@ -1562,7 +1566,7 @@ function pacUlt(p){var u=p.ult||'',td=iso(today());data.turnos.forEach(function(
 function pacAsist(p){var td=iso(today()),n=data.turnos.filter(function(t){return t.pid===p.id&&t.estado==='c'&&t.date<=td&&(!p.ult||t.date>p.ult)}).length;return (p.asist||0)+n}
 function pacVal(p,k){
   if(k==='nutri')return NUTRIS[p.nutri]||'';
-  if(k==='alta')return p.alta||(p.altaKey?'':'');
+  if(k==='alta')return (p.altaKey||'').charAt(0)==='0'?'Previos':(p.alta||'');
   if(k==='ult'){var u=pacUlt(p);return u?u.slice(8,10)+'/'+u.slice(5,7)+'/'+u.slice(0,4):''}
   if(k==='asist')return String(pacAsist(p));
   if(k==='pauta')return p.pauta?'si':'no';
@@ -1578,10 +1582,10 @@ function pacSortKey(p,k){
 }
 function isAdmin(){return !!staff} /* todos los usuarios ven todo */
 /* Pacientes (todos los usuarios): buscador centrado; sin búsqueda se muestran los ingresos del mes */
-/* fecha de ingreso (mes y año); lo anterior a mayo 2023 queda como "Antes de Mayo 2023" */
+/* fecha de ingreso (mes y año); los pacientes de antes del sistema quedan como "Previos" */
 var ANTES_KEY='02023-05';
 function altaSelect(p){
-  var k=p.altaKey||'', o='<option value="'+ANTES_KEY+'"'+(k&&k.charAt(0)==='0'?' selected':'')+'>Antes de may. 2023</option>', t=today(), y=t.getFullYear(), m=t.getMonth()+1, found=k.charAt(0)==='0';
+  var k=p.altaKey||'', o='<option value="'+ANTES_KEY+'"'+(k&&k.charAt(0)==='0'?' selected':'')+'>Previos</option>', t=today(), y=t.getFullYear(), m=t.getMonth()+1, found=k.charAt(0)==='0';
   var opts=[];
   while(y>2023||(y===2023&&m>=5)){var v=y+'-'+pad(m);if(v===k)found=true;opts.push('<option value="'+v+'"'+(v===k?' selected':'')+'>'+cap(MESES[m-1]).slice(0,3)+'. '+y+'</option>');m--;if(!m){m=12;y--}}
   if(!found&&k)opts.unshift('<option value="'+esc(k)+'" selected>'+esc(p.alta||k)+'</option>');
@@ -1590,7 +1594,7 @@ function altaSelect(p){
 }
 function setAlta(pid,k){
   var p=findPac(pid); if(!p||!k)return;
-  p.altaKey=k; p.alta=k.charAt(0)==='0'?'Antes de Mayo 2023':cap(MESES[+k.slice(5,7)-1])+' '+k.slice(0,4);
+  p.altaKey=k; p.alta=k.charAt(0)==='0'?'Previos':cap(MESES[+k.slice(5,7)-1])+' '+k.slice(0,4);
   save(); toast('Ingreso: '+p.alta);
 }
 function curAltaKey(){var t=today();return t.getFullYear()+'-'+pad(t.getMonth()+1)}
@@ -1656,7 +1660,7 @@ function renderPacList(){
     html+='<div class="pr">'+
       '<button type="button" class="pacname" data-act="editPac" data-id="'+p.id+'"><b>'+esc(p.name)+'</b></button>'+
       '<span class="pc">'+esc(NUTRIS[p.nutri]||'')+'</span>'+
-      '<span class="pc">'+esc(p.alta||'')+'</span>'+
+      '<span class="pc">'+esc(pacVal(p,'alta'))+'</span>'+
       '<span class="pc pn" title="'+esc(p.notas||'')+'">'+esc(p.notas||'')+'</span>'+
       '<span class="pc">'+(p.llegada?'<em class="lleg '+esc(p.llegada)+'">'+esc(p.llegada)+'</em>':'')+'</span>'+
       '<span class="pc num">'+esc(pacVal(p,'ult'))+'</span>'+
@@ -2209,6 +2213,17 @@ function extendRule(r){
   });
   if(ds.length&&(!r.gen||ds[ds.length-1]>r.gen))r.gen=ds[ds.length-1];
   return n;
+}
+/* Corrección única (19/11/2026): los pacientes que Fede cargó el 18/11 para asociar las agendas 2023-2025 entraron como
+   nuevos de noviembre 2026. Son pacientes viejos: pasan a "Previos". Se reconocen porque tienen ingreso nov. 2026 y turnos
+   de las agendas importadas (importado:'agenda2325'), cosa que un paciente nuevo de verdad no puede tener. */
+function migrPrevios(){
+  if(!staff||staff.rol!=='admin'||lsGet('ladob_migr_prev1118'))return;
+  var viejos={};data.turnos.forEach(function(t){if(t.importado==='agenda2325'&&t.pid&&!t.deleted)viejos[t.pid]=1});
+  var ps=data.pacientes.filter(function(p){return !p.deleted&&p.altaKey==='2026-11'&&viejos[p.id]});
+  ps.forEach(function(p){p.altaKey=ANTES_KEY;p.alta='Previos'});
+  lsSet('ladob_migr_prev1118',1);
+  if(ps.length){save();console.log('Pasados a Previos:',ps.map(function(p){return p.name}).join(', '));toast(ps.length+' pacientes pasaron a Previos: '+ps.map(function(p){return p.name}).join(', '))}
 }
 function extendAllRules(){var ch=0;data.bloqueos.forEach(function(r){if(r.regla&&!r.fin)ch+=extendRule(r)});if(ch)save();}
 function reglaDe(serie){return data.bloqueos.find(function(x){return x.regla&&x.serie===serie})}
