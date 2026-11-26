@@ -261,10 +261,9 @@ body{overflow-x:hidden}
 .spin{width:26px;height:26px;border-radius:50%;border:2.5px solid #DDE1DA;border-top-color:var(--ink);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* celular: deslizar en la grilla cambia de día y en la fila de días cambia de semana */
-@media(max-width:760px){.board,#row2 .tabs{touch-action:pan-y}}
-@keyframes swL{from{transform:translateX(36px);opacity:.4}to{transform:none;opacity:1}}
-@keyframes swR{from{transform:translateX(-36px);opacity:.4}to{transform:none;opacity:1}}
-.swL .grid,.swL.tabs{animation:swL .18s ease-out}.swR .grid,.swR.tabs{animation:swR .18s ease-out}
+@media(max-width:760px){.board,#row2 .tabs{touch-action:pan-y}.board{overflow-x:hidden}#row2 .tabs{overflow:hidden}
+  #row2 .tabs>button{transform:translateX(var(--sw,0px));opacity:var(--so,1);transition:var(--st,none)}
+  .board>.grid{will-change:transform}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
 .psearch{font:inherit;font-size:14px;height:36px;border:1px solid #C9CFC8;border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);flex:1;min-width:0;max-width:360px}
 .psearch:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
@@ -567,6 +566,8 @@ body{overflow-x:hidden}
 .fdpick{position:absolute;right:0;top:50%;transform:translateY(-50%);border:0;background:none;color:#8A938D;cursor:pointer;padding:4px;display:flex;align-items:center}.fdpick:hover{color:var(--ink)}
 .fdpick svg{width:15px;height:15px}
 .fdnat{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+/* iPhone/iPad: Safari no abre el calendario desde código; el casillero de fecha nativo (invisible) tapa el ícono y recibe el toque directo */
+@supports (-webkit-touch-callout:none){.fdnat{left:0;top:0;width:100%!important;height:100%!important;min-width:0;max-width:100%;opacity:.011;pointer-events:auto;font-size:16px!important;-webkit-appearance:none;appearance:none;background:transparent;color:transparent;z-index:1}}
 .fnac{display:flex;align-items:flex-end;gap:8px}
 .fnac input{flex:1;min-width:0}
 .fnac em{flex:none;font-style:normal;font-size:12px;font-weight:600;color:#3D5212;padding-bottom:8px}
@@ -997,7 +998,10 @@ function fdate(el){
   var b=document.createElement('button');b.type='button';b.className='fdpick';b.tabIndex=-1;b.setAttribute('aria-label','Elegir en el calendario');b.innerHTML=ICON.cal;
   var n=document.createElement('input');n.type='date';n.className='fdnat';n.tabIndex=-1;n.setAttribute('aria-hidden','true');
   b.appendChild(n);w.appendChild(b);
-  b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();DATE_D.set.call(n,el.value||'');try{n.showPicker()}catch(e){n.focus();n.click()}});
+  var ios=window.CSS&&CSS.supports&&CSS.supports('-webkit-touch-callout','none');
+  /* en iPhone el toque cae directo en el casillero nativo: solo se le carga la fecha actual antes de que se abra */
+  if(ios){var pre=function(){DATE_D.set.call(n,el.value||'')};n.addEventListener('touchstart',pre,{passive:true});n.addEventListener('focus',pre);n.addEventListener('click',function(ev){ev.stopPropagation()})}
+  b.addEventListener('click',function(ev){if(ios&&ev.target===n)return;ev.preventDefault();ev.stopPropagation();DATE_D.set.call(n,el.value||'');try{n.showPicker()}catch(e){n.focus();n.click()}});
   n.addEventListener('change',function(){el.value=DATE_D.get.call(n);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
 }
 /* lo mismo para las horas: siempre hh:mm de 24 h (en una PC en inglés el navegador muestra AM/PM) */
@@ -2818,20 +2822,36 @@ document.addEventListener('keydown',function(ev){
 var mq=window.matchMedia('(max-width:760px)');
 if(mq.addEventListener)mq.addEventListener('change',render);else if(mq.addListener)mq.addListener(render);
 setInterval(function(){if(staff&&ui.view==='agenda'&&!busy())render()},60000);
-/* deslizar con el dedo (celular, Agenda): en la grilla, día siguiente/anterior (saltea sábado y domingo); en la fila de días, semana siguiente/anterior */
-(function(){var sx=0,sy=0,st=0,zone=null;
-  document.addEventListener('touchstart',function(ev){zone=null;if(ui.view!=='agenda'||!isMobile()||ev.touches.length!==1)return;
+/* deslizar con el dedo (celular, Agenda): la grilla (o la fila de días) sigue al dedo; al soltar pasa al día (o semana) siguiente/anterior
+   con efecto de deslizamiento, o vuelve a su lugar si el movimiento fue corto. En la grilla saltea sábado y domingo. */
+(function(){var sx=0,sy=0,st=0,zone=null,lock=null,dx=0,anim=false;
+  function tgt(z){return z==='sem'?$('#row2 .tabs'):$('.board>.grid')}
+  function mv(z,x,op,ms,ease){var e=tgt(z);if(!e)return;var tr=ms?'transform '+ms+'ms '+ease+',opacity '+ms+'ms '+ease:'none';
+    if(z==='sem'){e.style.setProperty('--sw',x+'px');e.style.setProperty('--so',op);e.style.setProperty('--st',tr)}
+    else{e.style.transition=tr;e.style.transform=x?'translateX('+x+'px)':'';e.style.opacity=op}}
+  function width(z){var e=z==='sem'?$('#row2 .tabs'):$('.board');return e?e.clientWidth:320}
+  document.addEventListener('touchstart',function(ev){zone=null;lock=null;dx=0;if(anim||ui.view!=='agenda'||!isMobile()||ev.touches.length!==1)return;
     var el=ev.target;zone=el.closest&&el.closest('#row2 .tabs')?'sem':el.closest&&el.closest('.board')?'dia':null;
     if(!zone)return;sx=ev.touches[0].clientX;sy=ev.touches[0].clientY;st=Date.now()},{passive:true});
-  document.addEventListener('touchend',function(ev){if(!zone)return;var z=zone;zone=null;var t=ev.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
-    if(Date.now()-st>700||Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy)*1.5)return;
-    var dir=dx<0?1:-1;
-    if(z==='sem')ui.date=addDays(ui.date,7*dir);
-    else{var d=addDays(ui.date,dir);while(d.getDay()===0||d.getDay()===6)d=addDays(d,dir);ui.date=d}
-    if(ui.calOpen)calClose();render();
-    var c=dir>0?'swL':'swR',b=z==='sem'?$('#row2 .tabs'):$('.board');if(b)b.classList.add(c);
-  },{passive:true});
-  document.addEventListener('touchcancel',function(){zone=null},{passive:true});
+  document.addEventListener('touchmove',function(ev){if(!zone||lock==='v')return;var t=ev.touches[0],x=t.clientX-sx,y=t.clientY-sy;
+    if(!lock){if(Math.abs(x)<8&&Math.abs(y)<8)return;lock=Math.abs(x)>Math.abs(y)*1.2?'h':'v';if(lock==='v')return}
+    dx=x;var w=width(zone);mv(zone,dx,1-Math.min(Math.abs(dx)/w,1)*.5,0)},{passive:true});
+  function fin(){if(!zone)return;var z=zone;zone=null;if(lock!=='h'){lock=null;return}lock=null;
+    var w=width(z),v=Math.abs(dx)/Math.max(Date.now()-st,1);
+    if(Math.abs(dx)<w*.22&&!(Math.abs(dx)>30&&v>.45)){mv(z,0,1,180,'ease-out');return}
+    var dir=dx<0?1:-1;anim=true;
+    mv(z,-dir*w,0,150,'ease-in');
+    setTimeout(function(){
+      if(z==='sem')ui.date=addDays(ui.date,7*dir);
+      else{var d=addDays(ui.date,dir);while(d.getDay()===0||d.getDay()===6)d=addDays(d,dir);ui.date=d}
+      if(ui.calOpen)calClose();render();
+      mv(z,dir*w*.6,0,0);void (tgt(z)||document.body).offsetWidth;
+      mv(z,0,1,200,'cubic-bezier(.2,.7,.3,1)');
+      setTimeout(function(){mv(z,0,1,0);var e=tgt(z);if(e&&z!=='sem'){e.style.transition='';e.style.opacity=''}anim=false},220);
+    },150);
+  }
+  document.addEventListener('touchend',fin,{passive:true});
+  document.addEventListener('touchcancel',function(){if(zone&&lock==='h'){dx=0;fin()}zone=null;lock=null},{passive:true});
 })();
 
 document.addEventListener('submit',function(ev){
